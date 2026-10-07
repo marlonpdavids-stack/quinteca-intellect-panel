@@ -1,0 +1,110 @@
+const { JSDOM } = require('jsdom');
+const fs = require('fs');
+const dom = new JSDOM('<!doctype html><html><head></head><body></body></html>', { runScripts: 'outside-only', pretendToBeVisual: true });
+const w = dom.window;
+w.eval(fs.readFileSync('/home/claude/quinteca-panel.js', 'utf8'));
+
+const now = new Date().toISOString();
+const S = (state, attributes) => ({ state, attributes: attributes || {}, last_updated: now, last_changed: now });
+const states = {
+  'weather.forecast_home': S('clear-night', { temperature: 19.4, humidity: 68, wind_speed: 14, wind_speed_unit: 'km/h', friendly_name: 'Home' }),
+  'alarm_control_panel.alarm': S('disarmed', { friendly_name: 'Alarm' }),
+  'lock.main_gate': S('locked', { friendly_name: 'Main gate' }),
+  'lock.front_door': S('locked', { friendly_name: 'Front door' }),
+  'event.gate_doorbell': S(now, { friendly_name: 'Doorbell' }),
+  'climate.living_room': S('heat', { current_temperature: 21.6 }),
+  'media_player.living_room': S('playing', { friendly_name: 'Living room', media_title: 'Evening Jazz', media_artist: 'Spotify', volume_level: 0.38 }),
+  'sensor.udm_clients': S('42', {}),
+  'camera.main_gate': S('streaming', { entity_picture: '/api/camera_proxy/camera.main_gate?token=abc', access_token: 'abc' }),
+  'camera.driveway': S('idle', { entity_picture: '/api/camera_proxy/camera.driveway?token=def', access_token: 'def' }),
+  'camera.garden': S('unavailable', {}),
+  'binary_sensor.kitchen_window': S('on', { device_class: 'window', friendly_name: 'Kitchen window' }),
+  'binary_sensor.living_motion': S('off', { device_class: 'motion', friendly_name: 'Living room motion' }),
+  'scene.good_morning': S('2026-10-05T07:00:00Z', { friendly_name: 'Good morning' }),
+  'scene.evening': S('2026-10-05T18:00:00Z', { friendly_name: 'Evening' }),
+  'light.living_spots': S('on', { friendly_name: 'Ceiling spots', brightness: 178, supported_color_modes: ['brightness'] }),
+  'light.living_lamp': S('off', { friendly_name: 'Floor lamp', supported_color_modes: ['onoff'] }),
+  'cover.living_window': S('open', { friendly_name: 'Living window', current_position: 60, supported_features: 15 }),
+  'cover.terrace': S('closed', { friendly_name: 'Terrace doors', supported_features: 3 }),
+};
+const calls = [];
+const hass = { states, callService: (d, s, data) => { calls.push([d, s, data]); return Promise.resolve(); } };
+
+const el = w.document.createElement('quinteca-panel');
+el.panel = { config: {
+  homeName: 'Casa Test', location: 'Cascais', greetingName: 'Ian',
+  doorbell: 'event.gate_doorbell', wifiClients: 'sensor.udm_clients',
+  cameras: [{ entity: 'camera.main_gate', name: 'Main gate', gate: true }, 'camera.driveway', { entity: 'camera.garden', name: 'Garden' }],
+  zones: ['binary_sensor.kitchen_window', 'binary_sensor.living_motion'],
+  scenes: ['scene.good_morning', 'scene.evening'],
+  rooms: [{ name: 'Living room', lights: ['light.living_spots', 'light.living_lamp', 'light.missing'], covers: ['cover.living_window', 'cover.terrace'] }, { name: 'Pool', lights: [] }],
+} };
+el.hass = hass;
+w.document.body.appendChild(el);
+
+const flush = () => new Promise((r) => w.requestAnimationFrame(() => setTimeout(r, 5)));
+const html = () => el.shadowRoot.innerHTML;
+const click = (sel) => { const b = el.shadowRoot.querySelector(sel); if (!b) throw new Error('missing ' + sel); b.click(); };
+const expect = (cond, msg) => { if (!cond) { throw new Error('FAIL: ' + msg); } console.log('ok -', msg); };
+
+(async () => {
+  await flush();
+  expect(html().includes('Good evening, Ian') || html().includes('Good morning, Ian') || html().includes('Good afternoon, Ian'), 'home renders greeting');
+  expect(html().includes('1<small> / 3</small>'), 'lights count 1 of 3');
+  expect(html().includes('Evening Jazz'), 'media title');
+  expect(el.shadowRoot.querySelector('.scene.on').textContent === 'Evening', 'latest scene highlighted');
+  click('[data-action="access"][data-arg="gate"]');
+  expect(JSON.stringify(calls.pop()) === JSON.stringify(['lock', 'unlock', { entity_id: 'lock.main_gate' }]), 'gate unlocks');
+  click('[data-action="vol"][data-arg="5"]');
+  expect(calls.pop()[2].volume_level === 0.43, 'volume up');
+  click('[data-action="scene"][data-arg="0"]');
+  expect(calls.pop()[0] === 'scene', 'scene call');
+
+  click('[data-action="nav"][data-arg="security"]');
+  expect(html().includes('Kitchen window is open'), 'security warns about open window');
+  expect(html().includes('camera_proxy_stream/camera.main_gate?token=abc'), 'live stream url');
+  click('[data-action="alarm"][data-arg="away"]');
+  expect(calls.pop()[1] === 'alarm_arm_away', 'arm away');
+  click('[data-action="seccam"][data-arg="2"]');
+  expect(html().includes('Camera offline'), 'offline camera handled');
+
+  click('[data-action="nav"][data-arg="cameras"]');
+  expect(el.shadowRoot.querySelectorAll('.cam').length === 3, 'camera grid shows 3');
+  click('[data-action="camfocus"][data-arg="1"]');
+  expect(el.shadowRoot.querySelector('.strip button.on').textContent.trim() !== '', 'focused camera view');
+  click('[data-action="camall"]');
+  expect(el.shadowRoot.querySelectorAll('.cam').length === 3, 'back to grid');
+
+  click('[data-action="nav"][data-arg="lights"]');
+  expect(html().includes('Dimmer · 70%'), 'dimmer level');
+  expect(html().includes('Not found'), 'missing light handled');
+  expect(html().includes('data-pos="50"') && html().includes('coverstop'), 'half vs stop by cover features');
+  click('[data-action="dim"][data-step="10"]');
+  expect(calls.pop()[2].brightness_step_pct === 10, 'brighten');
+  click('[data-action="cover"][data-arg="cover.terrace"][data-pos="100"]');
+  expect(calls.pop()[1] === 'open_cover', 'cover without position opens');
+  click('[data-action="roomtoggle"]');
+  expect(calls.pop()[1] === 'turn_off', 'room off');
+  click('[data-action="closeall"]');
+  expect(calls.pop()[2].entity_id.length === 2, 'close all covers');
+  click('[data-action="room"][data-arg="1"]');
+  expect(html().includes('Pool'), 'empty room renders');
+
+  // state change triggers re-render
+  click('[data-action="nav"][data-arg="home"]');
+  hass.states = Object.assign({}, states, { 'alarm_control_panel.alarm': Object.assign(S('armed_away'), { last_updated: 'x' }) });
+  el.hass = Object.assign({}, hass);
+  await flush();
+  expect(html().includes('Armed · Away'), 're-renders on state change');
+
+  // empty config
+  const e2 = w.document.createElement('quinteca-panel');
+  e2.panel = { config: {} };
+  e2.hass = { states: {}, callService: () => Promise.resolve() };
+  w.document.body.appendChild(e2);
+  await flush();
+  ['home', 'security', 'cameras', 'lights'].forEach((v) => { e2._view = v; e2._render(); });
+  expect(e2.shadowRoot.innerHTML.includes('Add rooms'), 'empty config renders all views');
+  console.log('ALL PASSED');
+  process.exit(0);
+})().catch((e) => { console.error(e); process.exit(1); });
