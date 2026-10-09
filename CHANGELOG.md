@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6 (9 Oct 2026)
+- Dimmers get a full-width drag slider (tap or slide; slide to the left edge to turn off) in place of the − / + buttons.
+- Shutters always show Open / Stop / Close; shutters that report position also get a drag slider.
+- Home tile values now size to the tile itself, so "Disarmed" fits on every screen size.
+- The panel holds the value you set for a few seconds so sliders don't jump back while the device catches up.
+
 ## 1.5 (7 Oct 2026)
 - Tile values shrink to fit smaller tablet screens ("Disarmed" no longer overflows).
 

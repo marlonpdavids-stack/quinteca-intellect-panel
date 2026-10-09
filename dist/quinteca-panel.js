@@ -1,6 +1,6 @@
 /*
  * Quinteca Intellect - Home Assistant custom panel
- * Version 1.5 (October 2026)
+ * Version 1.6 (October 2026)
  *
  * Install: copy this file to /config/www/quinteca/quinteca-panel.js and add the
  * panel_custom block from INSTALL.md to configuration.yaml. All client-specific
@@ -203,12 +203,12 @@ button { font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transp
 .weather { height:140px; flex:none; padding:20px 22px; display:flex; flex-direction:column; justify-content:space-between; }
 .weather-temp { font-family:Sora,sans-serif; font-size:52px; font-weight:600; letter-spacing:-2px; line-height:1; }
 .tiles { flex:1; min-height:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr)); gap:12px; }
-.tile { text-align:left; padding:16px; border-radius:22px; background:var(--card); border:1px solid var(--line); color:var(--text); display:flex; flex-direction:column; justify-content:space-between; min-height:110px; }
+.tile { container-type:inline-size; text-align:left; padding:16px; border-radius:22px; background:var(--card); border:1px solid var(--line); color:var(--text); display:flex; flex-direction:column; justify-content:space-between; min-height:110px; }
 .tile.alert { border-color:var(--armed); }
 .tile-icon { width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; }
-.tile-value { font-family:Sora,sans-serif; font-size:clamp(18px, 2.1vw, 26px); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; display:block; }
+.tile-value { font-family:Sora,sans-serif; font-size:clamp(15px, 12.5cqi, 26px); line-height:1.15; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; display:block; }
 .tile > span:last-child { min-width:0; max-width:100%; }
-.tile-value small { font-size:16px; color:var(--muted); font-weight:600; }
+.tile-value small { font-size:0.62em; color:var(--muted); font-weight:600; }
 .tile-label { font-size:13px; color:var(--muted); }
 .hero { height:372px; flex:none; border-radius:26px; background:var(--card2); border:1px solid var(--line); display:flex; overflow:hidden; }
 .hero-art { flex:1; min-width:0; position:relative; }
@@ -341,6 +341,17 @@ button { font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transp
 .switch.on { justify-content:flex-end; background:var(--accent); }
 .switch span { width:26px; height:26px; border-radius:50%; background:#F7F4ED; }
 .shutter { padding:12px 16px; border-radius:18px; background:var(--card); display:flex; align-items:center; gap:16px; }
+.slider { position:relative; flex:1; min-width:0; height:52px; border-radius:16px; background:rgba(247,244,237,0.08); overflow:hidden; touch-action:none; cursor:pointer; user-select:none; -webkit-user-select:none; }
+.slider .fill { position:absolute; left:0; top:0; bottom:0; border-radius:16px 0 0 16px; transition:width 0.25s ease; }
+.slider.dragging .fill { transition:none; }
+.slider .fill::after { content:''; position:absolute; right:8px; top:14px; bottom:14px; width:4px; border-radius:2px; background:rgba(15,43,31,0.45); }
+.slider.light-slider { flex:none; width:100%; }
+.slider.light-slider .fill { background:linear-gradient(90deg, rgba(244,210,122,0.55), #F4D27A); }
+.slider.cover-slider .fill { background:linear-gradient(90deg, rgba(156,199,232,0.45), #9CC7E8); }
+.slider .val { position:absolute; left:16px; top:0; bottom:0; display:flex; align-items:center; gap:8px; font-family:Sora,sans-serif; font-size:16px; font-weight:600; color:var(--text); pointer-events:none; text-shadow:0 1px 3px rgba(0,0,0,0.35); }
+.slider .val small { display:none; font-family:inherit; font-size:12px; font-weight:500; opacity:0.75; }
+.slider.off .val { color:var(--muted); text-shadow:none; }
+.slider.off .val small { display:inline; }
 .shutter-name { width:160px; display:flex; flex-direction:column; gap:2px; flex:none; }
 
 @media (max-width: 960px) {
@@ -372,6 +383,10 @@ class QuintecaPanel extends HTMLElement {
     this._timers = [];
     this._onClick = this._onClick.bind(this);
     this._onTouch = this._onTouch.bind(this);
+    this._onSlideStart = this._onSlideStart.bind(this);
+    this._onSlideMove = this._onSlideMove.bind(this);
+    this._onSlideEnd = this._onSlideEnd.bind(this);
+    this._hold = {};
     this._saver = false;
   }
 
@@ -409,6 +424,10 @@ class QuintecaPanel extends HTMLElement {
     }
     this.shadowRoot.addEventListener('click', this._onClick);
     this.shadowRoot.addEventListener('pointerdown', this._onTouch, true);
+    this.shadowRoot.addEventListener('pointerdown', this._onSlideStart);
+    this.shadowRoot.addEventListener('pointermove', this._onSlideMove);
+    this.shadowRoot.addEventListener('pointerup', this._onSlideEnd);
+    this.shadowRoot.addEventListener('pointercancel', this._onSlideEnd);
     this._lastTouch = Date.now();
     this._timers.push(setInterval(() => this._checkIdle(), 10000));
     this._timers.push(setInterval(() => this._tickClock(), 15000));
@@ -419,6 +438,10 @@ class QuintecaPanel extends HTMLElement {
   disconnectedCallback() {
     this.shadowRoot.removeEventListener('click', this._onClick);
     this.shadowRoot.removeEventListener('pointerdown', this._onTouch, true);
+    this.shadowRoot.removeEventListener('pointerdown', this._onSlideStart);
+    this.shadowRoot.removeEventListener('pointermove', this._onSlideMove);
+    this.shadowRoot.removeEventListener('pointerup', this._onSlideEnd);
+    this.shadowRoot.removeEventListener('pointercancel', this._onSlideEnd);
     this._timers.forEach((t) => clearInterval(t));
     this._timers = [];
   }
@@ -490,17 +513,25 @@ class QuintecaPanel extends HTMLElement {
   }
 
   /* ---------- derived values ---------- */
-  _lightOn(id) { const s = this._st(id); return !!s && s.state === 'on'; }
+  _lightOn(id) { const held = this._held(id); if (held != null) return held > 0; const s = this._st(id); return !!s && s.state === 'on'; }
   _dimmable(id) {
     const modes = this._attr(id, 'supported_color_modes');
     if (Array.isArray(modes)) return !(modes.length === 1 && modes[0] === 'onoff');
     return this._attr(id, 'brightness') != null;
   }
+  _held(id) {
+    const h = this._hold && this._hold[id];
+    return h && Date.now() < h.until ? h.pct : null;
+  }
   _brightPct(id) {
+    const held = this._held(id);
+    if (held != null) return held;
     const b = this._attr(id, 'brightness');
     return b == null ? (this._lightOn(id) ? 100 : 0) : Math.round(b / 2.55);
   }
   _coverPos(id) {
+    const held = this._held(id);
+    if (held != null) return held;
     const p = this._attr(id, 'current_position');
     if (typeof p === 'number') return p;
     const s = this._st(id);
@@ -924,10 +955,9 @@ class QuintecaPanel extends HTMLElement {
           return `<div class="light ${on ? 'lit' : ''}">
             <div class="row"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:600">${qiEsc(this._name(id))}</span><span class="muted" style="font-size:12px">${sub}</span></div>
               <button class="switch ${on ? 'on' : ''}" data-action="light" data-arg="${qiEsc(id)}" aria-label="Toggle ${qiEsc(this._name(id))}"><span></span></button></div>
-            ${dim ? `<div style="display:flex;align-items:center;gap:10px">
-              <button class="small-round" data-action="dim" data-arg="${qiEsc(id)}" data-step="-10" aria-label="Dim ${qiEsc(this._name(id))}">−</button>
-              <div class="bar"><div style="width:${on ? pct : 0}%;background:var(--warm)"></div></div>
-              <button class="small-round" data-action="dim" data-arg="${qiEsc(id)}" data-step="10" aria-label="Brighten ${qiEsc(this._name(id))}">+</button>
+            ${dim ? `<div class="slider light-slider ${on ? '' : 'off'}" data-slider="light" data-arg="${qiEsc(id)}" role="slider" aria-label="Brightness ${qiEsc(this._name(id))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${on ? pct : 0}">
+              <div class="fill" style="width:${on ? pct : 0}%"></div>
+              <div class="val">${qiIcon('bulb', 16)}<span data-val>${on ? pct + '%' : 'Off'}</span><small>slide to dim</small></div>
             </div>` : ''}
           </div>`;
         }).join('')}</div>` : ''}
@@ -937,10 +967,13 @@ class QuintecaPanel extends HTMLElement {
           const canSet = this._coverCanSet(id);
           return `<div class="shutter">
             <div class="shutter-name"><span style="font-size:15px;font-weight:600">${qiEsc(this._name(id))}</span><span class="muted" style="font-size:12px">${word}</span></div>
-            <div class="bar"><div style="width:${pos}%;background:#9CC7E8"></div></div>
+            ${canSet ? `<div class="slider cover-slider ${pos > 0 ? '' : 'off'}" data-slider="cover" data-arg="${qiEsc(id)}" role="slider" aria-label="Position ${qiEsc(this._name(id))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pos}">
+              <div class="fill" style="width:${pos}%"></div>
+              <div class="val">${qiIcon('shutter', 16)}<span data-val>${pos <= 0 ? 'Closed' : pos + '% open'}</span></div>
+            </div>` : `<div class="bar"><div style="width:${pos}%;background:#9CC7E8"></div></div>`}
             <div style="display:flex;gap:6px">
               <button class="btn" data-action="cover" data-arg="${qiEsc(id)}" data-pos="100">Open</button>
-              ${canSet ? `<button class="btn" data-action="cover" data-arg="${qiEsc(id)}" data-pos="50">Half</button>` : `<button class="btn" data-action="coverstop" data-arg="${qiEsc(id)}">Stop</button>`}
+              <button class="btn" data-action="coverstop" data-arg="${qiEsc(id)}">Stop</button>
               <button class="btn" data-action="cover" data-arg="${qiEsc(id)}" data-pos="0">Close</button>
             </div>
           </div>`;
@@ -952,6 +985,7 @@ class QuintecaPanel extends HTMLElement {
   /* ---------- render ---------- */
   _render() {
     if (!this.shadowRoot) return;
+    if (this._drag) { this._renderAfterDrag = true; return; }
     const accent = /^#[0-9a-fA-F]{3,8}$/.test(this.cfg.accent || '') ? this.cfg.accent : '#CDF07E';
     let view = '';
     if (!this._hass) {
@@ -1003,6 +1037,57 @@ class QuintecaPanel extends HTMLElement {
       this._saver = true;
       this._render();
     }
+  }
+
+  /* ---------- sliders (dimmers, shutter position) ---------- */
+  _slidePct(el, x) {
+    const r = el.getBoundingClientRect();
+    if (!r.width) return 0;
+    const p = Math.round(((x - r.left) / r.width) * 100);
+    return Math.max(0, Math.min(100, p));
+  }
+  _slideShow(el, pct) {
+    const kind = el.getAttribute('data-slider');
+    const fill = el.querySelector('.fill');
+    const val = el.querySelector('[data-val]');
+    if (fill) fill.style.width = pct + '%';
+    if (val) val.textContent = kind === 'cover' ? (pct <= 0 ? 'Closed' : pct + '% open') : (pct <= 0 ? 'Off' : pct + '%');
+    el.classList.toggle('off', pct <= 0);
+    el.setAttribute('aria-valuenow', String(pct));
+  }
+  _onSlideStart(ev) {
+    if (this._saver) return;
+    const el = ev.target.closest && ev.target.closest('[data-slider]');
+    if (!el) return;
+    ev.preventDefault();
+    if (el.setPointerCapture && ev.pointerId != null) { try { el.setPointerCapture(ev.pointerId); } catch (e) { /* ignore */ } }
+    this._drag = { el, id: el.getAttribute('data-arg'), kind: el.getAttribute('data-slider'), pct: this._slidePct(el, ev.clientX) };
+    el.classList.add('dragging');
+    this._slideShow(el, this._drag.pct);
+  }
+  _onSlideMove(ev) {
+    const d = this._drag;
+    if (!d) return;
+    d.pct = this._slidePct(d.el, ev.clientX);
+    this._slideShow(d.el, d.pct);
+  }
+  _onSlideEnd() {
+    const d = this._drag;
+    if (!d) return;
+    this._drag = null;
+    d.el.classList.remove('dragging');
+    // Snap the very ends so "off" and "full" are easy to hit with a finger.
+    let pct = d.pct <= 3 ? 0 : (d.pct >= 97 ? 100 : d.pct);
+    this._hold[d.id] = { pct, until: Date.now() + 4000 };
+    if (d.kind === 'cover') {
+      this._call('cover', 'set_cover_position', { entity_id: d.id, position: pct });
+    } else if (pct <= 0) {
+      this._call('light', 'turn_off', { entity_id: d.id });
+    } else {
+      this._call('light', 'turn_on', { entity_id: d.id, brightness_pct: pct });
+    }
+    this._renderAfterDrag = false;
+    this._render();
   }
 
   /* ---------- actions ---------- */
@@ -1073,6 +1158,7 @@ class QuintecaPanel extends HTMLElement {
         return;
       }
       case 'light':
+        delete this._hold[arg];
         this._call('light', 'toggle', { entity_id: arg });
         return;
       case 'dim':
@@ -1080,11 +1166,13 @@ class QuintecaPanel extends HTMLElement {
         return;
       case 'cover': {
         const pos = Number(el.getAttribute('data-pos'));
+        delete this._hold[arg];
         if (this._coverCanSet(arg)) this._call('cover', 'set_cover_position', { entity_id: arg, position: pos });
         else this._call('cover', pos > 0 ? 'open_cover' : 'close_cover', { entity_id: arg });
         return;
       }
       case 'coverstop':
+        delete this._hold[arg];
         this._call('cover', 'stop_cover', { entity_id: arg });
         return;
       case 'alloff': {

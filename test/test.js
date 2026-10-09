@@ -2,7 +2,7 @@ const { JSDOM } = require('jsdom');
 const fs = require('fs');
 const dom = new JSDOM('<!doctype html><html><head></head><body></body></html>', { runScripts: 'outside-only', pretendToBeVisual: true });
 const w = dom.window;
-w.eval(fs.readFileSync('/home/claude/quinteca-panel.js', 'utf8'));
+w.eval(fs.readFileSync(require('path').join(__dirname, '..', 'dist', 'quinteca-panel.js'), 'utf8'));
 
 const now = new Date().toISOString();
 const S = (state, attributes) => ({ state, attributes: attributes || {}, last_updated: now, last_changed: now });
@@ -42,6 +42,7 @@ el.panel = { config: {
 el.hass = hass;
 w.document.body.appendChild(el);
 
+const QI_STYLE_CHECK = () => /\.tile \{ container-type:inline-size/.test(el.shadowRoot.querySelector('style').textContent) && /cqi/.test(el.shadowRoot.querySelector('style').textContent);
 const flush = () => new Promise((r) => w.requestAnimationFrame(() => setTimeout(r, 5)));
 const html = () => el.shadowRoot.innerHTML;
 const click = (sel) => { const b = el.shadowRoot.querySelector(sel); if (!b) throw new Error('missing ' + sel); b.click(); };
@@ -77,10 +78,35 @@ const expect = (cond, msg) => { if (!cond) { throw new Error('FAIL: ' + msg); } 
 
   click('[data-action="nav"][data-arg="lights"]');
   expect(html().includes('Dimmer · 70%'), 'dimmer level');
+  expect(QI_STYLE_CHECK(), 'tile values size to the tile (Disarmed fits)');
   expect(html().includes('Not found'), 'missing light handled');
-  expect(html().includes('data-pos="50"') && html().includes('coverstop'), 'half vs stop by cover features');
-  click('[data-action="dim"][data-step="10"]');
-  expect(calls.pop()[2].brightness_step_pct === 10, 'brighten');
+  expect(!html().includes('data-pos="50"') && el.shadowRoot.querySelectorAll('[data-action="coverstop"]').length === 2, 'every shutter has Open / Stop / Close');
+  expect(el.shadowRoot.querySelectorAll('[data-slider="light"]').length === 1, 'dimmer gets a slider, switch does not');
+  expect(el.shadowRoot.querySelectorAll('[data-slider="cover"]').length === 1, 'only positionable shutter gets a slider');
+  // drag the dimmer slider to ~40%
+  const sl = el.shadowRoot.querySelector('[data-slider="light"]');
+  sl.getBoundingClientRect = () => ({ left: 100, width: 200, top: 0, height: 52 });
+  const pe = (type, x) => { const e = new w.Event(type, { bubbles: true, composed: true }); e.clientX = x; e.pointerId = 1; return e; };
+  sl.dispatchEvent(pe('pointerdown', 150));
+  el._render();
+  expect(el.shadowRoot.querySelector('[data-slider="light"]') === sl, 'no redraw while dragging');
+  sl.dispatchEvent(pe('pointermove', 180));
+  expect(sl.querySelector('[data-val]').textContent === '40%', 'slider shows live value');
+  sl.dispatchEvent(pe('pointerup', 180));
+  let last = calls.pop();
+  expect(last[1] === 'turn_on' && last[2].brightness_pct === 40, 'slider sets brightness 40%');
+  expect(html().includes('Dimmer · 40%'), 'held value shown until HA catches up');
+  const sl2 = el.shadowRoot.querySelector('[data-slider="light"]');
+  sl2.getBoundingClientRect = () => ({ left: 100, width: 200, top: 0, height: 52 });
+  sl2.dispatchEvent(pe('pointerdown', 101)); sl2.dispatchEvent(pe('pointerup', 101));
+  expect(calls.pop()[1] === 'turn_off', 'slide to the left edge turns off');
+  const cs = el.shadowRoot.querySelector('[data-slider="cover"]');
+  cs.getBoundingClientRect = () => ({ left: 0, width: 100, top: 0, height: 52 });
+  cs.dispatchEvent(pe('pointerdown', 25)); cs.dispatchEvent(pe('pointerup', 25));
+  last = calls.pop();
+  expect(last[1] === 'set_cover_position' && last[2].position === 25, 'shutter slider sets position');
+  el._hold = {};
+  el._render();
   click('[data-action="cover"][data-arg="cover.terrace"][data-pos="100"]');
   expect(calls.pop()[1] === 'open_cover', 'cover without position opens');
   click('[data-action="roomtoggle"]');
