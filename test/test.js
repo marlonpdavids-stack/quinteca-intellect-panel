@@ -56,6 +56,9 @@ const expect = (cond, msg) => { if (!cond) { throw new Error('FAIL: ' + msg); } 
   expect(el.shadowRoot.querySelector('.scene.on').textContent === 'Evening', 'latest scene highlighted');
   click('[data-action="access"][data-arg="gate"]');
   expect(JSON.stringify(calls.pop()) === JSON.stringify(['lock', 'unlock', { entity_id: 'lock.main_gate' }]), 'gate unlocks');
+  await flush();
+  expect(el.shadowRoot.querySelector('.toast') && el.shadowRoot.querySelector('.toast').textContent.includes('unlocking'), 'gate shows a confirmation toast');
+  expect(!el._ac, 'no chime unless securityChime is on');
   click('[data-action="vol"][data-arg="5"]');
   expect(calls.pop()[2].volume_level === 0.43, 'volume up');
   click('[data-action="scene"][data-arg="0"]');
@@ -66,6 +69,9 @@ const expect = (cond, msg) => { if (!cond) { throw new Error('FAIL: ' + msg); } 
   expect(html().includes('camera_proxy_stream/camera.main_gate?token=abc'), 'live stream url');
   click('[data-action="alarm"][data-arg="away"]');
   expect(calls.pop()[1] === 'alarm_arm_away', 'arm away');
+  await flush();
+  expect(el.shadowRoot.querySelector('.toast.warn') && html().includes('Arming alarm'), 'arming shows a confirmation toast');
+  el._toast = null;
   click('[data-action="seccam"][data-arg="2"]');
   expect(html().includes('Camera offline'), 'offline camera handled');
 
@@ -79,6 +85,7 @@ const expect = (cond, msg) => { if (!cond) { throw new Error('FAIL: ' + msg); } 
   click('[data-action="nav"][data-arg="lights"]');
   expect(html().includes('Dimmer · 70%'), 'dimmer level');
   expect(QI_STYLE_CHECK(), 'tile values size to the tile (Disarmed fits)');
+  expect(/button:active:not\(:disabled\)/.test(el.shadowRoot.querySelector('style').textContent), 'buttons have a press state');
   expect(html().includes('Not found'), 'missing light handled');
   expect(!html().includes('data-pos="50"') && el.shadowRoot.querySelectorAll('[data-action="coverstop"]').length === 2, 'every shutter has Open / Stop / Close');
   expect(el.shadowRoot.querySelectorAll('[data-slider="light"]').length === 1, 'dimmer gets a slider, switch does not');

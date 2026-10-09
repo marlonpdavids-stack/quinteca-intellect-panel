@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7 (9 Oct 2026)
+- Every button presses in slightly when touched, so taps feel answered (respects reduced-motion).
+- Gate, front door and alarm actions show a short confirmation toast ("Main gate unlocking", "Arming alarm · Away").
+- Optional `securityChime: true` plays a soft two-note chime on those security actions only. Off by default; normal taps stay silent.
+
 ## 1.6 (9 Oct 2026)
 - Dimmers get a full-width drag slider (tap or slide; slide to the left edge to turn off) in place of the − / + buttons.
 - Shutters always show Open / Stop / Close; shutters that report position also get a drag slider.

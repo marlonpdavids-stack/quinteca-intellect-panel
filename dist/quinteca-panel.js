@@ -1,6 +1,6 @@
 /*
  * Quinteca Intellect - Home Assistant custom panel
- * Version 1.6 (October 2026)
+ * Version 1.7 (October 2026)
  *
  * Install: copy this file to /config/www/quinteca/quinteca-panel.js and add the
  * panel_custom block from INSTALL.md to configuration.yaml. All client-specific
@@ -20,6 +20,7 @@ const QUINTECA_DEFAULTS = {
   gateName: 'Main gate',
   frontDoorName: 'Front door',
   hideSidebar: false,
+  securityChime: false,
   sun: 'sun.sun',
   screensaverMinutes: 3,
   screensaverTouchOnly: true,
@@ -158,7 +159,15 @@ const QI_WORDMARK = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1252.8
 const QI_STYLE = `
 :host { display:block; height:100%; }
 * { box-sizing:border-box; }
-button { font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+button { font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform 0.12s ease, filter 0.12s ease, background-color 0.25s ease; }
+button:active:not(:disabled) { transform:scale(0.96); filter:brightness(1.18); }
+.slider:active { filter:brightness(1.08); }
+@media (prefers-reduced-motion: reduce) { button { transition:none; } button:active:not(:disabled) { transform:none; } }
+.toast { position:fixed; left:50%; top:24px; transform:translateX(-50%); z-index:50; display:flex; align-items:center; gap:10px; padding:12px 20px 12px 14px; border-radius:22px; background:#12331F; border:1px solid rgba(205,240,126,0.35); color:var(--text); font-size:15px; font-weight:600; box-shadow:0 10px 30px rgba(0,0,0,0.35); animation:qi-toast 2.4s ease forwards; pointer-events:none; }
+.toast .tick { width:28px; height:28px; border-radius:50%; background:var(--accent); color:var(--ink); display:flex; align-items:center; justify-content:center; flex:none; }
+.toast.warn { border-color:rgba(255,138,101,0.45); }
+.toast.warn .tick { background:var(--armed); }
+@keyframes qi-toast { 0% { opacity:0; transform:translate(-50%, -12px); } 12% { opacity:1; transform:translate(-50%, 0); } 80% { opacity:1; } 100% { opacity:0; } }
 .app { --bg:#08190F; --card:#0F2B1F; --card2:#0C2418; --raised:#12331F; --line:rgba(247,244,237,0.07);
   --text:#F7F4ED; --muted:#A9BFB1; --warm:#F4D27A; --armed:#F2A27A; --armed-ink:#3A1405; --ink:#0F2B1F;
   height:100vh; height:100dvh; background:var(--bg); color:var(--text);
@@ -559,11 +568,51 @@ class QuintecaPanel extends HTMLElement {
     return { word: open ? 'open' : 'closed', open, action: open ? 'Close' : 'Open', ok: true };
   }
 
-  _accessToggle(id) {
+  /* ---------- confirmation feedback ---------- */
+  _confirm(text, warn) {
+    this._toast = { text, warn: !!warn, until: Date.now() + 2400 };
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => { this._toast = null; this._schedule(); }, 2450);
+    if (this.cfg.securityChime === true) this._chime(warn ? 'down' : 'up');
+    this._schedule();
+  }
+  _toastHtml() {
+    const t = this._toast;
+    if (!t || Date.now() > t.until) return '';
+    return `<div class="toast ${t.warn ? 'warn' : ''}" role="status"><span class="tick"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>${qiEsc(t.text)}</div>`;
+  }
+  // Soft two-note chime (Web Audio, no files). Only plays when securityChime: true.
+  _chime(dir) {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      this._ac = this._ac || new AC();
+      const ac = this._ac;
+      if (ac.state === 'suspended') ac.resume();
+      const notes = dir === 'down' ? [880, 659.25] : [659.25, 880];
+      notes.forEach((f, i) => {
+        const t0 = ac.currentTime + i * 0.14;
+        const o = ac.createOscillator();
+        const g = ac.createGain();
+        o.type = 'sine';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.12, t0 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.45);
+        o.connect(g); g.connect(ac.destination);
+        o.start(t0); o.stop(t0 + 0.5);
+      });
+    } catch (e) { /* audio is optional */ }
+  }
+
+  _accessToggle(id, label) {
     const s = this._st(id);
     if (!s) return;
     const d = this._domain(id);
     const info = this._accessInfo(id);
+    const name = label || this._name(id);
+    const verb = d === 'lock' ? (info.open ? 'locking' : 'unlocking') : (d === 'cover' ? (info.open ? 'closing' : 'opening') : 'opening');
+    this._confirm(`${name} ${verb}`, false);
     if (d === 'lock') this._call('lock', info.open ? 'lock' : 'unlock', { entity_id: id });
     else if (d === 'cover') this._call('cover', info.open ? 'close_cover' : 'open_cover', { entity_id: id });
     else if (d === 'button') this._call('button', 'press', { entity_id: id });
@@ -997,7 +1046,7 @@ class QuintecaPanel extends HTMLElement {
     else if (this._view === 'cameras') view = this._viewCameras();
     else if (this._view === 'lights') view = this._viewLights();
     else view = this._viewHome();
-    this.shadowRoot.innerHTML = `<style>${QI_STYLE}</style><div class="app" style="--accent:${accent}">${view}${this._hass ? this._dock() : ''}</div>`;
+    this.shadowRoot.innerHTML = `<style>${QI_STYLE}</style><div class="app" style="--accent:${accent}">${view}${this._hass ? this._dock() : ''}${this._toastHtml()}</div>`;
   }
 
   _tickClock() {
@@ -1107,7 +1156,7 @@ class QuintecaPanel extends HTMLElement {
         if (arg === 'cameras') this._camFocus = -1;
         break;
       case 'access':
-        this._accessToggle(c[arg]);
+        this._accessToggle(c[arg], c[arg + 'Name']);
         return;
       case 'ring': {
         const cams = this._camList();
@@ -1136,6 +1185,7 @@ class QuintecaPanel extends HTMLElement {
         const data = { entity_id: c.alarm };
         if (c.alarmCode) data.code = String(c.alarmCode);
         this._call('alarm_control_panel', svc, data);
+        this._confirm({ disarm: 'Disarming alarm', night: 'Arming night mode', away: 'Arming alarm · Away' }[arg], arg !== 'disarm');
         return;
       }
       case 'seccam':

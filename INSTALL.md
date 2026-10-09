@@ -24,6 +24,7 @@ panel_custom:
       location: Cascais
       greetingName: Ian
       accent: "#CDF07E"
+      securityChime: false        # true = soft chime when the gate/door opens or the alarm arms/disarms from the panel
 
       weather: weather.forecast_home
       alarm: alarm_control_panel.alarm
