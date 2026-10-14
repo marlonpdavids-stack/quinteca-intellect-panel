@@ -132,6 +132,65 @@ const expect = (cond, msg) => { if (!cond) { throw new Error('FAIL: ' + msg); } 
   expect(html().includes('Armed · Away'), 're-renders on state change');
 
 
+
+  // ---------- doors, doorbell card, ring ----------
+  const dcalls = [];
+  const dstates = Object.assign({}, states, {
+    'button.side_door_unlock': S('unknown', { friendly_name: 'Unlock' }),
+    'button.gate_unlock': S('unknown', { friendly_name: 'Unlock' }),
+    'binary_sensor.side_door': S('off', { device_class: 'door' }),
+    'event.side_door_doorbell': S(new Date(Date.now() - 3600000).toISOString(), {}),
+  });
+  dstates['button.side_door_unlock'].state = '2026-10-14T20:00:00Z';
+  dstates['button.gate_unlock'].state = '2026-10-14T20:00:00Z';
+  const dh = { states: dstates, callService: (d, s, data) => { dcalls.push([d, s, data]); return Promise.resolve(); } };
+  const d1 = w.document.createElement('quinteca-panel');
+  d1.panel = { config: { healthReport: false, gate: 'button.side_door_unlock', gateName: 'Side door', gateSensor: 'binary_sensor.side_door',
+    frontDoor: 'button.gate_unlock', frontDoorName: 'Car gate', doorbell: 'event.side_door_doorbell',
+    cameras: [{ entity: 'camera.main_gate', name: 'Side door', gate: true }, 'camera.driveway'] } };
+  d1.hass = dh;
+  w.document.body.appendChild(d1);
+  await flush();
+  const access = () => d1.shadowRoot.querySelector('.access');
+  expect(access().querySelectorAll('.access-item').length === 2, 'both configured doors shown');
+  expect(!access().querySelector('.btn.primary'), 'door buttons are calm outlines, not lime');
+  expect(!access().textContent.includes('ready'), 'button doors no longer say "ready"');
+  expect(access().textContent.includes('closed'), 'door sensor shows the real state (closed)');
+  dh.states = Object.assign({}, dstates, { 'binary_sensor.side_door': Object.assign(S('on', { device_class: 'door' }), { last_updated: 'y' }) });
+  d1.hass = Object.assign({}, dh);
+  await flush();
+  expect(access().querySelector('.btn.outline.warm') && access().querySelector('.door-word.open'), 'open door turns warm');
+  const bellCard = access().querySelector('.bell');
+  expect(bellCard && bellCard.querySelector('img[data-snap="camera.main_gate"]'), 'doorbell card shows the doorbell camera snapshot');
+  expect(bellCard.textContent.includes('Rang') && bellCard.textContent.includes('Side door'), 'doorbell card shows camera name and last ring');
+  access().querySelector('[data-action="access"][data-arg="gate"]').click();
+  expect(JSON.stringify(dcalls.pop()) === JSON.stringify(['button', 'press', { entity_id: 'button.side_door_unlock' }]), 'Side door Open presses the side door unlock');
+
+  // a fresh ring wakes the panel and opens the doorbell camera
+  d1._saver = true; d1._view = 'home';
+  d1.hass = Object.assign({}, dh, { states: Object.assign({}, dh.states, { 'event.side_door_doorbell': S(new Date().toISOString(), {}) }) });
+  await flush();
+  expect(!d1._saver && d1._view === 'cameras' && d1._camFocus === 0, 'ring wakes the panel and opens the doorbell camera');
+  expect(d1.shadowRoot.innerHTML.includes('Open side door'), 'camera view offers Open side door');
+  // an old ring replayed (e.g. after a restart) does not jump
+  d1._view = 'home';
+  d1.hass = Object.assign({}, dh, { states: Object.assign({}, dh.states, { 'event.side_door_doorbell': S(new Date(Date.now() - 600000).toISOString(), {}) }) });
+  await flush();
+  expect(d1._view === 'home', 'old ring does not jump');
+
+  // unused door slot is hidden; configured-but-missing shows Unavailable
+  const d2 = w.document.createElement('quinteca-panel');
+  d2.panel = { config: { healthReport: false, gate: 'button.side_door_unlock', gateName: 'Side door' } };
+  d2.hass = { states: { 'button.side_door_unlock': S('unknown') }, callService: () => Promise.resolve() };
+  w.document.body.appendChild(d2);
+  await flush();
+  expect(d2.shadowRoot.querySelectorAll('.access-item').length === 1 && !d2.shadowRoot.querySelector('.access').textContent.includes('Not set up'), 'unused door slot hidden');
+  expect(!d2._watched().includes('lock.front_door'), 'unused door not counted as unavailable');
+  d2.panel = { config: { healthReport: false, gate: 'button.gone', gateName: 'Side door' } };
+  d2._render();
+  expect(d2.shadowRoot.querySelector('.access').textContent.includes('Unavailable'), 'configured but missing door says Unavailable');
+  d1.remove(); d2.remove();
+
   // ---------- health reporting and self-heal ----------
   const hcalls = [];
   const hh = { states, user: { name: 'Wall panel', is_admin: false }, connected: true,
@@ -144,7 +203,7 @@ const expect = (cond, msg) => { if (!cond) { throw new Error('FAIL: ' + msg); } 
   e3._healthReport(true);
   let rep = hcalls.pop();
   expect(rep && rep[0] === 'script' && rep[1] === 'quinteca_panel_report', 'reports to the watchdog script');
-  expect(rep[2].panel === '340jord-panel1' && rep[2].version === '1.8', 'report carries panel id and version');
+  expect(rep[2].panel === '340jord-panel1' && rep[2].version === '1.9', 'report carries panel id and version');
   expect(rep[2].status === 'degraded' && rep[2].unavailable.includes('light.missing'), 'missing entity reported as degraded');
   e3._healthReport(false);
   expect(hcalls.length === 0, 'no duplicate report inside the minute');

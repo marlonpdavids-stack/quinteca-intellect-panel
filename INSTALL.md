@@ -30,7 +30,10 @@ panel_custom:
       alarm: alarm_control_panel.alarm
       gate: lock.main_gate            # lock, cover, button or switch all work
       frontDoor: lock.front_door
-      doorbell: event.main_gate_doorbell   # optional, shows "Doorbell 18:42"
+      gateSensor: binary_sensor.main_gate        # optional: real Open / Closed on the tile
+      frontDoorSensor: binary_sensor.front_door  # optional
+      doorbell: event.main_gate_doorbell   # optional: doorbell card with camera snapshot and last ring
+      doorbellJump: true                   # a ring wakes the panel and opens the doorbell camera
       climate: climate.living_room
       mediaPlayer: media_player.living_room
       wifiClients: sensor.udm_clients      # optional
@@ -76,7 +79,9 @@ panel_custom:
 
 Then **Developer tools › YAML › Check configuration**, and restart Home Assistant. "Quinteca" appears in the sidebar and opens at `http://<ha-address>:8123/quinteca`.
 
-Anything left out simply shows "Not set up" instead of breaking the screen, so you can start with a few entities and fill in the rest.
+Anything left out simply shows "Not set up" instead of breaking the screen, so you can start with a few entities and fill in the rest. Door and gate tiles you don't configure are hidden.
+
+**Doors and gates:** the camera marked `gate: true` is the doorbell camera, and its Open button always works the `gate:` entry, so put the door the doorbell belongs to in `gate:` (even if it's a door, not a gate). A button entity (UniFi Access unlock) shows Open with no state; add `gateSensor:` with the door position sensor to show Open / Closed.
 
 ## 3. Updating the file later
 

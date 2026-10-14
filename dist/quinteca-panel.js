@@ -1,13 +1,13 @@
 /*
  * Quinteca Intellect - Home Assistant custom panel
- * Version 1.8 (October 2026)
+ * Version 1.9 (October 2026)
  *
  * Install: copy this file to /config/www/quinteca/quinteca-panel.js and add the
  * panel_custom block from INSTALL.md to configuration.yaml. All client-specific
  * entity IDs live in that YAML block, so this file is the same on every job.
  */
 
-const QI_VERSION = '1.8';
+const QI_VERSION = '1.9';
 
 // Health reporting: how long an error keeps the panel in "error", how often it
 // reports in, and how often it may reload itself to recover.
@@ -31,6 +31,9 @@ const QUINTECA_DEFAULTS = {
   frontDoor: 'lock.front_door',
   gateName: 'Main gate',
   frontDoorName: 'Front door',
+  gateSensor: null,                            // optional door/gate position sensor: shows real Open / Closed
+  frontDoorSensor: null,
+  doorbellJump: true,                          // a ring wakes the panel and opens the doorbell camera
   hideSidebar: false,
   securityChime: false,
   sun: 'sun.sun',
@@ -218,6 +221,12 @@ button:active:not(:disabled) { transform:scale(0.96); filter:brightness(1.18); }
 .btn.primary { background:var(--accent); color:var(--ink); }
 .btn.outline { background:transparent; border:1px solid rgba(247,244,237,0.18); }
 .btn[disabled] { opacity:0.4; cursor:default; }
+.btn.outline.warm { border-color:var(--warm); color:var(--warm); }
+.door-word.open { color:var(--warm); font-weight:600; }
+.bell { position:relative; flex:1 1 auto; min-height:64px; border-radius:18px; overflow:hidden; background:#0B1F15; }
+.bell-shot { position:absolute; inset:0; display:block; width:100%; height:100%; padding:0; border:none; background:transparent; color:var(--text); }
+.bell-shot img { width:100%; height:100%; object-fit:cover; display:block; }
+.bell-cap { position:absolute; left:8px; bottom:8px; right:8px; display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:12px; background:rgba(8,25,15,0.88); text-align:left; }
 .dot { width:7px; height:7px; border-radius:50%; display:inline-block; flex:none; }
 .bar { flex:1; height:10px; border-radius:5px; background:rgba(247,244,237,0.12); overflow:hidden; }
 .bar > div { height:100%; border-radius:5px; }
@@ -304,7 +313,7 @@ button:active:not(:disabled) { transform:scale(0.96); filter:brightness(1.18); }
 .hero-greet { position:absolute; left:20px; top:18px; display:flex; flex-direction:column; gap:4px; }
 .chips { position:absolute; left:20px; bottom:18px; right:20px; display:flex; gap:8px; flex-wrap:wrap; }
 .chip { height:32px; padding:0 12px; border-radius:16px; background:rgba(8,25,15,0.85); border:1px solid rgba(247,244,237,0.1); display:flex; align-items:center; gap:6px; font-size:13px; font-weight:500; }
-.access { width:248px; flex:none; padding:18px; border-left:1px solid var(--line); display:flex; flex-direction:column; gap:12px; }
+.access { width:248px; flex:none; min-height:0; padding:18px; border-left:1px solid var(--line); display:flex; flex-direction:column; gap:12px; }
 .access-item { padding:14px; border-radius:18px; background:var(--card); display:flex; flex-direction:column; gap:10px; }
 .row { display:flex; justify-content:space-between; align-items:center; gap:10px; }
 .ring { text-align:left; padding:12px 14px; border-radius:18px; background:transparent; border:1px dashed rgba(247,244,237,0.16); color:var(--text); display:flex; align-items:center; gap:10px; }
@@ -422,6 +431,7 @@ class QuintecaPanel extends HTMLElement {
   /* ---------- Home Assistant hooks ---------- */
   set hass(hass) {
     this._hass = hass;
+    this._checkBell();
     const sig = this._signature();
     if (sig !== this._sig) {
       this._sig = sig;
@@ -429,6 +439,31 @@ class QuintecaPanel extends HTMLElement {
     }
   }
   get hass() { return this._hass; }
+
+  // Someone rang: wake from the screensaver and open the doorbell camera with its Open button.
+  // Only a fresh ring counts (not the last ring replayed after a Home Assistant restart).
+  _checkBell() {
+    const c = this.cfg;
+    const s = this._st(c.doorbell);
+    if (!s || s.state === 'unavailable' || s.state === 'unknown') return;
+    let key = null;
+    let at = 0;
+    if (this._domain(c.doorbell) === 'event') { key = s.state; at = Date.parse(s.state); }
+    else if (s.state === 'on') { key = s.last_changed; at = Date.parse(s.last_changed); }
+    if (!key) return;
+    if (this._bellKey === undefined) { this._bellKey = key; return; }
+    if (key === this._bellKey) return;
+    this._bellKey = key;
+    if (!(Date.now() - at < 60000)) return;
+    if (c.doorbellJump === false || this._drag) return;
+    const bc = this._bellCam();
+    if (!bc) return;
+    this._saver = false;
+    this._lastTouch = Date.now();
+    this._view = 'cameras';
+    this._camFocus = bc.index;
+    this._schedule();
+  }
   set panel(panel) { this._panel = panel; this._cfg = null; this._applySidebar(); this._schedule(); }
 
   // Wall panels: hide Home Assistant's sidebar on this device (same as the profile's
@@ -632,7 +667,8 @@ class QuintecaPanel extends HTMLElement {
 
   _watched() {
     const c = this.cfg;
-    const ids = [c.sun, c.weather, c.alarm, c.gate, c.frontDoor, c.doorbell, c.climate, c.mediaPlayer, c.wifiClients, c.internet];
+    const ids = [c.sun, c.weather, c.alarm, c.doorbell, c.climate, c.mediaPlayer, c.wifiClients, c.internet];
+    ['gate', 'frontDoor'].forEach((k) => { if (this._accessSet(k)) ids.push(c[k], c[k + 'Sensor']); });
     this._zoneList().forEach((z) => ids.push(z.entity));
     this._sceneList().forEach((s) => ids.push(s.entity));
     this._camList().forEach((cam) => ids.push(cam.entity));
@@ -701,6 +737,38 @@ class QuintecaPanel extends HTMLElement {
     }
     const open = st === 'on' || st === 'open';
     return { word: open ? 'open' : 'closed', open, action: open ? 'Close' : 'Open', ok: true };
+  }
+
+  // A door slot shows on the panel only if it was put in the panel config, or the
+  // default entity really exists. Unused slots are hidden instead of "Not set up".
+  _accessSet(key) {
+    const user = (this._panel && this._panel.config) || {};
+    if (Object.prototype.hasOwnProperty.call(user, key)) return !!user[key];
+    return !!this._st(this.cfg[key]);
+  }
+  // Door/gate tile info. A position sensor (gateSensor / frontDoorSensor) gives the
+  // real Open / Closed; a plain button (e.g. UniFi Access unlock) shows no state at all.
+  _door(key) {
+    const c = this.cfg;
+    const id = c[key];
+    const info = Object.assign({ key, set: this._accessSet(key), name: c[key + 'Name'] }, this._accessInfo(id));
+    const sensor = this._st(c[key + 'Sensor']);
+    const d = this._domain(id);
+    if (sensor && sensor.state !== 'unavailable' && sensor.state !== 'unknown') {
+      info.open = sensor.state === 'on' || sensor.state === 'open';
+      info.word = info.open ? 'open' : 'closed';
+    } else if (!info.ok) {
+      info.word = 'unavailable';
+    } else if (d === 'button' || d === 'script' || d === 'scene') {
+      info.word = '';
+    }
+    return info;
+  }
+  _doors() { return ['gate', 'frontDoor'].map((k) => this._door(k)).filter((x) => x.set); }
+  _bellCam() {
+    const cams = this._camList();
+    const i = cams.findIndex((x) => x.gate);
+    return cams.length ? { cam: cams[i >= 0 ? i : 0], index: i >= 0 ? i : 0, gate: i >= 0 } : null;
   }
 
   /* ---------- confirmation feedback ---------- */
@@ -852,8 +920,7 @@ class QuintecaPanel extends HTMLElement {
     const wifi = this._st(c.wifiClients);
     const armed = this._alarmArmed();
 
-    const gate = this._accessInfo(c.gate);
-    const door = this._accessInfo(c.frontDoor);
+    const doors = this._doors();
     const internet = this._st(c.internet);
     const internetChip = internet
       ? `<div class="chip"><span class="dot" style="background:var(--accent)"></span>Internet ${qiEsc(Math.round(Number(internet.state)) || internet.state)} ${qiEsc(internet.attributes.unit_of_measurement || '')}</div>`
@@ -909,23 +976,18 @@ class QuintecaPanel extends HTMLElement {
             ${villa}
             <div class="hero-greet"><div class="display" style="font-size:20px;font-weight:600">${greet}</div><div class="muted" style="font-size:13px">${armed ? 'The alarm is armed' : 'Everything is running normally'}</div></div>
             <div class="chips">
-              <div class="chip"><span class="dot" style="background:${gate.open ? 'var(--warm)' : 'var(--accent)'}"></span>${qiEsc(c.gateName)} ${qiEsc(gate.word)}</div>
-              <div class="chip"><span class="dot" style="background:${door.open ? 'var(--warm)' : 'var(--accent)'}"></span>${qiEsc(c.frontDoorName)} ${qiEsc(door.word)}</div>
+              ${doors.filter((x) => x.word).map((x) => `<div class="chip"><span class="dot" style="background:${x.open ? 'var(--warm)' : 'var(--accent)'}"></span>${qiEsc(x.name)} ${qiEsc(x.word)}</div>`).join('')}
               ${internetChip}
             </div>
           </div>
-          <div class="access">
+          ${doors.length || bell ? `<div class="access">
             <div class="label">ACCESS</div>
-            <div class="access-item">
-              <div class="row"><span style="font-size:15px;font-weight:600">${qiEsc(c.gateName)}</span><span class="muted" style="font-size:13px">${qiEsc(gate.word)}</span></div>
-              <button class="btn primary" data-action="access" data-arg="gate" ${gate.ok ? '' : 'disabled'}>${qiEsc(gate.action || 'Not set up')}</button>
-            </div>
-            <div class="access-item">
-              <div class="row"><span style="font-size:15px;font-weight:600">${qiEsc(c.frontDoorName)}</span><span class="muted" style="font-size:13px">${qiEsc(door.word)}</span></div>
-              <button class="btn outline" data-action="access" data-arg="frontDoor" ${door.ok ? '' : 'disabled'}>${qiEsc(door.action || 'Not set up')}</button>
-            </div>
-            ${bell ? `<button class="ring" data-action="ring">${qiIcon('bell')}<span style="display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">Doorbell ${qiEsc(bellTime)}</span><span class="muted" style="font-size:12px">View gate camera</span></span></button>` : ''}
-          </div>
+            ${doors.map((x) => `<div class="access-item">
+              <div class="row"><span style="font-size:15px;font-weight:600">${qiEsc(x.name)}</span><span class="door-word muted ${x.open ? 'open' : ''}" style="font-size:13px">${qiEsc(x.word)}</span></div>
+              <button class="btn outline ${x.open ? 'warm' : ''}" data-action="access" data-arg="${x.key}" ${x.ok ? '' : 'disabled'}>${qiEsc(x.ok ? x.action : 'Unavailable')}</button>
+            </div>`).join('')}
+            ${bell ? this._bellCard(bellTime) : ''}
+          </div>` : ''}
         </div>
         <div class="bottom">
           <div class="card scenes">
@@ -962,7 +1024,7 @@ class QuintecaPanel extends HTMLElement {
     const night = sunSt ? sunSt.state === 'below_horizon' : (hr < 7 || hr >= 20);
     const nWin = 5;
     const litWindows = lights.length ? Math.ceil((lightsOn / lights.length) * nWin) : (night ? nWin : 0);
-    const door = this._accessInfo(c.frontDoor);
+    const door = this._door('frontDoor');
     const armed = this._alarmArmed();
     const alarmSt = this._alarmState();
     const camsLive = this._camList().filter((x) => this._ok(x.entity)).length;
@@ -973,11 +1035,28 @@ class QuintecaPanel extends HTMLElement {
     });
   }
 
+  // Doorbell card: live snapshot of the doorbell camera and the last ring. It fills the
+  // space left in the access column; tapping it opens the camera with its Open button.
+  _bellCard(bellTime) {
+    const bc = this._bellCam();
+    const when = bellTime ? 'Rang ' + bellTime : 'No rings yet';
+    if (!bc) {
+      return `<button class="ring" data-action="ring">${qiIcon('bell')}<span style="display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">Doorbell</span><span class="muted" style="font-size:12px">${qiEsc(when)}</span></span></button>`;
+    }
+    const camName = this._name(bc.cam.entity, bc.cam.name);
+    const live = this._ok(bc.cam.entity);
+    return `<div class="bell">
+      <button class="bell-shot" data-action="ring" aria-label="View ${qiEsc(camName)} camera">
+        ${live ? `<img data-snap="${qiEsc(bc.cam.entity)}" src="${qiEsc(this._snapUrl(bc.cam.entity))}" alt="">` : `<span class="live-ph" style="height:100%;justify-content:center">${qiIcon('camera', 32)}<span>Camera offline</span></span>`}
+        <span class="bell-cap">${qiIcon('bell', 16)}<span style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600">${qiEsc(camName)}</span><span class="muted" style="font-size:11px">${qiEsc(when)}</span></span></span>
+      </button>
+    </div>`;
+  }
+
   _viewSaver() {
     const c = this.cfg;
     const w = this._st(c.weather);
     const temp = w && w.attributes.temperature != null ? Math.round(w.attributes.temperature) + '°' : '';
-    const door = this._accessInfo(c.frontDoor);
     const camsLive = this._camList().filter((x) => this._ok(x.entity)).length;
     const armed = this._alarmArmed();
     const chip = (dot, text) => `<div class="chip"><span class="dot" style="background:${dot}"></span>${qiEsc(text)}</div>`;
@@ -990,7 +1069,7 @@ class QuintecaPanel extends HTMLElement {
         <div class="saver-art">${this._villa()}</div>
         <div class="saver-status">
           ${this._alarmState() ? chip(armed ? 'var(--armed)' : 'var(--accent)', this._alarmLabel()) : ''}
-          ${door.ok ? chip(door.open ? 'var(--warm)' : 'var(--accent)', c.frontDoorName + ' ' + door.word) : ''}
+          ${this._doors().filter((x) => x.ok && x.word).map((x) => chip(x.open ? 'var(--warm)' : 'var(--accent)', x.name + ' ' + x.word)).join('')}
           ${camsLive ? chip('#FF6B5A', camsLive + (camsLive === 1 ? ' camera live' : ' cameras live')) : ''}
         </div>
         <div class="saver-hint">Tap anywhere to wake</div>
@@ -1030,7 +1109,7 @@ class QuintecaPanel extends HTMLElement {
           ${sel ? `<div class="live-top"><span class="badge"><span class="dot" style="background:#FF6B5A"></span>LIVE</span><span class="live-name">${qiEsc(this._name(sel.entity, sel.name))}</span></div>` : ''}
           ${sel ? `<div class="live-bottom"><span></span><div style="display:flex;gap:8px">
             <button class="btn" style="background:rgba(8,25,15,0.85)" data-action="nav" data-arg="cameras">All cameras</button>
-            ${gateCam ? `<button class="btn primary" data-action="access" data-arg="gate">${qiEsc((this._accessInfo(c.gate).action || 'Open') + ' ' + String(c.gateName).toLowerCase())}</button>` : ''}
+            ${gateCam && this._accessSet('gate') && this._door('gate').ok ? `<button class="btn primary" data-action="access" data-arg="gate">${qiEsc(this._door('gate').action + ' ' + String(c.gateName).toLowerCase())}</button>` : ''}
           </div></div>` : ''}
         </div>
         ${cams.length ? `<div class="thumbs">${cams.map((cam, i) => `
@@ -1078,7 +1157,7 @@ class QuintecaPanel extends HTMLElement {
           ${this._ok(cam.entity) ? `<img src="${qiEsc(this._liveUrl(cam.entity))}" alt="${qiEsc(this._name(cam.entity, cam.name))} live view">` : `<div class="live-ph">${qiIcon('camera', 56)}<span>Camera offline</span></div>`}
           <div class="live-top"><span class="badge"><span class="dot" style="background:#FF6B5A"></span>LIVE</span><span class="live-name">${qiEsc(this._name(cam.entity, cam.name))}</span></div>
           <div class="live-bottom"><span></span><div style="display:flex;gap:8px">
-            ${cam.gate ? `<button class="btn primary" data-action="access" data-arg="gate">${qiEsc((this._accessInfo(c.gate).action || 'Open') + ' ' + String(c.gateName).toLowerCase())}</button>` : ''}
+            ${cam.gate && this._accessSet('gate') && this._door('gate').ok ? `<button class="btn primary" data-action="access" data-arg="gate">${qiEsc(this._door('gate').action + ' ' + String(c.gateName).toLowerCase())}</button>` : ''}
           </div></div>
         </div>
         <div class="strip">${cams.map((x, i) => `<button class="${i === this._camFocus ? 'on' : ''}" data-action="camfocus" data-arg="${i}">${qiEsc(this._name(x.entity, x.name))}</button>`).join('')}</div>
@@ -1312,10 +1391,9 @@ class QuintecaPanel extends HTMLElement {
         this._accessToggle(c[arg], c[arg + 'Name']);
         return;
       case 'ring': {
-        const cams = this._camList();
-        const idx = cams.findIndex((x) => x.gate);
+        const bc = this._bellCam();
         this._view = 'cameras';
-        this._camFocus = idx >= 0 ? idx : 0;
+        this._camFocus = bc ? bc.index : -1;
         break;
       }
       case 'scene': {

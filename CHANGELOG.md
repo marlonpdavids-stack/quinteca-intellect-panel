@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9 (14 Oct 2026)
+- Door and gate tiles are calm outline buttons; they only turn warm when the door is actually open. Button-style entries (e.g. UniFi Access unlock) no longer say "ready".
+- Optional `gateSensor` / `frontDoorSensor`: a door or gate position sensor shows the real Open / Closed on the tile, chips and screensaver.
+- Door slots that aren't configured are hidden instead of showing "Not set up"; a configured door whose entity is missing shows "Unavailable". Unused slots no longer count as unavailable in health reports.
+- The Doorbell card shows a live snapshot of the doorbell camera (the one marked `gate: true`) with the time of the last ring, and fills the space left in the access column.
+- A fresh ring wakes the panel from the screensaver and opens the doorbell camera with its Open button (`doorbellJump: false` to turn off). Old rings replayed after a restart are ignored.
+
 ## 1.8 (14 Oct 2026)
 - Health reporting: the wall panel reports its status to Home Assistant every minute (ok, degraded or error), with any on-screen errors and unavailable devices. Needs the watchdog package from quinteca-ha-base.
 - If a screen fails to draw, the client sees "Refreshing the panel…" instead of a blank or broken page, and the error is reported straight away.
