@@ -1,6 +1,6 @@
 const { JSDOM } = require('jsdom');
 const fs = require('fs');
-const dom = new JSDOM('<!doctype html><html><head></head><body></body></html>', { runScripts: 'outside-only', pretendToBeVisual: true });
+const dom = new JSDOM('<!doctype html><html><head></head><body></body></html>', { url: 'http://340jord-ha.home.arpa:8123/quinteca', runScripts: 'outside-only', pretendToBeVisual: true });
 const w = dom.window;
 w.eval(fs.readFileSync(require('path').join(__dirname, '..', 'dist', 'quinteca-panel.js'), 'utf8'));
 
@@ -32,6 +32,7 @@ const hass = { states, callService: (d, s, data) => { calls.push([d, s, data]); 
 
 const el = w.document.createElement('quinteca-panel');
 el.panel = { config: {
+  healthReport: false,
   homeName: 'Casa Test', location: 'Cascais', greetingName: 'Ian',
   doorbell: 'event.gate_doorbell', wifiClients: 'sensor.udm_clients',
   cameras: [{ entity: 'camera.main_gate', name: 'Main gate', gate: true }, 'camera.driveway', { entity: 'camera.garden', name: 'Garden' }],
@@ -129,6 +130,77 @@ const expect = (cond, msg) => { if (!cond) { throw new Error('FAIL: ' + msg); } 
   el.hass = Object.assign({}, hass);
   await flush();
   expect(html().includes('Armed · Away'), 're-renders on state change');
+
+
+  // ---------- health reporting and self-heal ----------
+  const hcalls = [];
+  const hh = { states, user: { name: 'Wall panel', is_admin: false }, connected: true,
+    callService: (d, s, data) => { hcalls.push([d, s, data]); return Promise.resolve(); } };
+  const e3 = w.document.createElement('quinteca-panel');
+  e3.panel = { config: { panelId: '340jord-panel1', rooms: [{ name: 'Living room', lights: ['light.living_spots', 'light.missing'] }] } };
+  e3.hass = hh;
+  w.document.body.appendChild(e3);
+  await flush();
+  e3._healthReport(true);
+  let rep = hcalls.pop();
+  expect(rep && rep[0] === 'script' && rep[1] === 'quinteca_panel_report', 'reports to the watchdog script');
+  expect(rep[2].panel === '340jord-panel1' && rep[2].version === '1.8', 'report carries panel id and version');
+  expect(rep[2].status === 'degraded' && rep[2].unavailable.includes('light.missing'), 'missing entity reported as degraded');
+  e3._healthReport(false);
+  expect(hcalls.length === 0, 'no duplicate report inside the minute');
+
+  e3.hass = Object.assign({}, hh, { user: { name: 'Marlon', is_admin: true } });
+  e3._healthReport(true);
+  expect(hcalls.length === 0, 'admin sessions do not report');
+  e3.panel = { config: { panelId: '340jord-panel1', healthUser: 'marlon' } };
+  e3._healthReport(true);
+  expect(hcalls.length === 1, 'healthUser override reports for that user');
+  hcalls.length = 0;
+  e3.panel = { config: { panelId: '340jord-panel1', rooms: [{ name: 'Living room', lights: ['light.living_spots', 'light.missing'] }] } };
+  e3.hass = Object.assign({}, hh, { connected: false });
+  e3._healthReport(true);
+  expect(hcalls.length === 0, 'no report while disconnected');
+  e3.hass = hh;
+
+  // a view that crashes: holding message, error reported, reload after 3 failures
+  let reloads = 0;
+  e3._reloadFn = () => { reloads += 1; };
+  w.sessionStorage.removeItem('qi-reload-at');
+  const realHome = e3._viewHome;
+  e3._viewHome = () => { throw new Error('boom'); };
+  e3._view = 'home';
+  e3._render(); e3._render();
+  expect(e3.shadowRoot.innerHTML.includes('Refreshing the panel'), 'crash shows a holding message, not a blank screen');
+  expect(reloads === 0, 'no reload on the first failures');
+  e3._render();
+  expect(reloads === 1, 'reloads itself after 3 failed draws');
+  e3._render(); e3._render(); e3._render();
+  expect(reloads === 1, 'reload is rate limited (no reload loop)');
+  e3._viewHome = realHome;
+  e3._render();
+  expect(e3._health.renderFails === 0 && e3.shadowRoot.querySelector('.dock'), 'recovers once the view draws again');
+  await new Promise((r) => setTimeout(r, 2100));
+  rep = hcalls.pop();
+  expect(rep && rep[2].status === 'error' && rep[2].errors.some((x) => x.includes('render: boom')), 'render error reported straight away');
+
+  // page-level errors
+  e3._health.errors = [];
+  w.dispatchEvent(new w.ErrorEvent('error', { message: 'ResizeObserver loop completed with undelivered notifications.' }));
+  expect(e3._healthStatus() !== 'error', 'browser noise ignored');
+  w.dispatchEvent(new w.ErrorEvent('error', { message: 'Cannot read properties of undefined' }));
+  expect(e3._healthStatus() === 'error', 'page script error marks the panel in error');
+  e3._health.errors = [];
+
+  // stuck connecting
+  const e4 = w.document.createElement('quinteca-panel');
+  e4.panel = { config: {} };
+  w.document.body.appendChild(e4);
+  let r4 = 0; e4._reloadFn = () => { r4 += 1; };
+  w.sessionStorage.removeItem('qi-reload-at');
+  e4._health.since = Date.now() - 3 * 60000;
+  e4._healthTick();
+  expect(r4 === 1, 'reloads if it never connects to Home Assistant');
+  e4.remove();
 
   // empty config
   const e2 = w.document.createElement('quinteca-panel');

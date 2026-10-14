@@ -91,6 +91,28 @@ Home Assistant and Safari cache the file hard. After uploading a new version, bu
 
 Tip: tapping the Quînteca wordmark opens the Home Assistant menu, for you when the sidebar is visible.
 
+## 5. Health reporting (wall panels)
+
+From version 1.8 the panel reports how it is doing to Home Assistant every minute, and straight away when something goes wrong. The quinteca-ha-base watchdog package picks this up, reloads the tablet if the panel stays broken, and raises an alert if that doesn't fix it.
+
+```yaml
+    config:
+      panelId: 340jord-panel1      # client code + panel number
+      healthUser: Wall panel       # optional: only this HA user reports (default: any non-admin user)
+      # healthReport: false        # switch reporting off
+```
+
+What counts as a problem:
+
+| Status | Meaning |
+|---|---|
+| `ok` | Drawing normally, every configured device available |
+| `degraded` | Panel fine, but one or more configured devices are unavailable or missing |
+| `error` | A screen failed to draw or a script error happened in the last 5 minutes |
+| (silence) | Panel not running: app closed, wrong page, tablet asleep or offline. The watchdog spots the missing reports |
+
+The panel also recovers on its own: it reloads after 3 failed draws, if it never connects, or if the connection to Home Assistant is lost for 2 minutes (at most once every 10 minutes).
+
 ## Notes and limits
 
 - **Lights**: dimmers are detected automatically; on/off-only lights show just the switch.

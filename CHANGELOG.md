@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8 (14 Oct 2026)
+- Health reporting: the wall panel reports its status to Home Assistant every minute (ok, degraded or error), with any on-screen errors and unavailable devices. Needs the watchdog package from quinteca-ha-base.
+- If a screen fails to draw, the client sees "Refreshing the panel…" instead of a blank or broken page, and the error is reported straight away.
+- Self-heal: the panel reloads itself after 3 failed draws, if it never connects to Home Assistant, or if the connection is lost for 2 minutes. At most one reload every 10 minutes, so a deeper fault can't loop.
+- Only non-admin users (the wall panel login) report, so installers opening /quinteca on a laptop don't count. New options: `panelId`, `healthReport`, `healthScript`, `healthUser`.
+
 ## 1.7 (9 Oct 2026)
 - Every button presses in slightly when touched, so taps feel answered (respects reduced-motion).
 - Gate, front door and alarm actions show a short confirmation toast ("Main gate unlocking", "Arming alarm · Away").

@@ -7,6 +7,7 @@ panel_custom:
     sidebar_icon: mdi:home-variant
     module_url: /local/quinteca/quinteca-panel.js?v=1
     config:
+      panelId: 123exam-panel1
       homeName: Casa Example
       location: Cascais
       greetingName: Client

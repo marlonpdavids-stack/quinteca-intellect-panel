@@ -1,11 +1,23 @@
 /*
  * Quinteca Intellect - Home Assistant custom panel
- * Version 1.7 (October 2026)
+ * Version 1.8 (October 2026)
  *
  * Install: copy this file to /config/www/quinteca/quinteca-panel.js and add the
  * panel_custom block from INSTALL.md to configuration.yaml. All client-specific
  * entity IDs live in that YAML block, so this file is the same on every job.
  */
+
+const QI_VERSION = '1.8';
+
+// Health reporting: how long an error keeps the panel in "error", how often it
+// reports in, and how often it may reload itself to recover.
+const QI_HEALTH = {
+  reportEveryMs: 60000,
+  errorWindowMs: 5 * 60000,
+  renderFailsBeforeReload: 3,
+  stuckBeforeReloadMs: 2 * 60000,
+  minReloadGapMs: 10 * 60000,
+};
 
 const QUINTECA_DEFAULTS = {
   homeName: 'Casa Bennett',
@@ -33,6 +45,11 @@ const QUINTECA_DEFAULTS = {
   zones: [],
   scenes: [],
   rooms: [],
+  // Health reporting to Home Assistant (needs the quinteca-ha-base watchdog package)
+  panelId: 'panel1',                           // e.g. 340jord-panel1
+  healthReport: true,                          // false = never report
+  healthScript: 'script.quinteca_panel_report',
+  healthUser: null,                            // only report for this HA user name; default = any non-admin user
 };
 
 const QI_FONT_URL =
@@ -397,6 +414,9 @@ class QuintecaPanel extends HTMLElement {
     this._onSlideEnd = this._onSlideEnd.bind(this);
     this._hold = {};
     this._saver = false;
+    this._health = { errors: [], renderFails: 0, lastSent: 0, lastKey: '', since: Date.now(), offlineSince: 0, warned: false };
+    this._onPageError = this._onPageError.bind(this);
+    this._onPageRejection = this._onPageRejection.bind(this);
   }
 
   /* ---------- Home Assistant hooks ---------- */
@@ -441,6 +461,11 @@ class QuintecaPanel extends HTMLElement {
     this._timers.push(setInterval(() => this._checkIdle(), 10000));
     this._timers.push(setInterval(() => this._tickClock(), 15000));
     this._timers.push(setInterval(() => this._refreshSnapshots(), 4000));
+    window.addEventListener('error', this._onPageError);
+    window.addEventListener('unhandledrejection', this._onPageRejection);
+    this._health.since = Date.now();
+    this._timers.push(setInterval(() => this._healthTick(), 15000));
+    this._kickTimer = setTimeout(() => this._healthReport(true), 5000);
     this._schedule();
   }
 
@@ -451,8 +476,118 @@ class QuintecaPanel extends HTMLElement {
     this.shadowRoot.removeEventListener('pointermove', this._onSlideMove);
     this.shadowRoot.removeEventListener('pointerup', this._onSlideEnd);
     this.shadowRoot.removeEventListener('pointercancel', this._onSlideEnd);
+    window.removeEventListener('error', this._onPageError);
+    window.removeEventListener('unhandledrejection', this._onPageRejection);
     this._timers.forEach((t) => clearInterval(t));
     this._timers = [];
+    clearTimeout(this._kickTimer);
+    clearTimeout(this._soonTimer);
+  }
+
+  /* ---------- health: spot problems, report them, recover ---------- */
+  _onPageError(ev) {
+    const msg = (ev && (ev.message || (ev.error && ev.error.message))) || 'Script error';
+    // Browser noise that doesn't affect what the client sees
+    if (/ResizeObserver loop/i.test(msg)) return;
+    this._noteError('script', msg);
+  }
+  _onPageRejection(ev) {
+    const r = ev && ev.reason;
+    const msg = (r && (r.message || r.code || r.error)) || String(r || 'Unhandled error');
+    // A failed service call (e.g. a device that didn't answer) is already logged by _call
+    if (r && typeof r === 'object' && 'code' in r && !r.message) return;
+    this._noteError('promise', msg);
+  }
+  _noteError(kind, msg) {
+    const text = (kind + ': ' + String(msg)).replace(/\s+/g, ' ').slice(0, 140);
+    const h = this._health;
+    h.errors.push({ t: Date.now(), text });
+    if (h.errors.length > 10) h.errors.splice(0, h.errors.length - 10);
+    // Report the change straight away (batched, so an error storm sends one report)
+    clearTimeout(this._soonTimer);
+    this._soonTimer = setTimeout(() => this._healthReport(true), 2000);
+  }
+  _recentErrors() {
+    const cut = Date.now() - QI_HEALTH.errorWindowMs;
+    this._health.errors = this._health.errors.filter((e) => e.t >= cut);
+    return this._health.errors;
+  }
+  _unavailable() {
+    if (!this._hass || !this._hass.states) return [];
+    return Array.from(new Set(this._watched())).filter((id) => !this._ok(id));
+  }
+  _healthStatus() {
+    if (this._recentErrors().length) return 'error';
+    if (this._unavailable().length) return 'degraded';
+    return 'ok';
+  }
+  // Only the wall panel reports, not an installer opening /quinteca on a laptop.
+  _healthOn() {
+    const c = this.cfg;
+    if (c.healthReport === false || !this._hass || !c.healthScript) return false;
+    const u = this._hass.user;
+    if (c.healthUser) return !!u && String(u.name || '').toLowerCase() === String(c.healthUser).toLowerCase();
+    return !u || !u.is_admin;
+  }
+  _healthReport(force) {
+    if (!this._healthOn() || this._hass.connected === false) return;
+    const h = this._health;
+    const status = this._healthStatus();
+    const errors = this._recentErrors().map((e) => e.text).slice(-5);
+    const unavailable = this._unavailable().slice(0, 10);
+    const key = status + '|' + errors.join('|') + '|' + unavailable.join(',');
+    const due = Date.now() - h.lastSent >= QI_HEALTH.reportEveryMs - 1000;
+    if (!force && !due && key === h.lastKey) return;
+    h.lastSent = Date.now();
+    h.lastKey = key;
+    const [domain, service] = String(this.cfg.healthScript).split('.');
+    const data = {
+      panel: String(this.cfg.panelId || 'panel1'),
+      status,
+      errors,
+      unavailable,
+      view: this._saver ? 'screensaver' : this._view,
+      version: QI_VERSION,
+      user: (this._hass.user && this._hass.user.name) || '',
+    };
+    try {
+      const p = this._hass.callService(domain, service, data);
+      if (p && p.catch) p.catch((err) => this._healthSendFailed(err));
+    } catch (err) { this._healthSendFailed(err); }
+  }
+  _healthSendFailed(err) {
+    // Usually the watchdog package isn't installed yet. Say so once, then stay quiet.
+    if (this._health.warned) return;
+    this._health.warned = true;
+    console.warn('Quinteca panel: health report not delivered (is the quinteca-ha-base watchdog installed?)', err);
+  }
+  _healthTick() {
+    const h = this._health;
+    const now = Date.now();
+    // Stuck on "Connecting to the house…" or lost the connection for too long: reload.
+    if (!this._hass) {
+      if (now - h.since > QI_HEALTH.stuckBeforeReloadMs) this._selfReload('never connected to Home Assistant');
+      return;
+    }
+    if (this._hass.connected === false) {
+      if (!h.offlineSince) h.offlineSince = now;
+      if (now - h.offlineSince > QI_HEALTH.stuckBeforeReloadMs) this._selfReload('connection to Home Assistant lost');
+      return;
+    }
+    h.offlineSince = 0;
+    this._healthReport(false);
+  }
+  // Reload the page to recover, at most once every 10 minutes so a deeper fault
+  // can't turn into a reload loop (the watchdog then raises it instead).
+  _selfReload(reason) {
+    let last = 0;
+    try { last = Number(window.sessionStorage.getItem('qi-reload-at')) || 0; } catch (e) { /* storage off */ }
+    if (Date.now() - last < QI_HEALTH.minReloadGapMs) return false;
+    try { window.sessionStorage.setItem('qi-reload-at', String(Date.now())); } catch (e) { /* storage off */ }
+    console.warn('Quinteca panel reloading:', reason);
+    this._reloading = reason;
+    (this._reloadFn || (() => window.location.reload()))();
+    return true;
   }
 
   /* ---------- config + state helpers ---------- */
@@ -1035,6 +1170,24 @@ class QuintecaPanel extends HTMLElement {
   _render() {
     if (!this.shadowRoot) return;
     if (this._drag) { this._renderAfterDrag = true; return; }
+    try {
+      this._renderView();
+      this._health.renderFails = 0;
+    } catch (err) {
+      // Never leave the client with a blank or broken screen: show a calm holding
+      // message, report the error, and reload if it keeps happening.
+      const h = this._health;
+      h.renderFails += 1;
+      this._noteError('render', (err && err.message) || err);
+      console.error('Quinteca panel render error', err);
+      try {
+        this.shadowRoot.innerHTML = `<style>${QI_STYLE}</style><div class="app"><div class="empty">Refreshing the panel…</div></div>`;
+      } catch (e) { /* nothing more we can do here */ }
+      if (h.renderFails >= QI_HEALTH.renderFailsBeforeReload) this._selfReload('screen failed to draw ' + h.renderFails + ' times');
+    }
+  }
+
+  _renderView() {
     const accent = /^#[0-9a-fA-F]{3,8}$/.test(this.cfg.accent || '') ? this.cfg.accent : '#CDF07E';
     let view = '';
     if (!this._hass) {
