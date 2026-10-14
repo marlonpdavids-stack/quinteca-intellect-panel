@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10 (14 Oct 2026)
+- New Lights & shutters design: one tile for every device. Icon top left, value top right (shown once), name, slim slider with a round knob.
+- Tiles glow with brightness or how far open they are: warm white for lights, daylight blue for shutters. Off and closed tiles stay dark.
+- Tap the icon to switch a light on/off or to open/close a shutter; tapping a moving shutter stops it. On/off-only lights and shutters without a position say "Tap to …" instead of a slider.
+- Room header has calm Lights off/on and Close shutters buttons; corners are smaller (12px tiles, 10px buttons).
+
 ## 1.9 (14 Oct 2026)
 - Door and gate tiles are calm outline buttons; they only turn warm when the door is actually open. Button-style entries (e.g. UniFi Access unlock) no longer say "ready".
 - Optional `gateSensor` / `frontDoorSensor`: a door or gate position sensor shows the real Open / Closed on the tile, chips and screensaver.

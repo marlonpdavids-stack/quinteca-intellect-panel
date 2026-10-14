@@ -1,6 +1,6 @@
 {
   "name": "quinteca-intellect-panel",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "private": true,
   "description": "Quinteca Intellect - custom Home Assistant panel",
   "scripts": {

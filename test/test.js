@@ -84,11 +84,14 @@ const expect = (cond, msg) => { if (!cond) { throw new Error('FAIL: ' + msg); } 
   expect(el.shadowRoot.querySelectorAll('.cam').length === 3, 'back to grid');
 
   click('[data-action="nav"][data-arg="lights"]');
-  expect(html().includes('Dimmer · 70%'), 'dimmer level');
+  const tileVal = (id) => el.shadowRoot.querySelector(`[data-arg="${id}"]`).closest('.dev').querySelector('[data-val]').textContent;
+  expect(tileVal('light.living_spots') === '70%', 'dimmer level shown once on the tile');
+  expect(el.shadowRoot.querySelectorAll('.dev').length === 5 && !el.shadowRoot.querySelector('.switch'), 'lights and shutters use the same tile, no toggle switches');
+  expect(el.shadowRoot.querySelector('.dev.cover') && /--p:0\.\d/.test(el.shadowRoot.querySelector('.dev.light:not(.zero)').getAttribute('style')), 'on tiles glow, shutters use their own tile');
   expect(QI_STYLE_CHECK(), 'tile values size to the tile (Disarmed fits)');
   expect(/button:active:not\(:disabled\)/.test(el.shadowRoot.querySelector('style').textContent), 'buttons have a press state');
   expect(html().includes('Not found'), 'missing light handled');
-  expect(!html().includes('data-pos="50"') && el.shadowRoot.querySelectorAll('[data-action="coverstop"]').length === 2, 'every shutter has Open / Stop / Close');
+  expect(el.shadowRoot.querySelector('.dev-hint[data-arg="cover.terrace"]').textContent === 'Tap to open', 'shutter without position offers tap to open');
   expect(el.shadowRoot.querySelectorAll('[data-slider="light"]').length === 1, 'dimmer gets a slider, switch does not');
   expect(el.shadowRoot.querySelectorAll('[data-slider="cover"]').length === 1, 'only positionable shutter gets a slider');
   // drag the dimmer slider to ~40%
@@ -99,11 +102,11 @@ const expect = (cond, msg) => { if (!cond) { throw new Error('FAIL: ' + msg); } 
   el._render();
   expect(el.shadowRoot.querySelector('[data-slider="light"]') === sl, 'no redraw while dragging');
   sl.dispatchEvent(pe('pointermove', 180));
-  expect(sl.querySelector('[data-val]').textContent === '40%', 'slider shows live value');
+  expect(tileVal('light.living_spots') === '40%' && sl.closest('.dev').style.getPropertyValue('--p') === '0.55', 'slider shows live value and the glow follows');
   sl.dispatchEvent(pe('pointerup', 180));
   let last = calls.pop();
   expect(last[1] === 'turn_on' && last[2].brightness_pct === 40, 'slider sets brightness 40%');
-  expect(html().includes('Dimmer · 40%'), 'held value shown until HA catches up');
+  expect(tileVal('light.living_spots') === '40%', 'held value shown until HA catches up');
   const sl2 = el.shadowRoot.querySelector('[data-slider="light"]');
   sl2.getBoundingClientRect = () => ({ left: 100, width: 200, top: 0, height: 52 });
   sl2.dispatchEvent(pe('pointerdown', 101)); sl2.dispatchEvent(pe('pointerup', 101));
@@ -115,8 +118,18 @@ const expect = (cond, msg) => { if (!cond) { throw new Error('FAIL: ' + msg); } 
   expect(last[1] === 'set_cover_position' && last[2].position === 25, 'shutter slider sets position');
   el._hold = {};
   el._render();
-  click('[data-action="cover"][data-arg="cover.terrace"][data-pos="100"]');
-  expect(calls.pop()[1] === 'open_cover', 'cover without position opens');
+  click('.dev-ico[data-arg="cover.terrace"]');
+  expect(calls.pop()[1] === 'open_cover', 'tapping a closed shutter opens it');
+  click('.dev-ico[data-arg="cover.living_window"]');
+  expect(calls.pop()[1] === 'close_cover', 'tapping an open shutter closes it');
+  hass.states = Object.assign({}, hass.states, { 'cover.living_window': Object.assign({}, states['cover.living_window'], { state: 'opening', last_updated: 'm' }) });
+  el.hass = Object.assign({}, hass); el._render();
+  click('.dev-ico[data-arg="cover.living_window"]');
+  expect(calls.pop()[1] === 'stop_cover', 'tapping a moving shutter stops it');
+  click('.dev-ico[data-arg="light.living_lamp"]');
+  expect(JSON.stringify(calls.pop()) === JSON.stringify(['light', 'toggle', { entity_id: 'light.living_lamp' }]), 'tapping the bulb switches the light');
+  click('[data-action="roomclose"]');
+  expect(calls.pop()[2].entity_id.length === 2, 'room Close shutters closes that room');
   click('[data-action="roomtoggle"]');
   expect(calls.pop()[1] === 'turn_off', 'room off');
   click('[data-action="closeall"]');
@@ -203,7 +216,7 @@ const expect = (cond, msg) => { if (!cond) { throw new Error('FAIL: ' + msg); } 
   e3._healthReport(true);
   let rep = hcalls.pop();
   expect(rep && rep[0] === 'script' && rep[1] === 'quinteca_panel_report', 'reports to the watchdog script');
-  expect(rep[2].panel === '340jord-panel1' && rep[2].version === '1.9', 'report carries panel id and version');
+  expect(rep[2].panel === '340jord-panel1' && rep[2].version === '1.10', 'report carries panel id and version');
   expect(rep[2].status === 'degraded' && rep[2].unavailable.includes('light.missing'), 'missing entity reported as degraded');
   e3._healthReport(false);
   expect(hcalls.length === 0, 'no duplicate report inside the minute');

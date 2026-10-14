@@ -1,13 +1,13 @@
 /*
  * Quinteca Intellect - Home Assistant custom panel
- * Version 1.9 (October 2026)
+ * Version 1.10 (October 2026)
  *
  * Install: copy this file to /config/www/quinteca/quinteca-panel.js and add the
  * panel_custom block from INSTALL.md to configuration.yaml. All client-specific
  * entity IDs live in that YAML block, so this file is the same on every job.
  */
 
-const QI_VERSION = '1.9';
+const QI_VERSION = '1.10';
 
 // Health reporting: how long an error keeps the panel in "error", how often it
 // reports in, and how often it may reload itself to recover.
@@ -363,31 +363,42 @@ button:active:not(:disabled) { transform:scale(0.96); filter:brightness(1.18); }
 /* Lights */
 .lights { grid-template-columns:290px minmax(0,1fr); }
 .rooms { padding:14px; display:flex; flex-direction:column; gap:6px; overflow:auto; }
-.room { min-height:56px; padding:0 14px; border-radius:14px; border:none; display:flex; justify-content:space-between; align-items:center; text-align:left; background:transparent; color:var(--text); flex:none; }
+.room { min-height:56px; padding:0 14px; border-radius:10px; border:none; display:flex; justify-content:space-between; align-items:center; text-align:left; background:transparent; color:var(--text); flex:none; }
 .room.on { background:var(--accent); color:var(--ink); }
 .room .count { font-size:12px; color:var(--muted); }
 .room .count.lit { color:var(--warm); }
 .room.on .count { color:var(--ink); }
-.room-panel { padding:20px 22px; border-radius:24px; background:var(--card2); border:1px solid var(--line); display:flex; flex-direction:column; gap:16px; overflow:auto; }
-.light-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.light { padding:14px 16px; border-radius:18px; display:flex; flex-direction:column; gap:12px; background:var(--card); border:1px solid rgba(247,244,237,0.06); }
-.light.lit { background:#1A3A22; border-color:rgba(244,210,122,0.35); }
-.switch { width:56px; height:32px; border-radius:16px; border:none; padding:3px; display:flex; justify-content:flex-start; background:rgba(247,244,237,0.18); flex:none; }
-.switch.on { justify-content:flex-end; background:var(--accent); }
-.switch span { width:26px; height:26px; border-radius:50%; background:#F7F4ED; }
-.shutter { padding:12px 16px; border-radius:18px; background:var(--card); display:flex; align-items:center; gap:16px; }
+.room-panel { padding:20px 22px; border-radius:16px; background:var(--card2); border:1px solid var(--line); display:flex; flex-direction:column; gap:16px; overflow:auto; }
 .slider { position:relative; flex:1; min-width:0; height:52px; border-radius:16px; background:rgba(247,244,237,0.08); overflow:hidden; touch-action:none; cursor:pointer; user-select:none; -webkit-user-select:none; }
 .slider .fill { position:absolute; left:0; top:0; bottom:0; border-radius:16px 0 0 16px; transition:width 0.25s ease; }
 .slider.dragging .fill { transition:none; }
-.slider .fill::after { content:''; position:absolute; right:8px; top:14px; bottom:14px; width:4px; border-radius:2px; background:rgba(15,43,31,0.45); }
-.slider.light-slider { flex:none; width:100%; }
-.slider.light-slider .fill { background:linear-gradient(90deg, rgba(244,210,122,0.55), #F4D27A); }
-.slider.cover-slider .fill { background:linear-gradient(90deg, rgba(156,199,232,0.45), #9CC7E8); }
-.slider .val { position:absolute; left:16px; top:0; bottom:0; display:flex; align-items:center; gap:8px; font-family:Sora,sans-serif; font-size:16px; font-weight:600; color:var(--text); pointer-events:none; text-shadow:0 1px 3px rgba(0,0,0,0.35); }
-.slider .val small { display:none; font-family:inherit; font-size:12px; font-weight:500; opacity:0.75; }
-.slider.off .val { color:var(--muted); text-shadow:none; }
-.slider.off .val small { display:inline; }
-.shutter-name { width:160px; display:flex; flex-direction:column; gap:2px; flex:none; }
+/* Device tiles (lights and shutters). One tile for everything: icon top left (tap = on/off,
+   open/close, or stop while moving), value top right, name, then a slim slider.
+   The tile glows with brightness or how far open it is: warm white for light, daylight blue for shutters. */
+.dev-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.dev { --c:255,244,224; --p:0; position:relative; min-height:150px; padding:16px; border-radius:12px; display:flex; flex-direction:column; justify-content:space-between; gap:12px; overflow:hidden;
+  background:radial-gradient(120% 150% at 0% 0%, rgba(var(--c),calc(var(--p) * 0.30)) 0%, rgba(var(--c),calc(var(--p) * 0.07)) 60%, rgba(0,0,0,0) 100%), #102E21;
+  border:1px solid rgba(var(--c),calc(0.07 + var(--p) * 0.40)); }
+.dev.cover { --c:156,199,232; }
+.dev.zero { background:#0E2A1D; border-color:rgba(247,244,237,0.07); }
+.dev-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.dev-ico { width:44px; height:44px; flex:none; border:none; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:0;
+  background:rgba(var(--c),calc(0.30 + var(--p) * 0.70)); color:#2B2416; box-shadow:0 0 calc(var(--p) * 26px) rgba(var(--c),calc(var(--p) * 0.55)); }
+.dev.cover .dev-ico { color:#0B2233; }
+.dev.zero .dev-ico { background:rgba(247,244,237,0.08); color:var(--muted); box-shadow:none; }
+.dev-val { font-family:Sora,sans-serif; font-size:24px; font-weight:600; letter-spacing:-0.3px; line-height:1.1; text-align:right; }
+.dev-val small { display:block; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; letter-spacing:0; color:var(--muted); }
+.dev.zero .dev-val { color:var(--muted); font-size:17px; font-weight:500; margin-top:4px; }
+.dev-name { font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px; }
+.dev-hint { display:block; padding:0; border:none; background:none; color:var(--muted); font-size:13px; text-align:left; }
+.slider.dev-slider { flex:none; width:100%; height:32px; border-radius:0; background:transparent; overflow:visible; }
+.slider.dev-slider::before { content:''; position:absolute; left:2px; right:2px; top:13px; height:6px; border-radius:3px; background:rgba(247,244,237,0.12); }
+.slider.dev-slider .fill { top:13px; bottom:auto; height:6px; border-radius:3px; background:rgba(var(--c),0.95); }
+.slider.dev-slider .knob { position:absolute; top:4px; width:24px; height:24px; border-radius:50%; background:#FFFFFF; box-shadow:0 2px 8px rgba(0,0,0,0.45); pointer-events:none; transition:left 0.25s ease; }
+.slider.dev-slider.dragging .knob { transition:none; }
+.dev.zero .slider.dev-slider .knob { background:#C9D3CC; }
+.room-actions { display:flex; gap:8px; }
+.room-actions .btn { border-radius:10px; }
 
 @media (max-width: 960px) {
   .app { height:auto; min-height:100vh; overflow:visible; padding:16px; }
@@ -398,8 +409,7 @@ button:active:not(:disabled) { transform:scale(0.96); filter:brightness(1.18); }
   .cams { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:none; grid-auto-rows:180px; }
   .live { min-height:260px; }
   .thumbs, .strip { grid-template-columns:repeat(3,minmax(0,1fr)); height:auto; grid-auto-rows:80px; }
-  .light-grid { grid-template-columns:1fr; }
-  .shutter { flex-wrap:wrap; }
+  .dev-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .brand { display:none; }
   .dock { flex-wrap:wrap; justify-content:center; }
   .dock button { padding:0 12px; }
@@ -1176,6 +1186,45 @@ class QuintecaPanel extends HTMLElement {
     </main>`;
   }
 
+  // One device tile. kind 'light' or 'cover'.
+  _devTile(kind, id) {
+    const s = this._st(id);
+    const name = qiEsc(this._name(id));
+    const isCover = kind === 'cover';
+    let pct = 0; let val = ''; let slider = false; let hint = '';
+    if (!s) {
+      val = 'Not found';
+    } else if (isCover) {
+      pct = this._coverPos(id);
+      const moving = s.state === 'opening' || s.state === 'closing';
+      val = moving ? (s.state === 'opening' ? 'Opening' : 'Closing') : (pct >= 100 ? 'Open' : (pct <= 0 ? 'Closed' : pct + '%<small>open</small>'));
+      slider = this._coverCanSet(id);
+      if (!slider) hint = moving ? 'Tap to stop' : (pct > 0 ? 'Tap to close' : 'Tap to open');
+    } else {
+      const on = this._lightOn(id);
+      slider = this._dimmable(id);
+      pct = on ? (slider ? this._brightPct(id) : 100) : 0;
+      val = on ? (slider ? pct + '%' : 'On') : 'Off';
+      if (!slider) hint = on ? 'Tap to switch off' : 'Tap to switch on';
+    }
+    const f = pct / 100;
+    const glow = pct > 0 ? (0.25 + 0.75 * f).toFixed(2) : 0;
+    const action = isCover ? 'covertap' : 'light';
+    const label = isCover ? 'Open, close or stop ' : 'Switch ';
+    return `<div class="dev ${isCover ? 'cover' : 'light'} ${pct > 0 ? '' : 'zero'}" style="--p:${glow}">
+      <div class="dev-top">
+        <button class="dev-ico" data-action="${action}" data-arg="${qiEsc(id)}" aria-label="${label}${name}" ${s ? '' : 'disabled'}>${qiIcon(isCover ? 'shutter' : 'bulb', 22)}</button>
+        <div class="dev-val" data-val>${val}</div>
+      </div>
+      <div>
+        <div class="dev-name">${name}</div>
+        ${slider ? `<div class="slider dev-slider ${pct > 0 ? '' : 'off'}" data-slider="${isCover ? 'cover' : 'light'}" data-arg="${qiEsc(id)}" role="slider" aria-label="${isCover ? 'Position' : 'Brightness'} ${name}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
+          <div class="fill" style="width:calc(12px + (100% - 24px) * ${f})"></div><div class="knob" style="left:calc((100% - 24px) * ${f})"></div>
+        </div>` : (hint ? `<button class="dev-hint" data-action="${action}" data-arg="${qiEsc(id)}">${hint}</button>` : '')}
+      </div>
+    </div>`;
+  }
+
   _viewLights() {
     const c = this.cfg;
     const rooms = this._rooms();
@@ -1206,41 +1255,15 @@ class QuintecaPanel extends HTMLElement {
         <div class="row">
           <div style="display:flex;flex-direction:column;gap:2px">
             <div class="display" style="font-size:26px;font-weight:600">${qiEsc(room.name)}</div>
-            <div class="muted" style="font-size:13px">${roomOn} of ${room.lights.length} lights on${room.covers.length ? ' · ' + room.covers.length + ' shutters' : ''}</div>
+            <div class="muted" style="font-size:13px">${[room.lights.length ? roomOn + ' of ' + room.lights.length + ' lights on' : '', room.covers.length ? room.covers.filter((x) => this._coverPos(x) > 0).length + ' of ' + room.covers.length + ' shutters open' : ''].filter(Boolean).join(' · ')}</div>
           </div>
-          ${room.lights.length ? `<button class="btn primary" data-action="roomtoggle">${roomOn ? 'Turn room off' : 'Turn room on'}</button>` : ''}
+          <div class="room-actions">
+            ${room.lights.length ? `<button class="btn outline" data-action="roomtoggle">${roomOn ? 'Lights off' : 'Lights on'}</button>` : ''}
+            ${room.covers.length ? `<button class="btn outline" data-action="roomclose">Close shutters</button>` : ''}
+          </div>
         </div>
-        ${room.lights.length ? `<div class="label">LIGHTS</div><div class="light-grid">${room.lights.map((id) => {
-          const on = this._lightOn(id);
-          const dim = this._dimmable(id);
-          const pct = this._brightPct(id);
-          const sub = !this._st(id) ? 'Not found' : (dim ? (on ? 'Dimmer · ' + pct + '%' : 'Dimmer · off') : (on ? 'Switch · on' : 'Switch · off'));
-          return `<div class="light ${on ? 'lit' : ''}">
-            <div class="row"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:600">${qiEsc(this._name(id))}</span><span class="muted" style="font-size:12px">${sub}</span></div>
-              <button class="switch ${on ? 'on' : ''}" data-action="light" data-arg="${qiEsc(id)}" aria-label="Toggle ${qiEsc(this._name(id))}"><span></span></button></div>
-            ${dim ? `<div class="slider light-slider ${on ? '' : 'off'}" data-slider="light" data-arg="${qiEsc(id)}" role="slider" aria-label="Brightness ${qiEsc(this._name(id))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${on ? pct : 0}">
-              <div class="fill" style="width:${on ? pct : 0}%"></div>
-              <div class="val">${qiIcon('bulb', 16)}<span data-val>${on ? pct + '%' : 'Off'}</span><small>slide to dim</small></div>
-            </div>` : ''}
-          </div>`;
-        }).join('')}</div>` : ''}
-        ${room.covers.length ? `<div class="label">SHUTTERS</div><div style="display:flex;flex-direction:column;gap:12px">${room.covers.map((id) => {
-          const pos = this._coverPos(id);
-          const word = !this._st(id) ? 'Not found' : (pos >= 100 ? 'Open' : (pos <= 0 ? 'Closed' : pos + '% open'));
-          const canSet = this._coverCanSet(id);
-          return `<div class="shutter">
-            <div class="shutter-name"><span style="font-size:15px;font-weight:600">${qiEsc(this._name(id))}</span><span class="muted" style="font-size:12px">${word}</span></div>
-            ${canSet ? `<div class="slider cover-slider ${pos > 0 ? '' : 'off'}" data-slider="cover" data-arg="${qiEsc(id)}" role="slider" aria-label="Position ${qiEsc(this._name(id))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pos}">
-              <div class="fill" style="width:${pos}%"></div>
-              <div class="val">${qiIcon('shutter', 16)}<span data-val>${pos <= 0 ? 'Closed' : pos + '% open'}</span></div>
-            </div>` : `<div class="bar"><div style="width:${pos}%;background:#9CC7E8"></div></div>`}
-            <div style="display:flex;gap:6px">
-              <button class="btn" data-action="cover" data-arg="${qiEsc(id)}" data-pos="100">Open</button>
-              <button class="btn" data-action="coverstop" data-arg="${qiEsc(id)}">Stop</button>
-              <button class="btn" data-action="cover" data-arg="${qiEsc(id)}" data-pos="0">Close</button>
-            </div>
-          </div>`;
-        }).join('')}</div>` : ''}
+        ${room.lights.length ? `<div class="label">LIGHTS</div><div class="dev-grid">${room.lights.map((id) => this._devTile('light', id)).join('')}</div>` : ''}
+        ${room.covers.length ? `<div class="label">SHUTTERS</div><div class="dev-grid">${room.covers.map((id) => this._devTile('cover', id)).join('')}</div>` : ''}
       </section>
     </main>`;
   }
@@ -1329,12 +1352,20 @@ class QuintecaPanel extends HTMLElement {
   }
   _slideShow(el, pct) {
     const kind = el.getAttribute('data-slider');
+    const f = pct / 100;
     const fill = el.querySelector('.fill');
-    const val = el.querySelector('[data-val]');
-    if (fill) fill.style.width = pct + '%';
-    if (val) val.textContent = kind === 'cover' ? (pct <= 0 ? 'Closed' : pct + '% open') : (pct <= 0 ? 'Off' : pct + '%');
+    const knob = el.querySelector('.knob');
+    if (fill) fill.style.width = `calc(12px + (100% - 24px) * ${f})`;
+    if (knob) knob.style.left = `calc((100% - 24px) * ${f})`;
     el.classList.toggle('off', pct <= 0);
     el.setAttribute('aria-valuenow', String(pct));
+    const tile = el.closest('.dev');
+    if (tile) {
+      tile.classList.toggle('zero', pct <= 0);
+      tile.style.setProperty('--p', pct > 0 ? (0.25 + 0.75 * f).toFixed(2) : '0');
+      const val = tile.querySelector('[data-val]');
+      if (val) val.innerHTML = kind === 'cover' ? (pct <= 0 ? 'Closed' : (pct >= 100 ? 'Open' : pct + '%<small>open</small>')) : (pct <= 0 ? 'Off' : pct + '%');
+    }
   }
   _onSlideStart(ev) {
     if (this._saver) return;
@@ -1450,6 +1481,19 @@ class QuintecaPanel extends HTMLElement {
         delete this._hold[arg];
         if (this._coverCanSet(arg)) this._call('cover', 'set_cover_position', { entity_id: arg, position: pos });
         else this._call('cover', pos > 0 ? 'open_cover' : 'close_cover', { entity_id: arg });
+        return;
+      }
+      case 'covertap': {
+        const st = this._st(arg);
+        if (!st) return;
+        delete this._hold[arg];
+        if (st.state === 'opening' || st.state === 'closing') this._call('cover', 'stop_cover', { entity_id: arg });
+        else this._call('cover', this._coverPos(arg) > 0 ? 'close_cover' : 'open_cover', { entity_id: arg });
+        return;
+      }
+      case 'roomclose': {
+        const room = this._rooms()[this._room];
+        if (room && room.covers.length) this._call('cover', 'close_cover', { entity_id: room.covers });
         return;
       }
       case 'coverstop':
