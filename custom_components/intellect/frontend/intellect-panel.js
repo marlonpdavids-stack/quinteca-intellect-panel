@@ -68,7 +68,7 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "intellect_cfg";
-const VER = "1.30.0";
+const VER = "1.30.1";
 const GATE_OPEN_MS = 60000; // how long a gate shows "Open" after it is opened from the panel
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
@@ -1567,7 +1567,7 @@ class IntellectDashboard extends HTMLElement {
   _credit() { const t = this._c.credit; return this._esc(t === undefined ? "By Quinteca" : t); }
   /* ---------- screensaver ---------- */
   // Shared settings live in this._c.ss; each device can force it on or off (localStorage intellect_ss).
-  _ssCfg() { return { on: false, idle: 5, mode: "clock", night: "clock", folder: "intellect", speed: "normal", ...(this._c.ss || {}) }; }
+  _ssCfg() { return { on: false, idle: 5, mode: "clock", night: "clock", face: "analog", folder: "intellect", speed: "normal", ...(this._c.ss || {}) }; }
   _ssDev() { try { return localStorage.getItem("intellect_ss") || ""; } catch (e) { return ""; } }
   _ssOn() { const d = this._ssDev(); return d === "on" || (d !== "off" && !!this._ssCfg().on); }
   _ssInit() {
@@ -1717,7 +1717,7 @@ class IntellectDashboard extends HTMLElement {
     } else {
       const sec = d.getSeconds(), mi = d.getMinutes() + sec / 60, hh = (d.getHours() % 12) + mi / 60;
       let face = "";
-      if (this._clockStyle() === "analog") {
+      if (this._ssCfg().face !== "digital") {
         let t = ""; for (let i = 0; i < 60; i++) { const mj = i % 5 === 0; t += `<line x1="100" y1="${mj ? 28 : 22}" x2="100" y2="16" stroke="#e9e6df" stroke-width="${mj ? 2.4 : 1}" stroke-linecap="round" opacity="${mj ? 0.95 : 0.35}" transform="rotate(${i * 6} 100 100)"/>`; }
         face = `<svg class="ssface" viewBox="0 0 200 200" role="img" aria-label="Clock"><circle cx="100" cy="100" r="96" fill="rgba(10,20,34,.55)" stroke="rgba(233,230,223,.14)"/>${t}<line x1="100" y1="106" x2="100" y2="52" stroke="#e9e6df" stroke-width="4" stroke-linecap="round" transform="rotate(${(hh * 30).toFixed(2)} 100 100)"/><line x1="100" y1="108" x2="100" y2="30" stroke="#e9e6df" stroke-width="2.5" stroke-linecap="round" transform="rotate(${(mi * 6).toFixed(2)} 100 100)"/><line x1="100" y1="114" x2="100" y2="26" stroke="#f2b856" stroke-width="1" stroke-linecap="round" transform="rotate(${sec * 6} 100 100)"/><circle cx="100" cy="100" r="3.2" fill="#f2b856"/></svg>`;
       } else face = `<div class="sstime big">${time}</div>`;
@@ -2298,6 +2298,7 @@ class IntellectDashboard extends HTMLElement {
         row("Screensaver", "turn it on for all panels", tg(s.on, 'data-s="ss|on:toggle"')) +
         row("Start after", "minutes without a touch", seg(s.idle, "idle", [[1, "1 min"], [2, "2"], [5, "5"], [10, "10"], [15, "15"], [30, "30"]])) +
         row("During the day", "a quiet clock with home status, or family photos scrolling with the clock on top", seg(s.mode, "mode", [["clock", "Clock"], ["photos", "Family photos"]])) +
+        row("Day clock", "the analog face from the design, or large digital numbers", seg(s.face, "face", [["analog", "Analog"], ["digital", "Digital"]])) +
         row("At night", "after sunset a dimmed clock is kinder in a bedroom or hallway", seg(s.night, "night", [["clock", "Dimmed clock"], ["same", "Same as day"]]))) +
       sec("Family photos", "upload them in Home Assistant: Media, then Local media, into this folder",
         row("Photo folder", "a folder inside Local media (/media); empty uses all of Local media", `<input type="text" data-ssf value="${E(s.folder || "")}" placeholder="intellect">`) +
