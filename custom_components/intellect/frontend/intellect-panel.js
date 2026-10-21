@@ -70,7 +70,7 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "intellect_cfg";
-const VER = "1.32.0";
+const VER = "1.32.1";
 const GATE_OPEN_MS = 60000; // how long a gate shows "Open" after it is opened from the panel
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
@@ -1620,8 +1620,10 @@ class IntellectDashboard extends HTMLElement {
     this._errs = (this._errs || []).filter((t) => Date.now() - t < 300e3);
     try {
       const r = await this._h.callApi("POST", "intellect/heartbeat", { pid: this._pid(), name, ver: VER, page: this._v.p || "", vis: !document.hidden, ss: !!this._ssShown, err: this._errs.length, ua: navigator.userAgent });
+      this._hbRes = { ok: !!(r && r.ok), at: Date.now(), msg: r && r.ok ? "" : "Home Assistant did not accept the report" };
       if (r && r.cmd === "reload") { try { sessionStorage.removeItem("intellect_rl"); } catch (e) {} location.reload(); }
-    } catch (e) {}
+    } catch (e) { this._hbRes = { ok: false, at: Date.now(), msg: (e && (e.body && e.body.message || e.message || e.error || e.status_code)) || "could not reach Home Assistant" }; }
+    if (this._v.p === "settings") this._draw(true);
   }
   async _plLoad(action) {
     try { this._pl = action ? await this._h.callApi("POST", "intellect/panels", action) : await this._h.callApi("GET", "intellect/panels"); if (this._pl && this._pl.ok === false && this._pl.error) this._toast(this._pl.error); }
@@ -2359,7 +2361,8 @@ class IntellectDashboard extends HTMLElement {
         row("Your own order", "tiles and cards are arranged on this device only", '<button class="sbtn" data-sc="ordreset|">Back to the shared order</button>'))) +
         sec("Background", u ? "this device only" : "using the shared look", `<div style="padding:4px 4px 12px">${this._pbControls(u, b)}</div>`);
     } else if (tab === "panels") {
-      if (!this._pl && !this._plBusy) { this._plBusy = true; this._plLoad().then(() => { this._plBusy = false; }); }
+      if ((!this._pl || Date.now() - (this._plAt || 0) > 30e3) && !this._plBusy) { this._plBusy = true; this._plAt = Date.now(); this._plLoad().then(() => { this._plBusy = false; }); }
+      clearTimeout(this._plT); this._plT = setTimeout(() => { if (this._v.p === "settings" && this._v.tab === "panels") this._draw(true); }, 31e3);
       const P = this._pl || {}, L = P.panels || [], T = P.tablets || [], po = P.portal || {};
       const ago = (s) => s < 90 ? "just now" : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 172800 ? `${Math.round(s / 3600)} h ago` : `${Math.round(s / 86400)} days ago`;
       const ST = { online: ["Online", "ok"], error: ["Errors on screen", "w"], background: ["Dashboard behind another app", "w"], offline: ["Offline", "b"] };
@@ -2398,7 +2401,7 @@ class IntellectDashboard extends HTMLElement {
       sec("This device", dv ? "this device only" : "using the shared setting",
         row("Screensaver here", "turn it off on a phone, or on for one panel only", devSeg) +
         row("Preview", "show it now; tap the screen to close", '<button class="sbtn" data-sc="sspv|">Show now</button>')) +
-      sec("Wall panel", this._pname() ? "this tablet reports its health" : "not a wall panel",
+      sec("Wall panel", !this._pname() ? "not a wall panel" : !this._hbRes ? "reporting…" : this._hbRes.ok ? `reported to Home Assistant at ${new Date(this._hbRes.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : `report failed: ${E(String(this._hbRes.msg))}`,
         row("Wall panel name", "give a wall tablet a name (e.g. Kitchen) so it reports to Home Assistant and Quinteca is told if it goes offline. Leave empty on phones", `<input type="text" data-pname value="${E(this._pname())}" placeholder="Kitchen">`));
     } else if (tab === "general") {
       const bg = { preset: "midnight", mode: "preset", dim: 0, blur: 0, ...(c.bg || {}) }, dv = localStorage.getItem("intellect_dev") || "auto";
