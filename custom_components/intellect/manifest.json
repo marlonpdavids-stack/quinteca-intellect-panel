@@ -1,5 +1,5 @@
 {
-  "domain": "quint",
+  "domain": "intellect",
   "name": "Intellect Dashboard",
   "codeowners": [],
   "config_flow": true,
@@ -9,5 +9,5 @@
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/marlonpdavids-stack/quinteca-intellect-panel/issues",
   "requirements": [],
-  "version": "1.28.1"
+  "version": "1.29.0"
 }

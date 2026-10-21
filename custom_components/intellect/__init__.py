@@ -10,15 +10,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN, PANEL_PATH, STATIC_URL, VERSION
-from .updater import QuintUpdater, read_disk_version
+from .updater import IntellectUpdater, read_disk_version
 from .util import clean_perms, is_newer, valid_image, valid_new_user
 
 
-class QuintConfigView(HomeAssistantView):
+class IntellectConfigView(HomeAssistantView):
     """Shared dashboard settings (rooms, device map, custom cards)."""
 
-    url = "/api/quint/config"
-    name = "api:quint:config"
+    url = "/api/intellect/config"
+    name = "api:intellect:config"
     requires_auth = True
 
     def __init__(self, store: Store) -> None:
@@ -45,12 +45,12 @@ class QuintConfigView(HomeAssistantView):
         return self.json({"ok": True})
 
 
-class QuintUsersView(HomeAssistantView):
+class IntellectUsersView(HomeAssistantView):
     """People: the Intellect admin (a normal user chosen in Settings) and Home Assistant admins
     can list, add and remove normal users and choose which services and rooms each may use."""
 
-    url = "/api/quint/users"
-    name = "api:quint:users"
+    url = "/api/intellect/users"
+    name = "api:intellect:users"
     requires_auth = True
 
     def __init__(self, hass: HomeAssistant, store: Store) -> None:
@@ -145,14 +145,14 @@ class QuintUsersView(HomeAssistantView):
         return self.json_message("Unknown action", 400)
 
 
-class QuintVersionView(HomeAssistantView):
+class IntellectVersionView(HomeAssistantView):
     """Running / installed version (the browser reloads itself when it is out of date)."""
 
-    url = "/api/quint/version"
-    name = "api:quint:version"
+    url = "/api/intellect/version"
+    name = "api:intellect:version"
     requires_auth = True
 
-    def __init__(self, hass: HomeAssistant, updater: QuintUpdater) -> None:
+    def __init__(self, hass: HomeAssistant, updater: IntellectUpdater) -> None:
         self._hass = hass
         self._updater = updater
 
@@ -164,14 +164,14 @@ class QuintVersionView(HomeAssistantView):
         return self.json({"running": VERSION, "disk": disk, "pending": is_newer(disk, VERSION)})
 
 
-class QuintUpdateView(HomeAssistantView):
+class IntellectUpdateView(HomeAssistantView):
     """Admin and Intellect admin actions: check now, install now, restart now, automatic-update switches."""
 
-    url = "/api/quint/update"
-    name = "api:quint:update"
+    url = "/api/intellect/update"
+    name = "api:intellect:update"
     requires_auth = True
 
-    def __init__(self, updater: QuintUpdater) -> None:
+    def __init__(self, updater: IntellectUpdater) -> None:
         self._updater = updater
 
     async def post(self, request):
@@ -197,11 +197,11 @@ class QuintUpdateView(HomeAssistantView):
         return self.json(await up.status())
 
 
-class QuintBackgroundView(HomeAssistantView):
+class IntellectBackgroundView(HomeAssistantView):
     """Optional custom background photo shared by every user."""
 
-    url = "/api/quint/background"
-    name = "api:quint:background"
+    url = "/api/intellect/background"
+    name = "api:intellect:background"
     requires_auth = True
 
     def __init__(self, store: Store) -> None:
@@ -230,11 +230,11 @@ class QuintBackgroundView(HomeAssistantView):
         return self.json({"ok": True})
 
 
-class QuintRoomImageView(HomeAssistantView):
+class IntellectRoomImageView(HomeAssistantView):
     """Optional photo per room, shared by every user (set by an admin)."""
 
-    url = "/api/quint/roomimg"
-    name = "api:quint:roomimg"
+    url = "/api/intellect/roomimg"
+    name = "api:intellect:roomimg"
     requires_auth = True
 
     def __init__(self, store: Store) -> None:
@@ -271,34 +271,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = hass.data.setdefault(DOMAIN, {})
     if not data.get("static"):
         store = Store(hass, 1, f"{DOMAIN}.config")
-        hass.http.register_view(QuintConfigView(store))
-        updater = QuintUpdater(hass, store)
+        hass.http.register_view(IntellectConfigView(store))
+        updater = IntellectUpdater(hass, store)
         data["updater"] = updater
-        hass.http.register_view(QuintUsersView(hass, store))
-        hass.http.register_view(QuintVersionView(hass, updater))
-        hass.http.register_view(QuintUpdateView(updater))
-        hass.http.register_view(QuintBackgroundView(Store(hass, 1, f"{DOMAIN}.background")))
-        hass.http.register_view(QuintRoomImageView(Store(hass, 1, f"{DOMAIN}.roomimg")))
+        hass.http.register_view(IntellectUsersView(hass, store))
+        hass.http.register_view(IntellectVersionView(hass, updater))
+        hass.http.register_view(IntellectUpdateView(updater))
+        hass.http.register_view(IntellectBackgroundView(Store(hass, 1, f"{DOMAIN}.background")))
+        hass.http.register_view(IntellectRoomImageView(Store(hass, 1, f"{DOMAIN}.roomimg")))
         await hass.http.async_register_static_paths(
             [StaticPathConfig(STATIC_URL, str(Path(__file__).parent / "frontend"), False)]
         )
         data["static"] = True
     data["updater"].start()
     title = entry.data.get("title", "Intellect")
-    # v1.28.0: boxes set up under the old name show "Intellect" in the sidebar from now on.
-    if title.strip().lower() in ("quint", "quint dashboard"):
-        title = "Intellect"
-        hass.config_entries.async_update_entry(entry, title=title, data={**entry.data, "title": title})
-    js = Path(__file__).parent / "frontend" / "quint-panel.js"
+    js = Path(__file__).parent / "frontend" / "intellect-panel.js"
     stamp = int((await hass.async_add_executor_job(js.stat)).st_mtime)
-    guard = f"{STATIC_URL}/quint-guard.js?v={VERSION}.{stamp}"
+    guard = f"{STATIC_URL}/intellect-guard.js?v={VERSION}.{stamp}"
     frontend.add_extra_js_url(hass, guard)
     data["guard"] = guard
     await panel_custom.async_register_panel(
         hass,
-        webcomponent_name="quint-panel",
+        webcomponent_name="intellect-panel",
         frontend_url_path=PANEL_PATH,
-        module_url=f"{STATIC_URL}/quint-panel.js?v={VERSION}.{stamp}",
+        module_url=f"{STATIC_URL}/intellect-panel.js?v={VERSION}.{stamp}",
         sidebar_title=title,
         sidebar_icon="mdi:home-automation",
         require_admin=False,

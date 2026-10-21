@@ -30,10 +30,10 @@ def is_newer(candidate: object, current: object) -> bool:
     return bool(a) and bool(b) and a > b
 
 
-def looks_like_quint(*texts: object) -> bool:
+def looks_like_intellect(*texts: object) -> bool:
     """Used to find the HACS update entity that belongs to this integration."""
     blob = " ".join(str(t) for t in texts if t).lower()
-    return "quint" in blob
+    return "intellect" in blob
 
 
 def clean_perms(raw: object, keep: dict | None = None, protect: str = "") -> dict:

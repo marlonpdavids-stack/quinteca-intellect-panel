@@ -1,13 +1,13 @@
 name: Release
 
 # Creates a GitHub release (and tag) automatically whenever the version in
-# custom_components/quint/manifest.json changes on main. HACS watches releases,
+# custom_components/intellect/manifest.json changes on main. HACS watches releases,
 # and Intellect installs them and restarts Home Assistant by itself.
 on:
   push:
     branches: [main]
     paths:
-      - custom_components/quint/manifest.json
+      - custom_components/intellect/manifest.json
   workflow_dispatch:
 
 permissions:
@@ -21,7 +21,7 @@ jobs:
       - name: Read version
         id: v
         run: |
-          echo "version=$(python3 -c "import json;print(json.load(open('custom_components/quint/manifest.json'))['version'])")" >> "$GITHUB_OUTPUT"
+          echo "version=$(python3 -c "import json;print(json.load(open('custom_components/intellect/manifest.json'))['version'])")" >> "$GITHUB_OUTPUT"
       - name: Create release when it does not exist yet
         env:
           GH_TOKEN: ${{ github.token }}

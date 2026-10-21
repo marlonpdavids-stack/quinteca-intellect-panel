@@ -20,7 +20,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from .const import VERSION
-from .util import is_newer, looks_like_quint
+from .util import is_newer, looks_like_intellect
 
 _LOGGER = logging.getLogger(__name__)
 MANIFEST = Path(__file__).parent / "manifest.json"
@@ -37,7 +37,7 @@ def read_disk_version() -> str:
         return ""
 
 
-class QuintUpdater:
+class IntellectUpdater:
     """Watches for new versions, installs them through HACS and restarts Home Assistant."""
 
     def __init__(self, hass: HomeAssistant, store: Store) -> None:
@@ -88,13 +88,13 @@ class QuintUpdater:
         """entity_id of the HACS update entity of this integration, if HACS is used."""
         reg = er.async_get(self.hass)
         for entry in reg.entities.values():
-            if entry.domain == "update" and entry.platform == "hacs" and looks_like_quint(
+            if entry.domain == "update" and entry.platform == "hacs" and looks_like_intellect(
                 entry.entity_id, entry.original_name, entry.name
             ):
                 return entry.entity_id
         for state in self.hass.states.async_all("update"):
             a = state.attributes
-            if looks_like_quint(a.get("release_url"), a.get("title"), a.get("friendly_name")) and (
+            if looks_like_intellect(a.get("release_url"), a.get("title"), a.get("friendly_name")) and (
                 "hacs" in str(a.get("entity_picture", "")).lower() or "github" in str(a.get("release_url", "")).lower()
             ):
                 return state.entity_id
@@ -162,7 +162,7 @@ class QuintUpdater:
         except Exception as err:  # noqa: BLE001 - e.g. invalid configuration
             self.last_error = f"restart: {err}"
             persistent_notification.async_create(
-                self.hass, f"Intellect could not restart Home Assistant: {err}", title="Intellect update", notification_id="quint_update"
+                self.hass, f"Intellect could not restart Home Assistant: {err}", title="Intellect update", notification_id="intellect_update"
             )
             return False
 
@@ -187,7 +187,7 @@ class QuintUpdater:
                     f"Intellect {disk} is installed (running {VERSION})."
                     + (" Home Assistant restarts in about a minute to finish the update." if cfg["restart"] else " Restart Home Assistant to finish the update."),
                     title="Intellect update",
-                    notification_id="quint_update",
+                    notification_id="intellect_update",
                 )
                 return
             if cfg["restart"] and (self._restart_after is None or now >= self._restart_after):

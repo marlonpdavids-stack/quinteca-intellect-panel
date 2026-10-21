@@ -35,8 +35,8 @@ const VOL_I = ic('<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0
 const WX = { "clear-night": "Clear night", cloudy: "Cloudy", exceptional: "Exceptional", fog: "Foggy", hail: "Hail", lightning: "Thunderstorm", "lightning-rainy": "Thunderstorm", partlycloudy: "Partly cloudy", pouring: "Heavy rain", rainy: "Rain", snowy: "Snow", "snowy-rainy": "Sleet", sunny: "Sunny", windy: "Windy", "windy-variant": "Windy" };
 (() => {
   try {
-    if (document.getElementById("quint-fonts")) return;
-    const l = document.createElement("link"); l.id = "quint-fonts"; l.rel = "stylesheet";
+    if (document.getElementById("intellect-fonts")) return;
+    const l = document.createElement("link"); l.id = "intellect-fonts"; l.rel = "stylesheet";
     l.href = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap";
     document.head.appendChild(l);
   } catch (e) {}
@@ -67,8 +67,8 @@ SET_I.wall = ICONS.camera; SET_I.updates = ic('<path d="M21 12a9 9 0 1 1-3-6.7"/
 const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
-const KEY = "quint_cfg";
-const VER = "1.28.1";
+const KEY = "intellect_cfg";
+const VER = "1.29.0";
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
 const TSIZES = { xl: { n: "Extra large", z: 1.3, m: 1.3 }, l: { n: "Large", z: 1, m: 1 }, s: { n: "Small", z: 0.8, m: 0.9 }, xs: { n: "Very small", z: 0.62, m: 0.8 } };
@@ -92,7 +92,7 @@ const SWATCH = {
 const FRESH = () => ({ rooms: [], floors: [], map: {}, hide: [], name: "", custom: {}, order: {} });
 
 const CSS = `
-:host{display:block;--vh:100vh;height:var(--vh);overflow-y:auto;--ac:#e8c98f;--ok:#5fd39a;--warn:#f0b35a;--bad:#ff6b6b;--mu:#9aa6bd;--tx:#eef1f6;--bd:rgba(255,255,255,.10);--cd:rgba(12,16,26,.55);--serif:"Cormorant Garamond","Quint Serif",Georgia,"Times New Roman",serif;color:var(--tx);font-family:"Inter","Quint Sans",-apple-system,"SF Pro Display","Segoe UI",Roboto,sans-serif}
+:host{display:block;--vh:100vh;height:var(--vh);overflow-y:auto;--ac:#e8c98f;--ok:#5fd39a;--warn:#f0b35a;--bad:#ff6b6b;--mu:#9aa6bd;--tx:#eef1f6;--bd:rgba(255,255,255,.10);--cd:rgba(12,16,26,.55);--serif:"Cormorant Garamond","Intellect Serif",Georgia,"Times New Roman",serif;color:var(--tx);font-family:"Inter","Intellect Sans",-apple-system,"SF Pro Display","Segoe UI",Roboto,sans-serif}
 @supports (height:100dvh){:host{--vh:100dvh}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 .si{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.12em}
@@ -449,7 +449,7 @@ nav button.t.act .si{color:var(--c,#12151c);animation:pop .55s cubic-bezier(.3,1
 :host([data-wide="1"]) .chips{grid-template-columns:repeat(4,minmax(0,1fr))}
 `;
 
-class QuintDashboard extends HTMLElement {
+class IntellectDashboard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -646,7 +646,7 @@ class QuintDashboard extends HTMLElement {
     return !!this._h2v;
   }
   _haOn() {
-    if (this._haOff === undefined) { try { this._haOff = localStorage.getItem("quint_haoff") === "1"; } catch (e) { this._haOff = false; } }
+    if (this._haOff === undefined) { try { this._haOff = localStorage.getItem("intellect_haoff") === "1"; } catch (e) { this._haOff = false; } }
     return (this._c.eng || "auto") !== "std" && !this._haOff && typeof window.loadCardHelpers === "function";
   }
   _haHost(id, wall, snap) {
@@ -690,7 +690,7 @@ class QuintDashboard extends HTMLElement {
   }
   _haFail(id) {
     (this._haBad = this._haBad || new Set()).add(id);
-    if (!this._haOkN && (this._haBad.size >= 2 || id === "api")) { this._haOff = true; try { localStorage.setItem("quint_haoff", "1"); } catch (e) {} }
+    if (!this._haOkN && (this._haBad.size >= 2 || id === "api")) { this._haOff = true; try { localStorage.setItem("intellect_haoff", "1"); } catch (e) {} }
     this._last = null; this._draw(true);
   }
   _snapLoad(img, base, cb) {
@@ -729,7 +729,7 @@ class QuintDashboard extends HTMLElement {
   }
   _layout() {
     const w = this.clientWidth || window.innerWidth || 1024, auto = w < 600 ? "phone" : w < 1200 ? "tablet" : "desktop";
-    let dev = localStorage.getItem("quint_dev") || "auto";
+    let dev = localStorage.getItem("intellect_dev") || "auto";
     if (!["phone", "tablet", "desktop"].includes(dev)) dev = auto;
     const wide = dev !== "phone" && w >= 900 ? "1" : "0";
     if (this.getAttribute("data-dev") !== dev) this.setAttribute("data-dev", dev);
@@ -798,7 +798,7 @@ class QuintDashboard extends HTMLElement {
   _push() {
     if (!this._h || !this._srv) return;
     clearTimeout(this._st);
-    this._st = setTimeout(() => this._h.callApi("POST", "quint/config", this._c).catch(() => {}), 300);
+    this._st = setTimeout(() => this._h.callApi("POST", "intellect/config", this._c).catch(() => {}), 300);
   }
   _revert() {
     try { const pm = { perms: this._c.perms, manager: this._c.manager, upInstall: this._c.upInstall, upRestart: this._c.upRestart }; this._c = { ...FRESH(), ...JSON.parse(this._snap), ...pm }; } catch (e) {}
@@ -806,7 +806,7 @@ class QuintDashboard extends HTMLElement {
     this._dirty = false; this._applyBg(); this._syncTpl();
   }
   _toast(t) { this._hint(t); clearTimeout(this._tt); this._tt = setTimeout(() => this._hint(""), 1800); }
-  _bgu() { try { return JSON.parse(localStorage.getItem("quint_bgu") || "null"); } catch (e) { return null; } }
+  _bgu() { try { return JSON.parse(localStorage.getItem("intellect_bgu") || "null"); } catch (e) { return null; } }
   _applyBg() {
     if (this._rbgOn) { this.style.setProperty("--qbg-img", `url("${this._rbgOn}")`); this.style.setProperty("--qbg-dim", "0.5"); this.style.setProperty("--qbg-blur", "0px"); return; }
     const u = this._bgu(), b = { preset: "midnight", mode: "preset", dim: 0, blur: 0, ...(u || this._c.bg || {}) }, data = u ? u.data : this._bgData;
@@ -816,14 +816,14 @@ class QuintDashboard extends HTMLElement {
     this.style.setProperty("--qbg-blur", Math.max(0, Math.min(20, +b.blur || 0)) + "px");
   }
   _loadBg() {
-    this._h.callApi("GET", "quint/roomimg").then((d) => { this._rsrv = d && typeof d === "object" ? d : {}; this._draw(); }).catch(() => {});
-    this._h.callApi("GET", "quint/background").then((d) => { this._bgData = (d && d.data) || ""; this._applyBg(); this._draw(); }).catch(() => {});
+    this._h.callApi("GET", "intellect/roomimg").then((d) => { this._rsrv = d && typeof d === "object" ? d : {}; this._draw(); }).catch(() => {});
+    this._h.callApi("GET", "intellect/background").then((d) => { this._bgData = (d && d.data) || ""; this._applyBg(); this._draw(); }).catch(() => {});
   }
   _bgLocal(patch) {
     try {
       let u = this._bgu();
       if (!u) { const b = { preset: "midnight", mode: "preset", dim: 0, blur: 0, ...(this._c.bg || {}) }; u = { ...b }; if (b.mode === "image" && this._bgData) u.data = this._bgData; else u.mode = "preset"; }
-      localStorage.setItem("quint_bgu", JSON.stringify({ ...u, ...patch }));
+      localStorage.setItem("intellect_bgu", JSON.stringify({ ...u, ...patch }));
     } catch (e) { this._toast("Not enough space to save the picture"); }
     this._applyBg();
   }
@@ -836,7 +836,7 @@ class QuintDashboard extends HTMLElement {
       cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
       URL.revokeObjectURL(url);
       const data = cv.toDataURL("image/jpeg", 0.8);
-      await this._h.callApi("POST", "quint/background", { data });
+      await this._h.callApi("POST", "intellect/background", { data });
       this._bgData = data;
       this._c.bg = { dim: 35, ...(this._c.bg || {}), mode: "image" };
       this._save(); this._applyBg(); this._draw(true); this._toast("Photo uploaded — press Save");
@@ -876,12 +876,12 @@ class QuintDashboard extends HTMLElement {
       this._c = FRESH(); this._importRooms(false); this._applyBg(); this._syncTpl(); this._save(); this._draw(true); return;
     }
     if (a === "export") {
-      const al = document.createElement("a"); al.href = URL.createObjectURL(new Blob([JSON.stringify({ quint: VER, ...c }, null, 2)], { type: "application/json" }));
-      al.download = "quint-settings.json"; al.click(); setTimeout(() => URL.revokeObjectURL(al.href), 2000); return;
+      const al = document.createElement("a"); al.href = URL.createObjectURL(new Blob([JSON.stringify({ intellect: VER, ...c }, null, 2)], { type: "application/json" }));
+      al.download = "intellect-settings.json"; al.click(); setTimeout(() => URL.revokeObjectURL(al.href), 2000); return;
     }
     if (a === "bgp") c.bg = { ...(c.bg || {}), preset: v, mode: "preset" };
     else if (a === "bgm") c.bg = { ...(c.bg || {}), mode: "image" };
-    else if (a === "bgx") { this._h.callApi("DELETE", "quint/background").catch(() => {}); this._bgData = ""; c.bg = { ...(c.bg || {}), mode: "preset" }; }
+    else if (a === "bgx") { this._h.callApi("DELETE", "intellect/background").catch(() => {}); this._bgData = ""; c.bg = { ...(c.bg || {}), mode: "preset" }; }
     else if (a === "svcvis") c.svcHide = (c.svcHide || []).includes(v) ? c.svcHide.filter((x) => x !== v) : [...(c.svcHide || []), v];
     else if (a === "svcup" || a === "svcdn") { const full = this._svcsAll(), ci = full.indexOf("clock"), l = this._svcsList(); this._swap(l, l.indexOf(v), a === "svcup" ? -1 : 1); if (ci >= 0) l.splice(Math.min(ci, l.length), 0, "clock"); c.svcOrder = l; }
     else if (a === "rup" || a === "rdn") this._swap(c.rooms, +v, a === "rup" ? -1 : 1);
@@ -906,7 +906,7 @@ class QuintDashboard extends HTMLElement {
     else if (a === "tsz") { if (TSIZES[v]) c.tsz = v; }
     else if (a === "cks") c.cks = v === "analog" ? "analog" : "digital";
     else if (a === "ctile") c.clockTile = !c.clockTile;
-    else if (a === "eng") { c.eng = v === "std" ? "std" : "auto"; this._haOff = false; this._haBad = new Set(); this._haOkN = 0; try { localStorage.removeItem("quint_haoff"); } catch (e) {} this._last = null; }
+    else if (a === "eng") { c.eng = v === "std" ? "std" : "auto"; this._haOff = false; this._haBad = new Set(); this._haOkN = 0; try { localStorage.removeItem("intellect_haoff"); } catch (e) {} this._last = null; }
     else if (a === "clk") c.noClock = !c.noClock;
     else if (a === "flag" && ["noClock", "noScenes", "noWeather", "noRooms", "dflt", "lock"].includes(v)) c[v] = !c[v];
     else if (a === "srsel") { this._sr = v; return this._draw(true); }
@@ -936,7 +936,7 @@ class QuintDashboard extends HTMLElement {
   }
   async _loadCfg() {
     try {
-      const d = await this._h.callApi("GET", "quint/config");
+      const d = await this._h.callApi("GET", "intellect/config");
       this._srv = true;
       if (d && Object.keys(d).length) { this._c = { rooms: [], map: {}, hide: [], name: "", custom: {}, order: {}, ...d }; localStorage.setItem(KEY, JSON.stringify(this._c)); }
       else if (this._c.rooms.length) this._save();
@@ -955,11 +955,11 @@ class QuintDashboard extends HTMLElement {
   /* ---------- updates ---------- */
   _verCheck() {
     if (!this._h || !this._h.callApi) return;
-    this._h.callApi("GET", "quint/version").then((d) => {
-      if (!d || !d.running || d.running === VER) { try { sessionStorage.removeItem("quint_rl"); } catch (e) {} return; }
-      let tried = ""; try { tried = sessionStorage.getItem("quint_rl") || ""; } catch (e) {}
+    this._h.callApi("GET", "intellect/version").then((d) => {
+      if (!d || !d.running || d.running === VER) { try { sessionStorage.removeItem("intellect_rl"); } catch (e) {} return; }
+      let tried = ""; try { tried = sessionStorage.getItem("intellect_rl") || ""; } catch (e) {}
       if (tried === d.running) return;
-      try { sessionStorage.setItem("quint_rl", d.running); } catch (e) {}
+      try { sessionStorage.setItem("intellect_rl", d.running); } catch (e) {}
       this._toast("Intellect " + d.running + " is ready, reloading…");
       setTimeout(() => this._reload(), 1200);
     }).catch(() => {});
@@ -968,13 +968,13 @@ class QuintDashboard extends HTMLElement {
   _upLoad(force) {
     if (this._upBusy || (this._up && !force)) return;
     this._upBusy = true;
-    this._h.callApi("GET", "quint/version?full=1").then((d) => { this._up = d || null; }).catch(() => { this._up = { error: true }; }).finally(() => { this._upBusy = false; this._draw(true); });
+    this._h.callApi("GET", "intellect/version?full=1").then((d) => { this._up = d || null; }).catch(() => { this._up = { error: true }; }).finally(() => { this._upBusy = false; this._draw(true); });
   }
   _upAct(a) {
     if (this._upBusy) return;
     if (a === "restart" && !confirm("Restart Home Assistant now?")) return;
     this._upBusy = true; this._upMsg = a === "check" ? "Checking GitHub through HACS…" : a === "install" ? "Asking HACS to install…" : "Restarting Home Assistant…"; this._draw(true);
-    this._h.callApi("POST", "quint/update", { action: a }).then((d) => { this._up = d || this._up; this._upMsg = ""; if (a === "restart") this._upMsg = "Home Assistant is restarting. This page reloads when it is back."; })
+    this._h.callApi("POST", "intellect/update", { action: a }).then((d) => { this._up = d || this._up; this._upMsg = ""; if (a === "restart") this._upMsg = "Home Assistant is restarting. This page reloads when it is back."; })
       .catch((e) => { this._upMsg = a === "restart" ? "Home Assistant is restarting. This page reloads when it is back." : "That did not work: " + ((e && e.body && e.body.message) || (e && e.message) || "error"); })
       .finally(() => { this._upBusy = false; this._draw(true); if (a !== "restart") setTimeout(() => this._upLoad(true), 4000); });
   }
@@ -984,7 +984,7 @@ class QuintDashboard extends HTMLElement {
     const h = this._h;
     try { if (h && h.auth && typeof h.auth.revoke === "function") await h.auth.revoke(); } catch (e) {}
     try { if (h && h.connection && h.connection.close) h.connection.close(); } catch (e) {}
-    try { localStorage.removeItem("hassTokens"); sessionStorage.removeItem("quint_rl"); } catch (e) {}
+    try { localStorage.removeItem("hassTokens"); sessionStorage.removeItem("intellect_rl"); } catch (e) {}
     this._goRoot();
   }
   _locked() {
@@ -995,13 +995,13 @@ class QuintDashboard extends HTMLElement {
     if (force) this._ua = null;
     if (this._ua || this._usersBusy || !(this._admin() || this._mgr())) return;
     this._usersBusy = true;
-    this._h.callApi("GET", "quint/users").then((l) => { this._ua = (l || []).filter((x) => x.is_active !== false); }).catch(() => { this._ua = []; }).finally(() => { this._usersBusy = false; this._draw(true); });
+    this._h.callApi("GET", "intellect/users").then((l) => { this._ua = (l || []).filter((x) => x.is_active !== false); }).catch(() => { this._ua = []; }).finally(() => { this._usersBusy = false; this._draw(true); });
   }
   _normUsers() { return (this._ua || []).filter((x) => !x.is_admin); }
   _err(e, d) { return (e && e.body && e.body.message) || (e && e.message) || d; }
   _permPush() {
     try { localStorage.setItem(KEY, JSON.stringify(this._c)); } catch (e) {}
-    this._h.callApi("POST", "quint/users", { action: "perms", perms: this._c.perms || {} }).catch((e) => this._toast("Could not save the limits: " + this._err(e, "error")));
+    this._h.callApi("POST", "intellect/users", { action: "perms", perms: this._c.perms || {} }).catch((e) => this._toast("Could not save the limits: " + this._err(e, "error")));
   }
   _uact(a, v) {
     const c = this._c;
@@ -1016,7 +1016,7 @@ class QuintDashboard extends HTMLElement {
     if (a === "ureset") { if (c.perms) delete c.perms[v]; this._permPush(); return this._draw(true); }
     if (a === "mgr") {
       if (!this._admin()) return;
-      return this._h.callApi("POST", "quint/users", { action: "manager", user_id: c.manager === v ? "" : v }).then((d) => { if (d && d.manager) c.manager = d.manager; else delete c.manager; try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} this._toast(c.manager ? "Intellect admin chosen" : "No Intellect admin"); this._draw(true); }).catch((e) => this._toast("Could not change it: " + this._err(e, "error")));
+      return this._h.callApi("POST", "intellect/users", { action: "manager", user_id: c.manager === v ? "" : v }).then((d) => { if (d && d.manager) c.manager = d.manager; else delete c.manager; try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} this._toast(c.manager ? "Intellect admin chosen" : "No Intellect admin"); this._draw(true); }).catch((e) => this._toast("Could not change it: " + this._err(e, "error")));
     }
     if (a === "unew") return this._userNew();
     if (a === "udel") return this._userDel(v);
@@ -1024,7 +1024,7 @@ class QuintDashboard extends HTMLElement {
     if (a === "upflag") {
       const on = (k) => c[k] !== false, ins = v === "install" ? !on("upInstall") : on("upInstall"), rs = v === "restart" ? !on("upRestart") : on("upRestart");
       c.upInstall = ins; c.upRestart = rs; try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} this._draw(true);
-      return this._h.callApi("POST", "quint/update", { action: "settings", install: ins, restart: rs }).catch((e) => this._toast("Could not save: " + this._err(e, "error")));
+      return this._h.callApi("POST", "intellect/update", { action: "settings", install: ins, restart: rs }).catch((e) => this._toast("Could not save: " + this._err(e, "error")));
     }
   }
   async _userNew() {
@@ -1034,7 +1034,7 @@ class QuintDashboard extends HTMLElement {
     if (pw.length < 8) return this._toast("The password needs at least 8 characters");
     this._ubusy = true; this._draw(true);
     try {
-      const d = await this._h.callApi("POST", "quint/users", { action: "create", name, username: un, password: pw });
+      const d = await this._h.callApi("POST", "intellect/users", { action: "create", name, username: un, password: pw });
       this._pu = d && d.id; this._toast(`${name} was added`);
       ["name", "user", "pass"].forEach((k) => { const el = this.shadowRoot.querySelector(`[data-nu="${k}"]`); if (el) el.value = ""; });
     } catch (e) { this._toast(this._err(e, "Could not add the user")); }
@@ -1043,7 +1043,7 @@ class QuintDashboard extends HTMLElement {
   async _userDel(uid) {
     const u = (this._ua || []).find((x) => x.id === uid); if (!u || u.is_admin) return;
     if (!confirm(`Remove ${u.name}? Their Home Assistant account is deleted.`)) return;
-    try { await this._h.callApi("POST", "quint/users", { action: "delete", user_id: uid }); } catch (e) { return this._toast(this._err(e, "Could not remove the user")); }
+    try { await this._h.callApi("POST", "intellect/users", { action: "delete", user_id: uid }); } catch (e) { return this._toast(this._err(e, "Could not remove the user")); }
     if (this._c.perms) delete this._c.perms[uid];
     if (this._c.manager === uid) delete this._c.manager;
     if (this._c.lockUsers) { this._c.lockUsers = this._c.lockUsers.filter((x) => x !== uid); this._save(); }
@@ -1051,7 +1051,7 @@ class QuintDashboard extends HTMLElement {
     this._loadUsers(true); this._draw(true);
   }
   _applyFull() {
-    const v = localStorage.getItem("quint_full"); if (v === null && !this._locked()) return;
+    const v = localStorage.getItem("intellect_full"); if (v === null && !this._locked()) return;
     const full = v === "1" || this._locked();
     this.dispatchEvent(new CustomEvent("hass-dock-sidebar", { bubbles: true, composed: true, detail: { dock: full ? "always_hidden" : "docked" } }));
   }
@@ -1092,8 +1092,8 @@ class QuintDashboard extends HTMLElement {
   _svcsList() { return this._svcsAll().filter((x) => x !== "clock"); }
   _svcs() { const h = this._c.svcHide || []; return this._svcsAll().filter((x) => x !== "clock" && !h.includes(x)); }
   _svcsHome() { const h = this._c.svcHide || []; return this._svcsAll().filter((x) => !h.includes(x)); }
-  _clockTile() { let v = ""; try { v = localStorage.getItem("quint_ct") || ""; } catch (e) {} return v === "1" ? true : v === "0" ? false : !!this._c.clockTile; }
-  _clockStyle() { let v = ""; try { v = localStorage.getItem("quint_ck") || ""; } catch (e) {} return v === "analog" || v === "digital" ? v : this._c.cks === "analog" ? "analog" : "digital"; }
+  _clockTile() { let v = ""; try { v = localStorage.getItem("intellect_ct") || ""; } catch (e) {} return v === "1" ? true : v === "0" ? false : !!this._c.clockTile; }
+  _clockStyle() { let v = ""; try { v = localStorage.getItem("intellect_ck") || ""; } catch (e) {} return v === "analog" || v === "digital" ? v : this._c.cks === "analog" ? "analog" : "digital"; }
   _titles() { const T = this._c.svcTitle || {}; Object.keys(SV).forEach((k) => { SV[k].n = T[k] || (k.startsWith("cs:") ? k.slice(3) : SV_DEF[k]); }); }
   _svcRooms(s) { const h = (this._c.roomHide || {})[s] || []; return this._rooms().filter((r) => !h.includes(r.id)); }
   _rooms() { return this._svOk("rooms") ? this._c.rooms.filter((r) => r.on !== false && this._rmOk(r.id)) : []; }
@@ -1147,7 +1147,7 @@ class QuintDashboard extends HTMLElement {
     if (d.pb) {
       const i = d.pb.indexOf("|"), a = d.pb.slice(0, i), v = d.pb.slice(i + 1);
       if (a === "preset") this._bgLocal({ preset: v, mode: "preset" });
-      else if (a === "shared") { try { localStorage.removeItem("quint_bgu"); } catch (er) {} this._applyBg(); }
+      else if (a === "shared") { try { localStorage.removeItem("intellect_bgu"); } catch (er) {} this._applyBg(); }
       return this._draw(true);
     }
     if (d.cam) {
@@ -1173,7 +1173,7 @@ class QuintDashboard extends HTMLElement {
     if (d.tog) {
       const [k, v] = d.tog.split(":");
       if (k === "menu") return this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
-      if (k === "full") { localStorage.setItem("quint_full", localStorage.getItem("quint_full") === "1" ? "0" : "1"); this._applyFull(); return this._draw(true); }
+      if (k === "full") { localStorage.setItem("intellect_full", localStorage.getItem("intellect_full") === "1" ? "0" : "1"); this._applyFull(); return this._draw(true); }
       if (k === "room") this._c.rooms[+v].on = this._c.rooms[+v].on === false;
       if (k === "hide") this._c.hide = this._c.hide.includes(v) ? this._c.hide.filter((x) => x !== v) : [...this._c.hide, v];
       if (k === "del") this._c.rooms.splice(+v, 1);
@@ -1191,7 +1191,7 @@ class QuintDashboard extends HTMLElement {
     if (d.pbfile !== undefined) { const fl = t.files && t.files[0]; if (fl) this._pickBgLocal(fl); t.value = ""; return; }
     if (d.sdf !== undefined && this._sd) { this._sd[d.sdf] = t.value; this._draw(true); return; }
     if (adm && d.icf) { const ic = this._icCur(), [a, b] = d.icf.split("."); if (!ic) return; if (b) { ic[a] = ic[a] || {}; ic[a][b] = t.value.trim(); } else ic[a] = t.value.trim(); this._save(); this._draw(true); return; }
-    if (d.devsel !== undefined) { localStorage.setItem("quint_dev", t.value); this._layout(); this._draw(true); return; }
+    if (d.devsel !== undefined) { localStorage.setItem("intellect_dev", t.value); this._layout(); this._draw(true); return; }
     if (adm && d.bgfile !== undefined) { const fl = t.files && t.files[0]; if (fl) this._pickBg(fl); t.value = ""; return; }
     if (adm && d.import !== undefined) {
       const fl = t.files && t.files[0];
@@ -1247,19 +1247,19 @@ class QuintDashboard extends HTMLElement {
 
   /* ---------- custom cards ---------- */
   _uid() { return Math.random().toString(36).slice(2, 9); }
-  _lo() { try { return JSON.parse(localStorage.getItem("quint_ord") || "{}") || {}; } catch (e) { return {}; } }
+  _lo() { try { return JSON.parse(localStorage.getItem("intellect_ord") || "{}") || {}; } catch (e) { return {}; } }
   _ordOf(ctx) { return (!this._admin() && this._lo()[ctx]) || (this._c.order && this._c.order[ctx]); }
   _ordSet(ctx, list) {
     if (this._admin()) { this._c.order[ctx] = list; this._save(); return; }
-    try { const o = this._lo(); o[ctx] = list; localStorage.setItem("quint_ord", JSON.stringify(o)); } catch (e) { this._toast("Not enough space to save the arrangement"); }
+    try { const o = this._lo(); o[ctx] = list; localStorage.setItem("intellect_ord", JSON.stringify(o)); } catch (e) { this._toast("Not enough space to save the arrangement"); }
   }
   _svcMove(from, to) {
     const l = this._svcsAll(), i = l.indexOf(from), j = l.indexOf(to); if (i < 0 || j < 0) return;
     l.splice(i, 1); l.splice(j, 0, from);
     if (this._admin()) { this._c.svcOrder = l; this._save(); return; }
-    try { localStorage.setItem("quint_svo", JSON.stringify(l)); } catch (e) {}
+    try { localStorage.setItem("intellect_svo", JSON.stringify(l)); } catch (e) {}
   }
-  _svcOrder() { if (!this._admin()) { try { const l = JSON.parse(localStorage.getItem("quint_svo") || "null"); if (Array.isArray(l)) return l; } catch (e) {} } return this._c.svcOrder || []; }
+  _svcOrder() { if (!this._admin()) { try { const l = JSON.parse(localStorage.getItem("intellect_svo") || "null"); if (Array.isArray(l)) return l; } catch (e) {} } return this._c.svcOrder || []; }
   _sort(ctx, arr, key) {
     const o = this._ordOf(ctx); if (!o) return arr;
     const r = (x) => { const i = o.indexOf(key(x)); return i < 0 ? 1e6 : i; };
@@ -1513,7 +1513,7 @@ class QuintDashboard extends HTMLElement {
 
   /* ---------- pages ---------- */
   _brand() {
-    const menu = !this._locked() && (this._narrow || localStorage.getItem("quint_full") === "1") ? `<button class="ib" data-tog="menu:0">☰</button>` : "";
+    const menu = !this._locked() && (this._narrow || localStorage.getItem("intellect_full") === "1") ? `<button class="ib" data-tog="menu:0">☰</button>` : "";
     return `<div class="brand">${menu}<span>${this._esc(this._c.title || this._title || "Intellect")}</span></div>`;
   }
   _top(back = true) { return `<div class="top">${this._brand()}${back ? `<button class="back" data-go='{"p":"home"}'>‹ Home</button>` : ""}</div>`; }
@@ -1651,8 +1651,8 @@ class QuintDashboard extends HTMLElement {
     return `${this._top()}<h1>${SV.intercom.i} ${l.length > 1 ? SV.intercom.n + "s" : this._esc(this._icName(l[0] || {}))}</h1><div class="icgrid" style="margin-top:10px">${l.map((ic) => this._icCard(ic, true)).join("")}</div>${hint}`;
   }
   /* --- scenes: your own scenes are saved as a snapshot of device states --- */
-  _lsc() { try { return JSON.parse(localStorage.getItem("quint_scenes") || "[]"); } catch (e) { return []; } }
-  _lscSave(l) { try { localStorage.setItem("quint_scenes", JSON.stringify(l)); } catch (e) {} }
+  _lsc() { try { return JSON.parse(localStorage.getItem("intellect_scenes") || "[]"); } catch (e) { return []; } }
+  _lscSave(l) { try { localStorage.setItem("intellect_scenes", JSON.stringify(l)); } catch (e) {} }
   _myScenes() { return [...(this._c.scenes || []).map((s) => ({ ...s, sc: "s" })), ...this._lsc().map((s) => ({ ...s, sc: "l" }))]; }
   _snapOf(id) {
     const s = this._h.states[id]; if (!s) return null;
@@ -1702,10 +1702,10 @@ class QuintDashboard extends HTMLElement {
   _scAct(a, v) {
     const find = (key) => { const [k, id] = [key.slice(0, key.indexOf(":")), key.slice(key.indexOf(":") + 1)]; return this._myScenes().find((s) => s.sc === k && s.id === id); };
     if (a === "run") { const s = find(v); if (s) this._applyScene(s); return; }
-    if (a === "ckd") { try { if (v === "analog" || v === "digital") localStorage.setItem("quint_ck", v); else localStorage.removeItem("quint_ck"); } catch (e) {} this._last = null; return this._draw(true); }
-    if (a === "ctd") { try { if (v === "1" || v === "0") localStorage.setItem("quint_ct", v); else localStorage.removeItem("quint_ct"); } catch (e) {} this._last = null; return this._draw(true); }
-    if (a === "tsd") { try { if (TSIZES[v]) localStorage.setItem("quint_ts", v); else localStorage.removeItem("quint_ts"); } catch (e) {} this._applyTs(); return this._draw(true); }
-    if (a === "ordreset") { try { localStorage.removeItem("quint_ord"); localStorage.removeItem("quint_svo"); } catch (e) {} this._toast("Back to the shared order"); return this._draw(true); }
+    if (a === "ckd") { try { if (v === "analog" || v === "digital") localStorage.setItem("intellect_ck", v); else localStorage.removeItem("intellect_ck"); } catch (e) {} this._last = null; return this._draw(true); }
+    if (a === "ctd") { try { if (v === "1" || v === "0") localStorage.setItem("intellect_ct", v); else localStorage.removeItem("intellect_ct"); } catch (e) {} this._last = null; return this._draw(true); }
+    if (a === "tsd") { try { if (TSIZES[v]) localStorage.setItem("intellect_ts", v); else localStorage.removeItem("intellect_ts"); } catch (e) {} this._applyTs(); return this._draw(true); }
+    if (a === "ordreset") { try { localStorage.removeItem("intellect_ord"); localStorage.removeItem("intellect_svo"); } catch (e) {} this._toast("Back to the shared order"); return this._draw(true); }
     if (a === "new") { this._sd = { name: "", scope: this._admin() ? "s" : "l", room: "", q: "", sel: new Set(Object.keys(this._h.states).filter((i) => ["lights", "shades", "climate"].includes(this._svcOf(i)) && !this._c.hide.includes(i))) }; return this._draw(true); }
     if (a === "re") { const s = find(v); if (!s) return; this._sd = { name: s.name, scope: s.sc, room: s.room || "", q: "", edit: v, sel: new Set((s.items || []).map((x) => x.e)) }; return this._draw(true); }
     if (a === "del") {
@@ -1769,12 +1769,12 @@ class QuintDashboard extends HTMLElement {
       this._draw(true);
     } catch (e) { this._toast("Could not use that photo"); }
   }
-  _rimgs() { try { return JSON.parse(localStorage.getItem("quint_rimg") || "{}") || {}; } catch (e) { return {}; } }
-  _rimgSave(m) { try { localStorage.setItem("quint_rimg", JSON.stringify(m)); return true; } catch (e) { this._toast("Not enough space for this photo"); return false; } }
+  _rimgs() { try { return JSON.parse(localStorage.getItem("intellect_rimg") || "{}") || {}; } catch (e) { return {}; } }
+  _rimgSave(m) { try { localStorage.setItem("intellect_rimg", JSON.stringify(m)); return true; } catch (e) { this._toast("Not enough space for this photo"); return false; } }
   _rimgOf(r) { const l = this._rimgs()[r.id]; if (l) return l; return r.pic && this._rsrv && this._rsrv[r.id] ? this._rsrv[r.id] : ""; }
   _rimgDel(rid) {
     if (this._admin()) {
-      this._h.callApi("DELETE", "quint/roomimg?id=" + encodeURIComponent(rid)).catch(() => {});
+      this._h.callApi("DELETE", "intellect/roomimg?id=" + encodeURIComponent(rid)).catch(() => {});
       if (this._rsrv) delete this._rsrv[rid];
       const r = this._c.rooms.find((x) => x.id === rid); if (r) delete r.pic; this._save();
     }
@@ -1789,7 +1789,7 @@ class QuintDashboard extends HTMLElement {
       cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(url);
       const data = cv.toDataURL("image/jpeg", 0.72);
       if (this._admin()) {
-        await this._h.callApi("POST", "quint/roomimg", { id: rid, data });
+        await this._h.callApi("POST", "intellect/roomimg", { id: rid, data });
         (this._rsrv = this._rsrv || {})[rid] = data; const r = this._c.rooms.find((x) => x.id === rid); if (r) r.pic = true; this._save();
         this._toast("Room photo saved for everyone"); this._draw(true);
       } else { const m = this._rimgs(); m[rid] = data; if (this._rimgSave(m)) { this._toast("Room photo saved on this device"); this._draw(true); } }
@@ -1877,7 +1877,7 @@ class QuintDashboard extends HTMLElement {
     const t = this._stats(k);
     return wrap("", `${hd("", S.i)}<div class="cnt">${t.big}</div><div class="cap2">${t.big ? t.lbl : "No cards yet · tap to open"}</div>`);
   }
-  _ts() { let u = ""; try { u = localStorage.getItem("quint_ts") || ""; } catch (e) {} return TSIZES[u] ? u : TSIZES[this._c && this._c.tsz] ? this._c.tsz : "l"; }
+  _ts() { let u = ""; try { u = localStorage.getItem("intellect_ts") || ""; } catch (e) {} return TSIZES[u] ? u : TSIZES[this._c && this._c.tsz] ? this._c.tsz : "l"; }
   _applyTs() {
     const k = this._ts(), z = TSIZES[k].z, i = ["xl", "l", "s", "xs"].indexOf(k), phone = this.getAttribute("data-dev") === "phone", st = this.style;
     this._z = z; this._m = TSIZES[k].m;
@@ -2048,8 +2048,8 @@ class QuintDashboard extends HTMLElement {
     let body = "";
     if (tab === "bg") {
       const u = this._bgu(), b = { preset: "midnight", mode: "preset", dim: 0, blur: 0, ...(u || c.bg || {}) };
-      let mine = ""; try { mine = localStorage.getItem("quint_ts") || ""; } catch (e) {}
-      let mk = "", mt = ""; try { mk = localStorage.getItem("quint_ck") || ""; mt = localStorage.getItem("quint_ct") || ""; } catch (e) {}
+      let mine = ""; try { mine = localStorage.getItem("intellect_ts") || ""; } catch (e) {}
+      let mk = "", mt = ""; try { mk = localStorage.getItem("intellect_ck") || ""; mt = localStorage.getItem("intellect_ct") || ""; } catch (e) {}
       const ckSeg = `<div class="seg sm" style="flex-wrap:wrap">${[["digital", "Digital"], ["analog", "Analog"]].map(([k, n]) => `<button class="${this._clockStyle() === k ? "on" : ""}" data-sc="ckd|${k}">${n}</button>`).join("")}${mk ? '<button data-sc="ckd|">Same as shared</button>' : ""}</div>`;
       const ctSeg = `<div class="seg sm" style="flex-wrap:wrap">${[["1", "Show"], ["0", "Hide"]].map(([k, n]) => `<button class="${this._clockTile() === (k === "1") ? "on" : ""}" data-sc="ctd|${k}">${n}</button>`).join("")}${mt ? '<button data-sc="ctd|">Same as shared</button>' : ""}</div>`;
       body = sec("Clock", mk || mt ? "this device only" : "using the shared clock", row("Clock style", "digital numbers or an analog face", ckSeg) + row("Clock tile", "show the clock as a tile among the home tiles", ctSeg)) + sec("Tile size", mine && TSIZES[mine] ? "this device only" : "using the shared size", row("Size on this device", "extra large, large, small or very small tiles and cards", tsSeg(this._ts(), "data-sc", !!(mine && TSIZES[mine])))) +
@@ -2057,7 +2057,7 @@ class QuintDashboard extends HTMLElement {
         row("Your own order", "tiles and cards are arranged on this device only", '<button class="sbtn" data-sc="ordreset|">Back to the shared order</button>'))) +
         sec("Background", u ? "this device only" : "using the shared look", `<div style="padding:4px 4px 12px">${this._pbControls(u, b)}</div>`);
     } else if (tab === "general") {
-      const bg = { preset: "midnight", mode: "preset", dim: 0, blur: 0, ...(c.bg || {}) }, dv = localStorage.getItem("quint_dev") || "auto";
+      const bg = { preset: "midnight", mode: "preset", dim: 0, blur: 0, ...(c.bg || {}) }, dv = localStorage.getItem("intellect_dev") || "auto";
       body = sec("Settings file", "settings are stored on the server and shared by every user; a file makes them portable",
         row("Export", "download all settings as JSON", `<button class="sbtn" data-s="export|">Download</button>`) +
         row("Import", "an export; merged with what is already there", `<input type="file" accept=".json,application/json" data-import="1">`)) +
@@ -2074,7 +2074,7 @@ class QuintDashboard extends HTMLElement {
         row("Blur", "soften the background", `<input type="range" min="0" max="20" value="${+bg.blur || 0}" data-bg="blur">`)) +
       sec("This device", "saved on this device only",
         row("Screen layout", `Detected: ${this._auto || "–"} · ${this._w || 0}px wide`, `<select data-devsel="1">${[["auto", "Auto"], ["phone", "Phone"], ["tablet", "Tablet"], ["desktop", "Desktop / wall panel"]].map(([v, l]) => `<option value="${v}" ${dv === v ? "selected" : ""}>${l}</option>`).join("")}</select>`) +
-        row("Fullscreen", "hide the Home Assistant sidebar", tg(localStorage.getItem("quint_full") === "1", 'data-tog="full:0"')));
+        row("Fullscreen", "hide the Home Assistant sidebar", tg(localStorage.getItem("intellect_full") === "1", 'data-tog="full:0"')));
     } else if (tab === "pages") {
       const all = this._svcsList(), H = c.svcHide || [], T = c.svcTitle || {};
       body = sec("Pages", "name, show and order the services on the home screen and bottom bar", all.map((k, i) => {
@@ -2308,5 +2308,5 @@ class QuintDashboard extends HTMLElement {
     this._mountLv(); this._mountHa(); this._tickClock();
   }
 }
-customElements.define("quint-panel", QuintDashboard);
-console.info("%c QUINT %c panel v" + VER + " loaded", "background:#f5a623;color:#000", "");
+customElements.define("intellect-panel", IntellectDashboard);
+console.info("%c INTELLECT %c panel v" + VER + " loaded", "background:#f5a623;color:#000", "");
