@@ -1,5 +1,5 @@
 {
-  "name": "Quinteca Intellect Panel",
-  "filename": "quinteca-panel.js",
-  "render_readme": true
+  "name": "Quint Dashboard",
+  "render_readme": true,
+  "homeassistant": "2024.7.0"
 }
