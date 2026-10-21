@@ -68,7 +68,7 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "intellect_cfg";
-const VER = "1.29.0";
+const VER = "1.29.1";
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
 const TSIZES = { xl: { n: "Extra large", z: 1.3, m: 1.3 }, l: { n: "Large", z: 1, m: 1 }, s: { n: "Small", z: 0.8, m: 0.9 }, xs: { n: "Very small", z: 0.62, m: 0.8 } };
@@ -1106,7 +1106,7 @@ class IntellectDashboard extends HTMLElement {
     if (svc === "shades") { const o = e.filter((i) => ["open", "opening"].includes(st(i))).length; return { big: `${o} / ${e.length - o}`, lbl: "open / closed", on: o > 0 }; }
     if (svc === "climate") { const n = e.filter((i) => !["off", "unavailable"].includes(st(i))).length; return { big: n, lbl: `of ${e.length} on`, on: n > 0 }; }
     if (svc === "media") { const n = e.filter((i) => ["on", "playing", "paused", "idle"].includes(st(i))).length; return { big: n, lbl: `of ${e.length} on`, on: n > 0 }; }
-    const o = e.filter((i) => ["on", "open", "unlocked"].includes(st(i))).length;
+    const o = e.filter((i) => this._sec(i)[1] === "w").length;
     return { big: o ? `${o} open` : "Secure", lbl: o ? "doors & locks" : "all closed & locked", on: o > 0 };
   }
   _roomCount(svc, r) {
@@ -1570,7 +1570,10 @@ class IntellectDashboard extends HTMLElement {
     if (d === "cover") return v === "closed" ? ["Closed", ""] : [cap(v), "w"];
     if (["motion", "occupancy", "presence"].includes(dc)) return [v === "on" ? "Detected" : "Clear", ""];
     if (dc === "tamper") return v === "on" ? ["Tampered", "w"] : ["OK", ""];
-    return v === "on" ? ["Open", "w"] : ["Closed", ""];
+    if (d === "binary_sensor" && dc === "lock") return v === "on" ? ["Unlocked", "w"] : ["Locked", ""];
+    if (d === "binary_sensor" && ["door", "window", "garage_door", "opening"].includes(dc)) return v === "on" ? ["Open", "w"] : ["Closed", ""];
+    // Anything else (a gate relay switch, a sensor with no type) only shows its state; it never counts as "open".
+    return [v === "on" ? "On" : v === "off" ? "Off" : cap(v), ""];
   }
   /* ---------- tiles, intercom, scenes ---------- */
   _groups(svc, ids) {
@@ -1844,10 +1847,11 @@ class IntellectDashboard extends HTMLElement {
       if (!ids.length) return wrap("", `${hd("", SHIELD_I)}${none}`);
       const dom = (i) => i.split(".")[0], isM = (i) => ["motion", "occupancy", "presence"].includes(H[i].attributes.device_class), lim = Array.isArray(tiles.security) ? 6 : 4;
       const al = ids.filter((i) => dom(i) === "alarm_control_panel"), lk = ids.filter((i) => dom(i) === "lock"), oth = ids.filter((i) => !al.includes(i) && !lk.includes(i));
-      const rows = [...al, ...lk, ...oth.filter((i) => !isM(i)), ...oth.filter(isM)].slice(0, lim).map((i) => { const [t, cl] = this._sec(i); return `<div class="rw" data-id="sr:${i}"><span class="nmx">${E(this._nm(i))}</span><span class="v ${cl}">${E(t)}</span></div>`; }).join("");
+      const rows = [...al, ...lk, ...oth.filter((i) => !isM(i)), ...oth.filter(isM)].slice(0, lim).map((i) => { const [t, cl] = this._sec(i); return `<div class="rw" data-id="sr:${i}"><span class="nmx">${E(dom(i) === "alarm_control_panel" ? "Alarm" : this._nm(i))}</span><span class="v ${cl}">${E(t)}</span></div>`; }).join("");
       const lv = ids.map((i) => this._sec(i)[1]), nb = lv.filter((x) => x === "b").length, nw = lv.filter((x) => x === "w").length, cls = nb ? "b" : nw ? "w" : "";
+      const opn = ids.filter((i) => this._sec(i)[1] === "w").map((i) => this._nm(i)), openTxt = opn.length === 1 ? `${opn[0]} ${this._sec(ids.find((i) => this._sec(i)[1] === "w"))[0].toLowerCase()}` : opn.length === 2 ? `${opn[0]} and ${opn[1]} open` : `${opn.length} things open`;
       const ap = al[0], seg = ap ? `<div class="seg">${[["Off", "alarm_disarm", "disarmed"], ["Home", "alarm_arm_home", "armed_home"], ["Night", "alarm_arm_night", "armed_night"], ["Away", "alarm_arm_away", "armed_away"]].map(([l, s, x]) => `<button class="${st(ap) === x ? "on" : ""}" data-act="alarm_control_panel.${s}" data-e="${ap}">${l}</button>`).join("")}</div>` : "";
-      return wrap("", `${hd("", SHIELD_I)}<div class="st2"><span class="sd ${cls}"></span>${nb ? "Alarm triggered" : nw ? `${nw} open` : "All secure"}</div><div class="rows">${rows}</div>${seg}`);
+      return wrap("", `${hd("", SHIELD_I)}<div class="st2"><span class="sd ${cls}"></span>${E(nb ? "Alarm triggered" : nw ? openTxt : "All secure")}</div><div class="rows">${rows}</div>${seg}`);
     }
     if (k === "climate") {
       if (!ids.length) return wrap("", `${hd("")}${none}`);
