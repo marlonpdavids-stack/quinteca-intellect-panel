@@ -68,7 +68,7 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "intellect_cfg";
-const VER = "1.29.2";
+const VER = "1.30.0";
 const GATE_OPEN_MS = 60000; // how long a gate shows "Open" after it is opened from the panel
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
@@ -450,6 +450,44 @@ nav button.t.act .si{color:var(--c,#12151c);animation:pop .55s cubic-bezier(.3,1
 :host([data-wide="1"]) .chips{grid-template-columns:repeat(4,minmax(0,1fr))}
 `;
 
+const SS_CSS = `
+.ssv{position:fixed;inset:0;z-index:9999;overflow:hidden;color:#e9e6df;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;cursor:none;user-select:none;-webkit-user-select:none;touch-action:none}
+.ssv[hidden]{display:none}
+.ssbg{position:absolute;inset:0;background:radial-gradient(1200px 700px at 85% 110%,rgba(150,105,70,.35),transparent 60%),radial-gradient(900px 600px at 10% 90%,rgba(40,80,120,.35),transparent 65%),linear-gradient(160deg,#0b1626 0%,#101e33 55%,#171d2a 100%)}
+.ssv[data-k="night"] .ssbg{background:radial-gradient(1200px 700px at 85% 110%,rgba(150,105,70,.18),transparent 60%),radial-gradient(900px 600px at 10% 90%,rgba(40,80,120,.15),transparent 65%),linear-gradient(160deg,#03060b 0%,#060a12 55%,#080a0f 100%)}
+.sstrack{position:absolute;top:0;bottom:0;left:0;display:flex;gap:6px;width:max-content;will-change:transform}
+.sstrack img{height:100%;width:auto;display:block;object-fit:cover;flex:none}
+.ssshade{position:absolute;inset:0;pointer-events:none;display:none;background:linear-gradient(0deg,rgba(0,0,0,.72) 0%,rgba(0,0,0,.35) 32%,transparent 58%)}
+.ssv[data-k="photos"] .ssshade{display:block}
+.ssinfo{position:absolute;inset:0;pointer-events:none}
+@keyframes ssdrift{0%,100%{transform:translate(-12px,-8px)}50%{transform:translate(12px,8px)}}
+@keyframes ssbreathe{0%,100%{opacity:.45}50%{opacity:.85}}
+@keyframes sspulse{0%,100%{box-shadow:0 0 0 0 rgba(242,184,86,.45)}50%{box-shadow:0 0 0 8px rgba(242,184,86,0)}}
+.sstime{font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;font-weight:300;line-height:.9;letter-spacing:-.02em;font-size:clamp(64px,11vw,150px)}
+.sstime.big{font-size:clamp(90px,17vw,260px)}
+.sstime small{font-size:.32em;margin-left:.15em;letter-spacing:0}
+.ssgreet{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:clamp(26px,3vw,46px);line-height:1.1}
+.ssdate{font-size:clamp(15px,1.3vw,20px);color:#c9c5bc;margin-top:10px}
+.sswx{font-size:clamp(15px,1.2vw,19px);color:#c9c5bc}
+.ssname{font-size:clamp(14px,1.2vw,20px);font-weight:500;letter-spacing:.5em;padding-left:.5em}
+.sspills{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.sspill{display:flex;align-items:center;gap:10px;padding:11px 20px;border-radius:999px;background:rgba(233,230,223,.08);border:1px solid rgba(233,230,223,.16);font-size:clamp(14px,1.1vw,18px);color:#d8d4cc;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.sspill svg{width:17px;height:17px;flex:none}
+.sspill.w{background:rgba(242,184,86,.16);border-color:rgba(242,184,86,.55);color:#f6d8a4;font-weight:500}
+.sspill i{width:9px;height:9px;border-radius:50%;background:#f2b856;animation:sspulse 2s infinite;flex:none}
+.ssday{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,2.4vh,30px);animation:ssdrift 90s ease-in-out infinite;text-align:center;padding:24px}
+.ssday .sspills{justify-content:center}
+.ssface{width:min(390px,42vh);height:auto}
+.sshint{max-width:520px;font-size:15px;color:#a9adb8;line-height:1.5}
+.ssnt{position:absolute;left:6vw;right:6vw;top:7vh;bottom:7vh;display:flex;flex-direction:column;justify-content:space-between;animation:ssdrift 120s ease-in-out infinite;opacity:.72}
+.sstop{display:flex;justify-content:space-between;align-items:center;font-size:clamp(14px,1.2vw,18px);letter-spacing:.5em;color:#c9c5bc}
+.sstop span+span{letter-spacing:normal}
+.ssph{position:absolute;left:5vw;right:5vw;bottom:7vh;display:flex;flex-direction:column;gap:12px;text-shadow:0 2px 18px rgba(0,0,0,.55)}
+.ssph .sspills{margin-top:8px}
+.sswake{position:absolute;left:0;right:0;bottom:22px;text-align:center;font-size:12px;letter-spacing:.32em;color:#8e93a0;animation:ssbreathe 6s ease-in-out infinite}
+.ssv[data-k="photos"] .sswake{display:none}
+`;
+
 class IntellectDashboard extends HTMLElement {
   constructor() {
     super();
@@ -753,6 +791,7 @@ class IntellectDashboard extends HTMLElement {
   }
   _time() { return this._clock(); }
   connectedCallback() {
+    this._ssStart();
     this._applyBg(); this._layout();
     if (typeof ResizeObserver !== "undefined") { this._ro = new ResizeObserver(() => this._layout()); this._ro.observe(this); }
     this._kd = (e) => { if (e.key === "Escape" && this._cam) { this._cam = null; this._camFb = false; this._draw(true); } };
@@ -769,7 +808,7 @@ class IntellectDashboard extends HTMLElement {
     }, 1000);
     this._iv = setInterval(() => { const r = this.shadowRoot; this._tickClock(); const m = r.querySelector(".tm"); if (m) m.textContent = this._time(); }, 1000);
   }
-  disconnectedCallback() { clearInterval(this._iv4); clearInterval(this._iv); clearInterval(this._iv2); clearInterval(this._iv3); clearInterval(this._iv5); window.removeEventListener("keydown", this._kd); if (this._ro) { this._ro.disconnect(); this._ro = null; } Object.values(this._tsub || {}).forEach((p) => p.then((u) => u()).catch(() => {})); this._tsub = {}; this._conn = null; }
+  disconnectedCallback() { this._ssStop(); clearInterval(this._iv4); clearInterval(this._iv); clearInterval(this._iv2); clearInterval(this._iv3); clearInterval(this._iv5); window.removeEventListener("keydown", this._kd); if (this._ro) { this._ro.disconnect(); this._ro = null; } Object.values(this._tsub || {}).forEach((p) => p.then((u) => u()).catch(() => {})); this._tsub = {}; this._conn = null; }
   set panel(p) { this._title = (p && p.config && p.config.title) || "Intellect"; }
   set narrow(n) { if (n === this._narrow) return; this._narrow = n; this._draw(true); }
   set route(r) {}
@@ -868,6 +907,12 @@ class IntellectDashboard extends HTMLElement {
   _swap(arr, i, d) { const j = i + d; if (j < 0 || j >= arr.length) return; [arr[i], arr[j]] = [arr[j], arr[i]]; }
   _sact(a, v) {
     const c = this._c;
+    if (a === "ss") {
+      const i = v.indexOf(":"), k = v.slice(0, i), x = v.slice(i + 1), s = { ...this._ssCfg() };
+      if (k === "scan") { this._ssPhotos(true).then(() => this._draw(true)); return; }
+      if (k === "on") s.on = !s.on; else if (k === "idle") s.idle = +x || 5; else s[k] = x;
+      c.ss = s; this._save(); return this._draw(true);
+    }
     if (a === "icsel") { this._icSel = +v; return this._draw(true); }
     if (a === "rdsel") { this._rd = v; return this._draw(true); }
     if (a === "save") { this._push(); this._dirty = false; this._snap = JSON.stringify(c); this._toast("Saved"); this._draw(true); return; }
@@ -1192,6 +1237,7 @@ class IntellectDashboard extends HTMLElement {
     if (d.pbfile !== undefined) { const fl = t.files && t.files[0]; if (fl) this._pickBgLocal(fl); t.value = ""; return; }
     if (d.sdf !== undefined && this._sd) { this._sd[d.sdf] = t.value; this._draw(true); return; }
     if (adm && d.icf) { const ic = this._icCur(), [a, b] = d.icf.split("."); if (!ic) return; if (b) { ic[a] = ic[a] || {}; ic[a][b] = t.value.trim(); } else ic[a] = t.value.trim(); this._save(); this._draw(true); return; }
+    if (adm && d.ssf !== undefined) { this._c.ss = { ...this._ssCfg(), folder: t.value.trim() }; this._ssPh = null; this._save(); this._draw(true); return; }
     if (d.devsel !== undefined) { localStorage.setItem("intellect_dev", t.value); this._layout(); this._draw(true); return; }
     if (adm && d.bgfile !== undefined) { const fl = t.files && t.files[0]; if (fl) this._pickBg(fl); t.value = ""; return; }
     if (adm && d.import !== undefined) {
@@ -1519,6 +1565,169 @@ class IntellectDashboard extends HTMLElement {
   }
   _top(back = true) { return `<div class="top">${this._brand()}${back ? `<button class="back" data-go='{"p":"home"}'>‹ Home</button>` : ""}</div>`; }
   _credit() { const t = this._c.credit; return this._esc(t === undefined ? "By Quinteca" : t); }
+  /* ---------- screensaver ---------- */
+  // Shared settings live in this._c.ss; each device can force it on or off (localStorage intellect_ss).
+  _ssCfg() { return { on: false, idle: 5, mode: "clock", night: "clock", folder: "intellect", speed: "normal", ...(this._c.ss || {}) }; }
+  _ssDev() { try { return localStorage.getItem("intellect_ss") || ""; } catch (e) { return ""; } }
+  _ssOn() { const d = this._ssDev(); return d === "on" || (d !== "off" && !!this._ssCfg().on); }
+  _ssInit() {
+    if (this._ssEl) return;
+    const el = document.createElement("div");
+    el.className = "ssv"; el.hidden = true;
+    el.innerHTML = `<style>${SS_CSS}</style><div class="ssbg"></div><div class="sstrack"></div><div class="ssshade"></div><div class="ssinfo"></div>`;
+    const wake = (e) => { e.stopPropagation(); e.preventDefault(); this._ssHide(); };
+    el.addEventListener("pointerdown", wake);
+    el.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); });
+    el.addEventListener("touchstart", wake, { passive: false });
+    this.shadowRoot.appendChild(el);
+    this._ssEl = el;
+    this._ssLast = Date.now();
+    this._ssPoke = () => { this._ssLast = Date.now(); };
+  }
+  _ssStart() {
+    this._ssInit();
+    ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"].forEach((t) => window.addEventListener(t, this._ssPoke, { passive: true }));
+    this._ssLast = Date.now();
+    clearInterval(this._ssIv);
+    this._ssIv = setInterval(() => this._ssTick(), 1000);
+  }
+  _ssStop() {
+    if (this._ssPoke) ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"].forEach((t) => window.removeEventListener(t, this._ssPoke));
+    clearInterval(this._ssIv); this._ssHide(true);
+  }
+  _ssTick() {
+    if (!this._h || !this._ssEl) return;
+    if (this._ssShown) { this._ssPaint(); return; }
+    if (!this._ssOn() || document.hidden || this._cam || this._v.p === "settings") { this._ssLast = Math.max(this._ssLast, Date.now() - 1000); return; }
+    const mins = Math.max(1, +this._ssCfg().idle || 5);
+    if (Date.now() - this._ssLast > mins * 60e3) this._ssShow();
+  }
+  _ssNight() { const s = this._h && this._h.states["sun.sun"]; return !!s && s.state === "below_horizon"; }
+  // "photos" | "clock" | "night"
+  _ssKind() {
+    const s = this._ssCfg();
+    if (this._ssNight() && s.night !== "same") return "night";
+    return s.mode === "photos" ? "photos" : "clock";
+  }
+  _ssShow() {
+    this._ssInit();
+    this._ssShown = true; this._ssKindNow = null;
+    this._ssEl.hidden = false;
+    this._ssPaint();
+  }
+  _ssHide(silent) {
+    this._ssShown = false; this._ssLast = Date.now();
+    cancelAnimationFrame(this._ssRaf); this._ssRaf = null;
+    if (!this._ssEl) return;
+    this._ssEl.hidden = true;
+    this._ssEl.querySelector(".sstrack").innerHTML = "";
+    this._ssKindNow = null;
+  }
+  async _ssPhotos(force) {
+    const folder = String(this._ssCfg().folder || "").trim().replace(/^\/+|\/+$/g, "").replace(/^media\/?/, "");
+    const P = this._ssPh;
+    if (!force && P && P.folder === folder && Date.now() - P.at < 20 * 60e3) return P.items;
+    const base = "media-source://media_source/local" + (folder ? "/" + folder : "");
+    const walk = async (id, depth) => {
+      const r = await this._h.callWS({ type: "media_source/browse_media", media_content_id: id });
+      let out = [];
+      for (const ch of r.children || []) {
+        if (ch.media_class === "image" || /^image\//.test(ch.media_content_type || "")) out.push(ch.media_content_id);
+        else if (ch.can_expand && depth < 2) out = out.concat(await walk(ch.media_content_id, depth + 1));
+      }
+      return out;
+    };
+    let items = [], err = "";
+    try { items = await walk(base, 0); } catch (e) { err = (e && e.message) || "Folder not found"; }
+    for (let i = items.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [items[i], items[j]] = [items[j], items[i]]; }
+    this._ssPh = { folder, items, err, at: Date.now(), n: 0 };
+    return items;
+  }
+  async _ssUrl(id) {
+    const r = await this._h.callWS({ type: "media_source/resolve_media", media_content_id: id, expires: 3600 });
+    return this._h.hassUrl ? this._h.hassUrl(r.url) : r.url;
+  }
+  // Photos glide slowly from right to left; an image that leaves the screen is dropped and the next one is added on the right.
+  async _ssReel() {
+    const tr = this._ssEl.querySelector(".sstrack");
+    tr.innerHTML = ""; this._ssOff = 0; tr.style.transform = "translate3d(0,0,0)";
+    const items = await this._ssPhotos();
+    if (!this._ssShown || this._ssKindNow !== "photos") return;
+    if (!items.length) { this._ssEmpty = true; this._ssPaint(); return; }
+    this._ssEmpty = false;
+    const px = { slow: 18, normal: 32, fast: 55 }[this._ssCfg().speed] || 32;
+    const vw = () => this._ssEl.clientWidth || window.innerWidth;
+    let busy = false;
+    const fill = async () => {
+      if (busy) return; busy = true;
+      try {
+        let guard = 0;
+        while (this._ssShown && this._ssKindNow === "photos" && tr.scrollWidth + this._ssOff < vw() * 2.2 && guard++ < 6) {
+          const P = this._ssPh, id = P.items[P.n++ % P.items.length];
+          let url; try { url = await this._ssUrl(id); } catch (e) { continue; }
+          const img = new Image(); img.decoding = "async"; img.alt = "";
+          const ok = await new Promise((res) => { img.onload = () => res(true); img.onerror = () => res(false); img.src = url; });
+          if (!ok || !this._ssShown) continue;
+          tr.appendChild(img);
+        }
+      } finally { busy = false; }
+    };
+    await fill();
+    let t0 = performance.now();
+    const step = (t) => {
+      if (!this._ssShown || this._ssKindNow !== "photos") return;
+      const dt = Math.min(0.1, (t - t0) / 1000); t0 = t;
+      this._ssOff -= px * dt;
+      const first = tr.firstElementChild;
+      if (first && first.offsetWidth && this._ssOff + first.offsetWidth < -4) { this._ssOff += first.offsetWidth + 6; first.remove(); fill(); }
+      else if (tr.scrollWidth + this._ssOff < vw() * 1.4) fill();
+      tr.style.transform = `translate3d(${this._ssOff.toFixed(1)}px,0,0)`;
+      this._ssRaf = requestAnimationFrame(step);
+    };
+    this._ssRaf = requestAnimationFrame(step);
+  }
+  _ssStatus() {
+    const H = this._h.states, ids = this._ents("security").filter((i) => H[i]);
+    const al = ids.find((i) => i.startsWith("alarm_control_panel."));
+    const open = ids.filter((i) => i !== al && ["w", "b"].includes(this._sec(i)[1])).map((i) => this._nm(i));
+    const SH = '<svg viewBox="0 0 24 24" fill="none" stroke="#9fd8b0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/></svg>';
+    const out = [];
+    if (open.length) out.push(`<div class="sspill w"><i></i>${this._esc(open.length === 1 ? open[0] + " open" : open.length === 2 ? `${open[0]} and ${open[1]} open` : `${open.length} things open`)}</div>`);
+    else if (ids.length) out.push(`<div class="sspill">${SH}All gates and doors closed</div>`);
+    if (al) { const [t, cl] = this._sec(al); out.push(`<div class="sspill ${cl === "b" ? "w" : ""}">${cl === "b" ? "<i></i>" : ""}Alarm · ${this._esc(t)}</div>`); }
+    return out.join("");
+  }
+  _ssPaint() {
+    const el = this._ssEl; if (!el || !this._h) return;
+    const kind = this._ssKind();
+    if (kind !== this._ssKindNow) {
+      this._ssKindNow = kind; el.dataset.k = kind;
+      cancelAnimationFrame(this._ssRaf); el.querySelector(".sstrack").innerHTML = "";
+      if (kind === "photos") this._ssReel();
+    }
+    const d = new Date(), name = this._c.title || this._title || "", wx = this._wx();
+    const date = d.toLocaleDateString((this._h.locale && this._h.locale.language) || [], { weekday: "long", day: "numeric", month: "long" });
+    const hr = d.getHours(), greet = hr < 5 ? "Good night" : hr < 12 ? "Good morning" : hr < 18 ? "Good afternoon" : "Good evening";
+    const pills = this._ssStatus(), time = this._clockHtml();
+    let h;
+    if (kind === "photos" && !this._ssEmpty) {
+      h = `<div class="ssph"><div class="sstime">${time}</div><div class="ssdate">${this._esc(date)}${wx ? ` · ${wx.t}` : ""}</div><div class="sspills">${pills}</div></div>`;
+    } else if (kind === "night") {
+      h = `<div class="ssnt"><div class="sstop"><span>${this._esc(name.toUpperCase())}</span><span>${wx ? wx.t : ""}</span></div><div><div class="sstime big">${time}</div><div class="ssgreet">${greet}</div><div class="ssdate">${this._esc(date)}</div></div><div class="sspills">${pills}</div></div>`;
+    } else {
+      const sec = d.getSeconds(), mi = d.getMinutes() + sec / 60, hh = (d.getHours() % 12) + mi / 60;
+      let face = "";
+      if (this._clockStyle() === "analog") {
+        let t = ""; for (let i = 0; i < 60; i++) { const mj = i % 5 === 0; t += `<line x1="100" y1="${mj ? 28 : 22}" x2="100" y2="16" stroke="#e9e6df" stroke-width="${mj ? 2.4 : 1}" stroke-linecap="round" opacity="${mj ? 0.95 : 0.35}" transform="rotate(${i * 6} 100 100)"/>`; }
+        face = `<svg class="ssface" viewBox="0 0 200 200" role="img" aria-label="Clock"><circle cx="100" cy="100" r="96" fill="rgba(10,20,34,.55)" stroke="rgba(233,230,223,.14)"/>${t}<line x1="100" y1="106" x2="100" y2="52" stroke="#e9e6df" stroke-width="4" stroke-linecap="round" transform="rotate(${(hh * 30).toFixed(2)} 100 100)"/><line x1="100" y1="108" x2="100" y2="30" stroke="#e9e6df" stroke-width="2.5" stroke-linecap="round" transform="rotate(${(mi * 6).toFixed(2)} 100 100)"/><line x1="100" y1="114" x2="100" y2="26" stroke="#f2b856" stroke-width="1" stroke-linecap="round" transform="rotate(${sec * 6} 100 100)"/><circle cx="100" cy="100" r="3.2" fill="#f2b856"/></svg>`;
+      } else face = `<div class="sstime big">${time}</div>`;
+      const hint = kind === "photos" && this._ssEmpty ? `<div class="sshint">No photos yet. Add pictures to the folder "${this._esc(this._ssCfg().folder || "")}" in Home Assistant Media.</div>` : "";
+      h = `<div class="ssday"><div class="ssname">${this._esc(name.toUpperCase())}</div>${face}<div class="ssgreet">${this._esc(date)}</div>${wx ? `<div class="sswx">${wx.t}</div>` : ""}<div class="sspills">${pills}</div>${hint}</div>`;
+    }
+    h += `<div class="sswake">TAP TO WAKE</div>`;
+    const info = el.querySelector(".ssinfo");
+    if (info._h !== h) { info.innerHTML = h; info._h = h; }
+  }
   _clock(d) {
     const L = this._h && this._h.locale, f = L && L.time_format, o = { hour: "2-digit", minute: "2-digit" }, dt = d || new Date();
     if (f === "24") o.hourCycle = "h23"; else if (f === "12") o.hour12 = true;
@@ -1576,8 +1785,8 @@ class IntellectDashboard extends HTMLElement {
   _gate(i) {
     const s = this._h && this._h.states[i]; if (!s) return false;
     const d = i.split(".")[0], dc = s.attributes.device_class, nm = (s.attributes.friendly_name || i).toLowerCase();
-    if (d === "cover" || (d === "binary_sensor" && ["door", "window", "garage_door", "opening"].includes(dc))) return false;
-    return ["lock", "switch", "button", "input_button", "script", "binary_sensor", "event"].includes(d) && /gate|port[aã]o/.test(nm);
+    // Any gate, even one reported as a cover or door sensor: UniFi Access gates have no real position sensor.
+    return ["lock", "switch", "button", "input_button", "script", "binary_sensor", "event", "cover"].includes(d) && /gate|port[aã]o/.test(nm) && dc !== "motion";
   }
   _sec(i) {
     const s = this._h.states[i], d = i.split(".")[0], dc = s.attributes.device_class, v = s.state, cap = (x) => x.charAt(0).toUpperCase() + x.slice(1).replace(/_/g, " ");
@@ -1721,6 +1930,8 @@ class IntellectDashboard extends HTMLElement {
     return out.slice(0, 12);
   }
   _scAct(a, v) {
+    if (a === "ssd") { try { if (v === "on" || v === "off") localStorage.setItem("intellect_ss", v); else localStorage.removeItem("intellect_ss"); } catch (e) {} return this._draw(true); }
+    if (a === "sspv") { setTimeout(() => this._ssShow(), 300); return; }
     const find = (key) => { const [k, id] = [key.slice(0, key.indexOf(":")), key.slice(key.indexOf(":") + 1)]; return this._myScenes().find((s) => s.sc === k && s.id === id); };
     if (a === "run") { const s = find(v); if (s) this._applyScene(s); return; }
     if (a === "ckd") { try { if (v === "analog" || v === "digital") localStorage.setItem("intellect_ck", v); else localStorage.removeItem("intellect_ck"); } catch (e) {} this._last = null; return this._draw(true); }
@@ -2061,11 +2272,11 @@ class IntellectDashboard extends HTMLElement {
     const sec = (t, note, rows) => `<div class="ssec"><div class="shd"><span>${t}</span>${note ? `<small>${note}</small>` : ""}</div>${rows}</div>`;
     const tg = (on, a) => `<button class="sw ${on ? "on" : ""}" ${a}></button>`;
     const up = (a, v, off) => `<button class="ib2" data-s="${a}|${v}" ${off ? "disabled" : ""}>${a.endsWith("up") ? "▲" : "▼"}</button>`;
-    const tabs = !this._admin() ? [...(this._mgr() ? [["users", "Users", "add users, limit services and rooms"], ["updates", "Updates", "automatic updates and restart"]] : []), ["scenes", "Scenes", "add your own scenes"], ["rphoto", "Room photos", "pick a photo per room"], ["bg", "Background", "change it on this device"]] : [["general", "General", "title, background, layout"], ["pages", "Pages", "services, order, titles"], ["rooms", "Rooms", "floors, order and names"], ["rphoto", "Room photos", "background of each room"], ["devices", "Devices", "room and visibility per device"], ["rdev", "Room devices", "hide or show devices room by room"], ["srooms", "Service rooms", "hide unused rooms in each service"], ["home", "Home page", "clock, weather, services"], ["tiles", "Home tiles", "choose devices per tile"], ["wall", "Camera wall", "many cameras on one screen"], ["intercom", "Intercoms", "cameras, door, calls"], ["autos", "Automations", "choose what users can run"], ["users", "Users", "add users, limit services and rooms"], ["access", "Access", "default page and lock users"], ["updates", "Updates", "automatic updates and restart"], ["scenes", "Scenes", "add and edit scenes"], ["bg", "Background", "your own on this device"], ["cards", "Cards", "custom cards you added"]];
+    const tabs = !this._admin() ? [...(this._mgr() ? [["users", "Users", "add users, limit services and rooms"], ["updates", "Updates", "automatic updates and restart"]] : []), ["scenes", "Scenes", "add your own scenes"], ["rphoto", "Room photos", "pick a photo per room"], ["bg", "Background", "change it on this device"], ["ss", "Screensaver", "on or off on this device"]] : [["general", "General", "title, background, layout"], ["pages", "Pages", "services, order, titles"], ["rooms", "Rooms", "floors, order and names"], ["rphoto", "Room photos", "background of each room"], ["devices", "Devices", "room and visibility per device"], ["rdev", "Room devices", "hide or show devices room by room"], ["srooms", "Service rooms", "hide unused rooms in each service"], ["home", "Home page", "clock, weather, services"], ["ss", "Screensaver", "family photos or a clock when idle"], ["tiles", "Home tiles", "choose devices per tile"], ["wall", "Camera wall", "many cameras on one screen"], ["intercom", "Intercoms", "cameras, door, calls"], ["autos", "Automations", "choose what users can run"], ["users", "Users", "add users, limit services and rooms"], ["access", "Access", "default page and lock users"], ["updates", "Updates", "automatic updates and restart"], ["scenes", "Scenes", "add and edit scenes"], ["bg", "Background", "your own on this device"], ["cards", "Cards", "custom cards you added"]];
     const adm = this._admin();
     const tsSeg = (cur, attr, none) => `<div class="seg sm" style="flex-wrap:wrap">${Object.entries(TSIZES).map(([k, t]) => `<button class="${cur === k ? "on" : ""}" ${attr}="${attr === "data-s" ? "tsz|" : "tsd|"}${k}">${t.n}</button>`).join("")}${none ? `<button ${attr}="tsd|">Same as shared</button>` : ""}</div>`;
     let tab2 = tab;
-    if (!adm) tab2 = tab === "bg" || tab === "rphoto" || ((tab === "users" || tab === "updates") && this._mgr()) ? tab : "scenes";
+    if (!adm) tab2 = tab === "bg" || tab === "ss" || tab === "rphoto" || ((tab === "users" || tab === "updates") && this._mgr()) ? tab : "scenes";
     tab = tab2;
     let body = "";
     if (tab === "bg") {
@@ -2078,6 +2289,23 @@ class IntellectDashboard extends HTMLElement {
         (adm ? "" : sec("Arrangement", "hold a tile or card for 2 seconds, then drag it onto the card whose place you want",
         row("Your own order", "tiles and cards are arranged on this device only", '<button class="sbtn" data-sc="ordreset|">Back to the shared order</button>'))) +
         sec("Background", u ? "this device only" : "using the shared look", `<div style="padding:4px 4px 12px">${this._pbControls(u, b)}</div>`);
+    } else if (tab === "ss") {
+      const s = this._ssCfg(), dv = this._ssDev(), P = this._ssPh;
+      const seg = (cur, key, opts) => `<div class="seg sm" style="flex-wrap:wrap">${opts.map(([k, n]) => `<button class="${String(cur) === String(k) ? "on" : ""}" data-s="ss|${key}:${k}">${n}</button>`).join("")}</div>`;
+      const found = P && P.folder === String(s.folder || "").trim().replace(/^\/+|\/+$/g, "").replace(/^media\/?/, "") ? (P.err ? `Folder not found (${E(P.err)})` : `${P.items.length} photo${P.items.length === 1 ? "" : "s"} found`) : "not checked yet";
+      const devSeg = `<div class="seg sm" style="flex-wrap:wrap">${[["", "Same as shared"], ["on", "Always on"], ["off", "Off"]].map(([k, n]) => `<button class="${dv === k ? "on" : ""}" data-sc="ssd|${k}">${n}</button>`).join("")}</div>`;
+      body = (adm ? sec("Screensaver", "shared by every wall panel; it starts when nobody has touched the screen for a while and a tap wakes it",
+        row("Screensaver", "turn it on for all panels", tg(s.on, 'data-s="ss|on:toggle"')) +
+        row("Start after", "minutes without a touch", seg(s.idle, "idle", [[1, "1 min"], [2, "2"], [5, "5"], [10, "10"], [15, "15"], [30, "30"]])) +
+        row("During the day", "a quiet clock with home status, or family photos scrolling with the clock on top", seg(s.mode, "mode", [["clock", "Clock"], ["photos", "Family photos"]])) +
+        row("At night", "after sunset a dimmed clock is kinder in a bedroom or hallway", seg(s.night, "night", [["clock", "Dimmed clock"], ["same", "Same as day"]]))) +
+      sec("Family photos", "upload them in Home Assistant: Media, then Local media, into this folder",
+        row("Photo folder", "a folder inside Local media (/media); empty uses all of Local media", `<input type="text" data-ssf value="${E(s.folder || "")}" placeholder="intellect">`) +
+        row("Scroll speed", "how fast the photos glide across", seg(s.speed, "speed", [["slow", "Slow"], ["normal", "Normal"], ["fast", "Fast"]])) +
+        row("Photos", found, '<button class="sbtn" data-s="ss|scan:1">Check folder</button>')) : "") +
+      sec("This device", dv ? "this device only" : "using the shared setting",
+        row("Screensaver here", "turn it off on a phone, or on for one panel only", devSeg) +
+        row("Preview", "show it now; tap the screen to close", '<button class="sbtn" data-sc="sspv|">Show now</button>'));
     } else if (tab === "general") {
       const bg = { preset: "midnight", mode: "preset", dim: 0, blur: 0, ...(c.bg || {}) }, dv = localStorage.getItem("intellect_dev") || "auto";
       body = sec("Settings file", "settings are stored on the server and shared by every user; a file makes them portable",

@@ -1,5 +1,5 @@
 """Constants for Intellect Dashboard."""
 DOMAIN = "intellect"
-VERSION = "1.29.2"
+VERSION = "1.30.0"
 PANEL_PATH = "intellect"
 STATIC_URL = "/intellect_static"
