@@ -68,7 +68,7 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "intellect_cfg";
-const VER = "1.30.1";
+const VER = "1.31.0";
 const GATE_OPEN_MS = 60000; // how long a gate shows "Open" after it is opened from the panel
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
@@ -479,7 +479,14 @@ const SS_CSS = `
 .ssday .sspills{justify-content:center}
 .ssface{width:min(390px,42vh);height:auto}
 .sshint{max-width:520px;font-size:15px;color:#a9adb8;line-height:1.5}
-.ssnt{position:absolute;left:6vw;right:6vw;top:7vh;bottom:7vh;display:flex;flex-direction:column;justify-content:space-between;animation:ssdrift 120s ease-in-out infinite;opacity:.72}
+.ssnt{position:absolute;left:6vw;right:6vw;top:7vh;bottom:7vh;display:flex;flex-direction:column;justify-content:space-between;animation:ssdrift 120s ease-in-out infinite}
+.ssv[data-k="night"] .ssnt{opacity:.72}
+.ssv[data-k="c"] .ssbg{background:#05070b}
+.ssc{position:absolute;left:12vw;top:30vh;color:#8d8679;opacity:.8;animation:ssdrift 150s ease-in-out infinite}
+.ssc .sstime{font-size:clamp(60px,8vw,130px)}
+.sscd{font-size:clamp(11px,.9vw,14px);letter-spacing:.3em;margin-top:6px;padding-left:.4em;color:#6c675f}
+.sscred{position:absolute;right:44px;bottom:22px;font-size:12px;letter-spacing:.3em;color:#6f7686}
+.ssv[data-k="photos"] .sscred{display:none}
 .sstop{display:flex;justify-content:space-between;align-items:center;font-size:clamp(14px,1.2vw,18px);letter-spacing:.5em;color:#c9c5bc}
 .sstop span+span{letter-spacing:normal}
 .ssph{position:absolute;left:5vw;right:5vw;bottom:7vh;display:flex;flex-direction:column;gap:12px;text-shadow:0 2px 18px rgba(0,0,0,.55)}
@@ -1567,7 +1574,7 @@ class IntellectDashboard extends HTMLElement {
   _credit() { const t = this._c.credit; return this._esc(t === undefined ? "By Quinteca" : t); }
   /* ---------- screensaver ---------- */
   // Shared settings live in this._c.ss; each device can force it on or off (localStorage intellect_ss).
-  _ssCfg() { return { on: false, idle: 5, mode: "clock", night: "clock", face: "analog", folder: "intellect", speed: "normal", ...(this._c.ss || {}) }; }
+  _ssCfg() { return { on: false, idle: 5, mode: "a", night: "b", face: "analog", folder: "intellect", speed: "normal", ...(this._c.ss || {}) }; }
   _ssDev() { try { return localStorage.getItem("intellect_ss") || ""; } catch (e) { return ""; } }
   _ssOn() { const d = this._ssDev(); return d === "on" || (d !== "off" && !!this._ssCfg().on); }
   _ssInit() {
@@ -1605,12 +1612,13 @@ class IntellectDashboard extends HTMLElement {
   _ssNight() { const s = this._h && this._h.states["sun.sun"]; return !!s && s.state === "below_horizon"; }
   // "photos" | "clock" | "night"
   _ssKind() {
-    const s = this._ssCfg();
-    if (this._ssNight() && s.night !== "same") return "night";
-    return s.mode === "photos" ? "photos" : "clock";
+    const s = this._ssCfg(), day = s.mode === "photos" ? "photos" : s.mode === "b" ? "b" : "a";
+    if (this._ssNight() && s.night !== "same") return s.night === "c" ? "c" : "night";
+    return day;
   }
   _ssShow() {
     this._ssInit();
+    if (!document.getElementById("intellect-ss-font")) { const l = document.createElement("link"); l.id = "intellect-ss-font"; l.rel = "stylesheet"; l.href = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&display=swap"; document.head.appendChild(l); }
     this._ssShown = true; this._ssKindNow = null;
     this._ssEl.hidden = false;
     this._ssPaint();
@@ -1694,6 +1702,9 @@ class IntellectDashboard extends HTMLElement {
     const out = [];
     if (open.length) out.push(`<div class="sspill w"><i></i>${this._esc(open.length === 1 ? open[0] + " open" : open.length === 2 ? `${open[0]} and ${open[1]} open` : `${open.length} things open`)}</div>`);
     else if (ids.length) out.push(`<div class="sspill">${SH}All gates and doors closed</div>`);
+    const mot = ids.filter((i) => ["motion", "occupancy"].includes(H[i].attributes.device_class) && H[i].state === "on").map((i) => this._nm(i).replace(/\s*motion$/i, ""));
+    const cams = this._ents("cameras").length, CM = '<svg viewBox="0 0 24 24" fill="none" stroke="#d8d4cc" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="14" height="10" rx="2"/><path d="M16 11l6-3v8l-6-3"/></svg>';
+    if (cams || mot.length) out.push(`<div class="sspill">${CM}${this._esc((cams ? `${cams} camera${cams === 1 ? "" : "s"} · ` : "") + (mot.length ? "motion at " + mot.slice(0, 2).join(" and ") : "no motion"))}</div>`);
     if (al) { const [t, cl] = this._sec(al); out.push(`<div class="sspill ${cl === "b" ? "w" : ""}">${cl === "b" ? "<i></i>" : ""}Alarm · ${this._esc(t)}</div>`); }
     return out.join("");
   }
@@ -1712,7 +1723,9 @@ class IntellectDashboard extends HTMLElement {
     let h;
     if (kind === "photos" && !this._ssEmpty) {
       h = `<div class="ssph"><div class="sstime">${time}</div><div class="ssdate">${this._esc(date)}${wx ? ` · ${wx.t}` : ""}</div><div class="sspills">${pills}</div></div>`;
-    } else if (kind === "night") {
+    } else if (kind === "c") {
+      h = `<div class="ssc"><div class="sstime">${time}</div><div class="sscd">${this._esc(d.toLocaleDateString((this._h.locale && this._h.locale.language) || [], { weekday: "short", day: "numeric", month: "short" }).replace(/,/g, "").toUpperCase())}</div></div>`;
+    } else if (kind === "night" || kind === "b") {
       h = `<div class="ssnt"><div class="sstop"><span>${this._esc(name.toUpperCase())}</span><span>${wx ? wx.t : ""}</span></div><div><div class="sstime big">${time}</div><div class="ssgreet">${greet}</div><div class="ssdate">${this._esc(date)}</div></div><div class="sspills">${pills}</div></div>`;
     } else {
       const sec = d.getSeconds(), mi = d.getMinutes() + sec / 60, hh = (d.getHours() % 12) + mi / 60;
@@ -1724,7 +1737,7 @@ class IntellectDashboard extends HTMLElement {
       const hint = kind === "photos" && this._ssEmpty ? `<div class="sshint">No photos yet. Add pictures to the folder "${this._esc(this._ssCfg().folder || "")}" in Home Assistant Media.</div>` : "";
       h = `<div class="ssday"><div class="ssname">${this._esc(name.toUpperCase())}</div>${face}<div class="ssgreet">${this._esc(date)}</div>${wx ? `<div class="sswx">${wx.t}</div>` : ""}<div class="sspills">${pills}</div>${hint}</div>`;
     }
-    h += `<div class="sswake">TAP TO WAKE</div>`;
+    if (kind !== "c") h += `<div class="sswake">TAP TO WAKE</div><div class="sscred">${this._credit().toUpperCase()}</div>`;
     const info = el.querySelector(".ssinfo");
     if (info._h !== h) { info.innerHTML = h; info._h = h; }
   }
@@ -2297,9 +2310,9 @@ class IntellectDashboard extends HTMLElement {
       body = (adm ? sec("Screensaver", "shared by every wall panel; it starts when nobody has touched the screen for a while and a tap wakes it",
         row("Screensaver", "turn it on for all panels", tg(s.on, 'data-s="ss|on:toggle"')) +
         row("Start after", "minutes without a touch", seg(s.idle, "idle", [[1, "1 min"], [2, "2"], [5, "5"], [10, "10"], [15, "15"], [30, "30"]])) +
-        row("During the day", "a quiet clock with home status, or family photos scrolling with the clock on top", seg(s.mode, "mode", [["clock", "Clock"], ["photos", "Family photos"]])) +
+        row("During the day", "A: analog clock with status. B: large time, greeting and status. Or family photos scrolling with the clock on top", seg(s.mode === "clock" ? "a" : s.mode, "mode", [["a", "A · Quiet clock"], ["b", "B · Time and status"], ["photos", "Family photos"]])) +
         row("Day clock", "the analog face from the design, or large digital numbers", seg(s.face, "face", [["analog", "Analog"], ["digital", "Digital"]])) +
-        row("At night", "after sunset a dimmed clock is kinder in a bedroom or hallway", seg(s.night, "night", [["clock", "Dimmed clock"], ["same", "Same as day"]]))) +
+        row("At night", "after sunset. B dimmed keeps the status; C is only a faint time and date", seg(s.night === "clock" ? "b" : s.night, "night", [["b", "B · dimmed"], ["c", "C · Night mode"], ["same", "Same as day"]]))) +
       sec("Family photos", "upload them in Home Assistant: Media, then Local media, into this folder",
         row("Photo folder", "a folder inside Local media (/media); empty uses all of Local media", `<input type="text" data-ssf value="${E(s.folder || "")}" placeholder="intellect">`) +
         row("Scroll speed", "how fast the photos glide across", seg(s.speed, "speed", [["slow", "Slow"], ["normal", "Normal"], ["fast", "Fast"]])) +
