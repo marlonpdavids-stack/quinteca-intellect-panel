@@ -1,9 +1,9 @@
-"""Automatic updates for Quint.
+"""Automatic updates for Intellect.
 
-The chain is:  new release on GitHub  ->  HACS notices it  ->  Quint asks HACS to
-install it  ->  Quint sees that the files on disk are newer than the running
-version  ->  Quint restarts Home Assistant  ->  open browsers reload by themselves.
-Every step can be switched off in Quint -> Settings -> Updates.
+The chain is:  new release on GitHub  ->  HACS notices it  ->  Intellect asks HACS to
+install it  ->  Intellect sees that the files on disk are newer than the running
+version  ->  Intellect restarts Home Assistant  ->  open browsers reload by themselves.
+Every step can be switched off in Intellect -> Settings -> Updates.
 """
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ class QuintUpdater:
         return {"install": cfg.get("upInstall") is not False, "restart": cfg.get("upRestart") is not False}
 
     async def can_manage(self, user) -> bool:
-        """Home Assistant admins and the Quint admin may check, install and restart."""
+        """Home Assistant admins and the Intellect admin may check, install and restart."""
         if user is None:
             return False
         if user.is_admin:
@@ -137,7 +137,7 @@ class QuintUpdater:
             await self.hass.services.async_call("homeassistant", "update_entity", {"entity_id": ent}, blocking=True)
         except Exception as err:  # noqa: BLE001 - never break the loop
             self.last_error = f"refresh: {err}"
-            _LOGGER.debug("Quint refresh failed: %s", err)
+            _LOGGER.debug("Intellect refresh failed: %s", err)
 
     async def install(self) -> bool:
         ent = self.hacs_entity()
@@ -145,13 +145,13 @@ class QuintUpdater:
         if not st or st.state != "on" or st.attributes.get("in_progress"):
             return False
         self.last_action = f"installing {st.attributes.get('latest_version', '')}"
-        _LOGGER.info("Quint: installing %s through HACS", st.attributes.get("latest_version"))
+        _LOGGER.info("Intellect: installing %s through HACS", st.attributes.get("latest_version"))
         try:
             await self.hass.services.async_call("update", "install", {"entity_id": ent}, blocking=False)
             return True
         except Exception as err:  # noqa: BLE001
             self.last_error = f"install: {err}"
-            _LOGGER.warning("Quint install failed: %s", err)
+            _LOGGER.warning("Intellect install failed: %s", err)
             return False
 
     async def restart(self, reason: str = "") -> bool:
@@ -162,7 +162,7 @@ class QuintUpdater:
         except Exception as err:  # noqa: BLE001 - e.g. invalid configuration
             self.last_error = f"restart: {err}"
             persistent_notification.async_create(
-                self.hass, f"Quint could not restart Home Assistant: {err}", title="Quint update", notification_id="quint_update"
+                self.hass, f"Intellect could not restart Home Assistant: {err}", title="Intellect update", notification_id="quint_update"
             )
             return False
 
@@ -172,7 +172,7 @@ class QuintUpdater:
             await self._check()
         except Exception as err:  # noqa: BLE001
             self.last_error = str(err)
-            _LOGGER.debug("Quint update check failed: %s", err)
+            _LOGGER.debug("Intellect update check failed: %s", err)
 
     async def _check(self) -> None:
         cfg = await self.settings()
@@ -184,15 +184,15 @@ class QuintUpdater:
                 self._seen_disk = disk
                 persistent_notification.async_create(
                     self.hass,
-                    f"Quint {disk} is installed (running {VERSION})."
+                    f"Intellect {disk} is installed (running {VERSION})."
                     + (" Home Assistant restarts in about a minute to finish the update." if cfg["restart"] else " Restart Home Assistant to finish the update."),
-                    title="Quint update",
+                    title="Intellect update",
                     notification_id="quint_update",
                 )
                 return
             if cfg["restart"] and (self._restart_after is None or now >= self._restart_after):
                 self._restart_after = now + RETRY_RESTART
-                await self.restart(f"restarting for Quint {disk}")
+                await self.restart(f"restarting for Intellect {disk}")
             return
         # Up to date on disk: keep HACS looking and install what it finds.
         if not self.hacs_entity():

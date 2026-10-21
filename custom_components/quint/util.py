@@ -1,4 +1,4 @@
-"""Helpers for Quint Dashboard (no Home Assistant imports, so they are easy to test)."""
+"""Helpers for Intellect Dashboard (no Home Assistant imports, so they are easy to test)."""
 from __future__ import annotations
 
 import re

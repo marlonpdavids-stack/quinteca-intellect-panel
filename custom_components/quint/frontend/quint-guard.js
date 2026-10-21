@@ -1,5 +1,5 @@
-/* Quint access guard – loaded on every Home Assistant page.
-   When an admin turns it on in Quint → Settings → Access, normal users open Quint
+/* Intellect access guard – loaded on every Home Assistant page.
+   When an admin turns it on in Intellect → Settings → Access, normal users open Intellect
    by default and, if "Lock" is on, cannot open other Home Assistant pages.
    This is a convenience lock of the screen (not a security boundary): use
    non-admin accounts for real restrictions. Admins are never affected. */

@@ -1,4 +1,4 @@
-/* Quint Dashboard – Savant-style full-page dashboard for Home Assistant (HACS plugin) */
+/* Intellect Dashboard – Savant-style full-page dashboard for Home Assistant (HACS plugin) */
 const ic = (p) => `<svg class="si" viewBox="0 0 24 24">${p}</svg>`;
 const SV = {
   security:{ n: "Security", c: "#34c98b", i: ic('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>') },
@@ -68,7 +68,7 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "quint_cfg";
-const VER = "1.27.0";
+const VER = "1.28.0";
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
 const TSIZES = { xl: { n: "Extra large", z: 1.3, m: 1.3 }, l: { n: "Large", z: 1, m: 1 }, s: { n: "Small", z: 0.8, m: 0.9 }, xs: { n: "Very small", z: 0.62, m: 0.8 } };
@@ -769,12 +769,12 @@ class QuintDashboard extends HTMLElement {
     this._iv = setInterval(() => { const r = this.shadowRoot; this._tickClock(); const m = r.querySelector(".tm"); if (m) m.textContent = this._time(); }, 1000);
   }
   disconnectedCallback() { clearInterval(this._iv4); clearInterval(this._iv); clearInterval(this._iv2); clearInterval(this._iv3); clearInterval(this._iv5); window.removeEventListener("keydown", this._kd); if (this._ro) { this._ro.disconnect(); this._ro = null; } Object.values(this._tsub || {}).forEach((p) => p.then((u) => u()).catch(() => {})); this._tsub = {}; this._conn = null; }
-  set panel(p) { this._title = (p && p.config && p.config.title) || "Quint"; }
+  set panel(p) { this._title = (p && p.config && p.config.title) || "Intellect"; }
   set narrow(n) { if (n === this._narrow) return; this._narrow = n; this._draw(true); }
   set route(r) {}
-  setConfig(config) { this._title = (config && config.title) || "Quint"; }
+  setConfig(config) { this._title = (config && config.title) || "Intellect"; }
   getCardSize() { return 12; }
-  static getStubConfig() { return { title: "Quint" }; }
+  static getStubConfig() { return { title: "Intellect" }; }
 
   set hass(h) {
     this._h = h;
@@ -960,7 +960,7 @@ class QuintDashboard extends HTMLElement {
       let tried = ""; try { tried = sessionStorage.getItem("quint_rl") || ""; } catch (e) {}
       if (tried === d.running) return;
       try { sessionStorage.setItem("quint_rl", d.running); } catch (e) {}
-      this._toast("Quint " + d.running + " is ready, reloading…");
+      this._toast("Intellect " + d.running + " is ready, reloading…");
       setTimeout(() => this._reload(), 1200);
     }).catch(() => {});
   }
@@ -1016,7 +1016,7 @@ class QuintDashboard extends HTMLElement {
     if (a === "ureset") { if (c.perms) delete c.perms[v]; this._permPush(); return this._draw(true); }
     if (a === "mgr") {
       if (!this._admin()) return;
-      return this._h.callApi("POST", "quint/users", { action: "manager", user_id: c.manager === v ? "" : v }).then((d) => { if (d && d.manager) c.manager = d.manager; else delete c.manager; try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} this._toast(c.manager ? "Quint admin chosen" : "No Quint admin"); this._draw(true); }).catch((e) => this._toast("Could not change it: " + this._err(e, "error")));
+      return this._h.callApi("POST", "quint/users", { action: "manager", user_id: c.manager === v ? "" : v }).then((d) => { if (d && d.manager) c.manager = d.manager; else delete c.manager; try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} this._toast(c.manager ? "Intellect admin chosen" : "No Intellect admin"); this._draw(true); }).catch((e) => this._toast("Could not change it: " + this._err(e, "error")));
     }
     if (a === "unew") return this._userNew();
     if (a === "udel") return this._userDel(v);
@@ -1514,7 +1514,7 @@ class QuintDashboard extends HTMLElement {
   /* ---------- pages ---------- */
   _brand() {
     const menu = !this._locked() && (this._narrow || localStorage.getItem("quint_full") === "1") ? `<button class="ib" data-tog="menu:0">☰</button>` : "";
-    return `<div class="brand">${menu}<span>${this._esc(this._c.title || this._title || "Quint")}</span></div>`;
+    return `<div class="brand">${menu}<span>${this._esc(this._c.title || this._title || "Intellect")}</span></div>`;
   }
   _top(back = true) { return `<div class="top">${this._brand()}${back ? `<button class="back" data-go='{"p":"home"}'>‹ Home</button>` : ""}</div>`; }
   _credit() { const t = this._c.credit; return this._esc(t === undefined ? "By Quinteca" : t); }
@@ -2064,7 +2064,7 @@ class QuintDashboard extends HTMLElement {
       sec("Tile size", "the size of every tile and card for all users; a person can pick another size on their own device",
         row("Size for everyone", "extra large, large, small or very small", tsSeg(TSIZES[c.tsz] ? c.tsz : "l", "data-s"))) +
       sec("Appearance", "",
-        row("Client name", "written top left on every page", `<input type="text" data-ttl value="${E(c.title || "")}" placeholder="${E(this._title || "Quint")}">`) +
+        row("Client name", "written top left on every page", `<input type="text" data-ttl value="${E(c.title || "")}" placeholder="${E(this._title || "Intellect")}">`) +
         row("Bottom text", "written next to the settings button, bottom right (empty = hide)", `<input type="text" data-cred value="${E(c.credit === undefined ? "By Quinteca" : c.credit)}" placeholder="By Quinteca">`) +
         row("Greeting name", "shown on the home page", `<input type="text" data-uname value="${E(c.name || "")}" placeholder="${E((this._h.user && this._h.user.name) || "")}">`)) +
       sec("Background", "everything sits on top of this",
@@ -2186,23 +2186,23 @@ class QuintDashboard extends HTMLElement {
       this._upLoad();
       const U = this._up, H = U && U.hacs, cfgOn = (k) => c[k] !== false, btn = (a, t, off, pri) => `<button class="${pri ? "pri" : ""}" data-um="upd|${a}" ${off || this._upBusy ? "disabled" : ""}>${t}</button>`;
       const avail = !!(H && H.state === "on"), pend = !!(U && U.pending);
-      const line = !U ? "Loading…" : U.error ? "Could not read the update status." : pend ? `Version ${E(U.disk)} is installed. Home Assistant must restart to run it.` : avail ? `A new version ${E(H.latest || "")} is available.` : H ? "Quint is up to date." : "HACS was not found, so new versions cannot be installed automatically.";
-      body = sec("Quint version", "", row("Running now", "", `<b>v${E(VER)}</b>`) +
+      const line = !U ? "Loading…" : U.error ? "Could not read the update status." : pend ? `Version ${E(U.disk)} is installed. Home Assistant must restart to run it.` : avail ? `A new version ${E(H.latest || "")} is available.` : H ? "Intellect is up to date." : "HACS was not found, so new versions cannot be installed automatically.";
+      body = sec("Intellect version", "", row("Running now", "", `<b>v${E(VER)}</b>`) +
         (U && U.disk && U.disk !== VER ? row("Installed on disk", "waiting for a restart", `<b>v${E(U.disk)}</b>`) : "") +
         (H && H.latest ? row("Latest in HACS", H.release_url ? `<a href="${E(H.release_url)}" target="_blank" rel="noopener" style="color:var(--ac)">release notes</a>` : "", `<b>v${E(String(H.latest).replace(/^v/, ""))}</b>`) : "") +
         `<div class="lbl" style="padding:8px 4px 4px">${line}</div>${this._upMsg ? `<div class="lbl" style="padding:2px 4px 8px;color:var(--ac)">${E(this._upMsg)}</div>` : ""}${U && U.last_error ? `<div class="lbl" style="padding:2px 4px 8px;color:var(--bad)">${E(U.last_error)}</div>` : ""}` +
         `<div class="btns">${btn("check", "Check now")}${btn("install", "Update now", !avail, avail)}${btn("restart", "Restart Home Assistant", false, pend)}</div>`) +
       sec("Automatic", "everything below happens by itself; switch a step off to keep control",
-        row("Install new versions", "when HACS finds a new Quint release, install it without asking", tg(cfgOn("upInstall"), 'data-um="upflag|install"')) +
+        row("Install new versions", "when HACS finds a new Intellect release, install it without asking", tg(cfgOn("upInstall"), 'data-um="upflag|install"')) +
         row("Restart Home Assistant", "restart automatically after an update has been installed (about a minute later)", tg(cfgOn("upRestart"), 'data-um="upflag|restart"')) +
-        row("Reload open screens", "always on: every open Quint screen reloads itself after the restart", '<b>On</b>')) +
-      sec("How it works", "", '<div class="lbl" style="padding:6px 4px 12px">You publish the new version on GitHub (a release is created automatically when the version number changes). HACS notices it within about two hours; <b>Check now</b> asks HACS right away. Quint then installs it, restarts Home Assistant and every open screen reloads itself. The two switches are saved right away.</div>');
+        row("Reload open screens", "always on: every open Intellect screen reloads itself after the restart", '<b>On</b>')) +
+      sec("How it works", "", '<div class="lbl" style="padding:6px 4px 12px">You publish the new version on GitHub (a release is created automatically when the version number changes). HACS notices it within about two hours; <b>Check now</b> asks HACS right away. Intellect then installs it, restarts Home Assistant and every open screen reloads itself. The two switches are saved right away.</div>');
     } else if (tab === "access") {
       this._loadUsers();
       const U = this._normUsers(), sel = new Set(c.lockUsers || []);
-      body = sec("Quint as the home of your users", "applies to normal (non-admin) users; admins are never affected",
-        row("Open Quint first", "after signing in, normal users land on Quint instead of the default Home Assistant page", tg(!!c.dflt || !!c.lock, 'data-s="flag|dflt"')) +
-        row("Lock to Quint", "hide the Home Assistant sidebar and send users back to Quint when they try to open any other page", tg(!!c.lock, 'data-s="flag|lock"'))) +
+      body = sec("Intellect as the home of your users", "applies to normal (non-admin) users; admins are never affected",
+        row("Open Intellect first", "after signing in, normal users land on Intellect instead of the default Home Assistant page", tg(!!c.dflt || !!c.lock, 'data-s="flag|dflt"')) +
+        row("Lock to Intellect", "hide the Home Assistant sidebar and send users back to Intellect when they try to open any other page", tg(!!c.lock, 'data-s="flag|lock"'))) +
       sec("Who is locked", sel.size ? `${sel.size} chosen user${sel.size === 1 ? "" : "s"}` : "all normal users",
         (U.length ? U.map((x) => row(E(x.name), sel.size ? "" : "locked, because no one is chosen", tg(sel.has(x.id), `data-s="lockuser|${E(x.id)}"`))).join("") : `<div class="lbl" style="padding:6px 4px 12px">${this._usersBusy ? "Loading users…" : "No normal users found."}</div>`) +
         '<div class="lbl" style="padding:8px 4px 4px">Switch on specific users to lock only them. With none switched on, every normal user is locked.</div>') +
@@ -2214,7 +2214,7 @@ class QuintDashboard extends HTMLElement {
       const sum = (id) => { const p = P[id]; if (!p) return "everything"; const a = (p.svcOff || []).length, b = (p.roomOff || []).length; return [a ? `${a} service${a === 1 ? "" : "s"} off` : "", b ? `${b} room${b === 1 ? "" : "s"} off` : ""].filter(Boolean).join(" · "); };
       const one = (x) => {
         const adm2 = !!x.is_admin, self = x.id === me, open = this._pu === x.id && !adm2 && !self;
-        let h = row(E(x.name) + (adm2 ? " · Admin" : x.id === mg ? " · Quint admin" : ""), adm2 ? "full access" : self ? "you · you add users and set their limits" : `can use: ${sum(x.id)}`,
+        let h = row(E(x.name) + (adm2 ? " · Admin" : x.id === mg ? " · Intellect admin" : ""), adm2 ? "full access" : self ? "you · you add users and set their limits" : `can use: ${sum(x.id)}`,
           adm2 || self ? "" : `<button class="sbtn" ${um("usel", E(x.id))}>${open ? "Close" : "Limits"}</button>${x.id === mg ? "" : `<button class="ib2" ${um("udel", E(x.id))} title="Remove user">✕</button>`}`);
         if (open) {
           const p = P[x.id] || {}, so = p.svcOff || [], ro = p.roomOff || [], rs = (c.rooms || []).filter((r) => r.on !== false), ks = [...this._svcsList(), "rooms"].filter((k, i, a) => a.indexOf(k) === i);
@@ -2227,9 +2227,9 @@ class QuintDashboard extends HTMLElement {
         }
         return h;
       };
-      body = (isA ? sec("Quint admin", "one person you trust: a normal user who can also add users and limit their services and rooms",
-        (this._normUsers().map((x) => row(E(x.name), x.id === mg ? "Quint admin" : "", tg(x.id === mg, um("mgr", E(x.id))))).join("") || `<div class="lbl" style="padding:6px 4px 12px">${this._usersBusy ? "Loading users…" : "Add a user below first."}</div>`) +
-        '<div class="lbl" style="padding:8px 4px 4px">Only one person can be the Quint admin. Switch the person off again to have none. They can use everything the other users can, plus this Users tab. They cannot become a Home Assistant admin.</div>') : "") +
+      body = (isA ? sec("Intellect admin", "one person you trust: a normal user who can also add users and limit their services and rooms",
+        (this._normUsers().map((x) => row(E(x.name), x.id === mg ? "Intellect admin" : "", tg(x.id === mg, um("mgr", E(x.id))))).join("") || `<div class="lbl" style="padding:6px 4px 12px">${this._usersBusy ? "Loading users…" : "Add a user below first."}</div>`) +
+        '<div class="lbl" style="padding:8px 4px 4px">Only one person can be the Intellect admin. Switch the person off again to have none. They can use everything the other users can, plus this Users tab. They cannot become a Home Assistant admin.</div>') : "") +
       sec("People", isA ? "admins can use everything; for the others choose what they may use" : "choose what each person may use. Changes are saved right away",
         (U.length ? U.map(one).join("") : `<div class="lbl" style="padding:6px 4px 12px">${this._usersBusy ? "Loading users…" : "No users found."}</div>`)) +
       sec("Add a user", "creates a normal Home Assistant account (not an admin)",
@@ -2237,7 +2237,7 @@ class QuintDashboard extends HTMLElement {
         row("Login name", "letters and numbers", '<input type="text" data-nu="user" placeholder="anna" autocomplete="off" autocapitalize="none">') +
         row("Password", "at least 8 characters", '<input type="password" data-nu="pass" autocomplete="new-password">') +
         `<div class="btns"><button class="pri" ${um("unew", "")} ${busy ? "disabled" : ""}>${busy ? "Adding…" : "＋ Add user"}</button></div>`) +
-      sec("Good to know", "", '<div class="lbl" style="padding:6px 4px 12px">New users start with everything. Limits hide services, rooms and their devices inside Quint. It is not a security wall: a user could still open Home Assistant itself, so also switch on <b>Lock to Quint</b> in the Access tab (admin). Limits apply to normal users only.</div>');
+      sec("Good to know", "", '<div class="lbl" style="padding:6px 4px 12px">New users start with everything. Limits hide services, rooms and their devices inside Intellect. It is not a security wall: a user could still open Home Assistant itself, so also switch on <b>Lock to Intellect</b> in the Access tab (admin). Limits apply to normal users only.</div>');
     } else if (tab === "autos") {
       const all = Object.keys(this._h.states).filter((i) => /^(automation|script)\./.test(i)).sort((a, b) => this._nm(a).localeCompare(this._nm(b))).slice(0, 300), sel = new Set(c.autos || []);
       body = sec("Automations", `choose the automations and scripts that appear on the home page and in the Automations tab (${sel.size} chosen). Users can switch an automation on or off and run it with ▶`,
@@ -2258,7 +2258,7 @@ class QuintDashboard extends HTMLElement {
       }).join("") || '<div class="lbl" style="padding:6px 4px 12px">No custom cards yet.</div>') + `<div class="btns"><button class="pri" data-cc="open:home">＋ Add card (home page or a room)</button></div>`);
     }
     const tabsHtml = tabs.map(([id, t, sub]) => `<button class="sti ${tab === id ? "act" : ""}" data-go='${JSON.stringify({ p: "settings", tab: id })}'>${SET_I[id]}<span><b>${t}</b><small>${sub}</small></span></button>`).join("");
-    return `${this._top(false)}<div class="sbar"><div><h1>Settings</h1><div class="sub">${adm ? `Stored on the server for every user · Quint v${VER} · ${this._rn || 0} screen updates` : "Saved on this device only"}</div></div><div class="sbtns">${adm ? `<button class="sbtn ${this._dirty ? "pri2" : ""}" data-s="save|">Save</button><button class="sbtn" data-s="reset|">Reset everything</button><button class="sbtn" data-out="1">Sign out</button><button class="sbtn" data-s="close|">Close</button>` : `<button class="sbtn" data-out="1">Sign out</button><button class="sbtn" data-go='{"p":"home"}'>Close</button>`}</div></div><div class="sg"><div class="snav">${tabsHtml}</div><div>${body}</div></div>`;
+    return `${this._top(false)}<div class="sbar"><div><h1>Settings</h1><div class="sub">${adm ? `Stored on the server for every user · Intellect v${VER} · ${this._rn || 0} screen updates` : "Saved on this device only"}</div></div><div class="sbtns">${adm ? `<button class="sbtn ${this._dirty ? "pri2" : ""}" data-s="save|">Save</button><button class="sbtn" data-s="reset|">Reset everything</button><button class="sbtn" data-out="1">Sign out</button><button class="sbtn" data-s="close|">Close</button>` : `<button class="sbtn" data-out="1">Sign out</button><button class="sbtn" data-go='{"p":"home"}'>Close</button>`}</div></div><div class="sg"><div class="snav">${tabsHtml}</div><div>${body}</div></div>`;
   }
 
   /* ---------- render ---------- */

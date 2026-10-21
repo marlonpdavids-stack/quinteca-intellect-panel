@@ -1,4 +1,4 @@
-"""Quint Dashboard – Savant-style sidebar dashboard for Home Assistant."""
+"""Intellect Dashboard – Savant-style sidebar dashboard for Home Assistant."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -35,7 +35,7 @@ class QuintConfigView(HomeAssistantView):
         if not isinstance(data, dict):
             return self.json_message("Bad settings", 400)
         old = await self._store.async_load() or {}
-        # the Quint admin, user limits and update switches are changed only through their own endpoints
+        # the Intellect admin, user limits and update switches are changed only through their own endpoints
         for key in ("perms", "manager", "upInstall", "upRestart"):
             if key in old:
                 data[key] = old[key]
@@ -46,7 +46,7 @@ class QuintConfigView(HomeAssistantView):
 
 
 class QuintUsersView(HomeAssistantView):
-    """People: the Quint admin (a normal user chosen in Settings) and Home Assistant admins
+    """People: the Intellect admin (a normal user chosen in Settings) and Home Assistant admins
     can list, add and remove normal users and choose which services and rooms each may use."""
 
     url = "/api/quint/users"
@@ -165,7 +165,7 @@ class QuintVersionView(HomeAssistantView):
 
 
 class QuintUpdateView(HomeAssistantView):
-    """Admin and Quint admin actions: check now, install now, restart now, automatic-update switches."""
+    """Admin and Intellect admin actions: check now, install now, restart now, automatic-update switches."""
 
     url = "/api/quint/update"
     name = "api:quint:update"
@@ -284,7 +284,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         data["static"] = True
     data["updater"].start()
-    title = entry.data.get("title", "Quint")
+    title = entry.data.get("title", "Intellect")
     js = Path(__file__).parent / "frontend" / "quint-panel.js"
     stamp = int((await hass.async_add_executor_job(js.stat)).st_mtime)
     guard = f"{STATIC_URL}/quint-guard.js?v={VERSION}.{stamp}"

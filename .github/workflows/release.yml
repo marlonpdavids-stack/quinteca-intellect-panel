@@ -2,7 +2,7 @@ name: Release
 
 # Creates a GitHub release (and tag) automatically whenever the version in
 # custom_components/quint/manifest.json changes on main. HACS watches releases,
-# and Quint installs them and restarts Home Assistant by itself.
+# and Intellect installs them and restarts Home Assistant by itself.
 on:
   push:
     branches: [main]
@@ -30,5 +30,5 @@ jobs:
           if gh release view "$tag" >/dev/null 2>&1; then
             echo "Release $tag already exists"
           else
-            gh release create "$tag" --title "Quint ${{ steps.v.outputs.version }}" --generate-notes --target "$GITHUB_SHA" --latest
+            gh release create "$tag" --title "Intellect ${{ steps.v.outputs.version }}" --generate-notes --target "$GITHUB_SHA" --latest
           fi

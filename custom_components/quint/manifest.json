@@ -1,13 +1,13 @@
 {
   "domain": "quint",
-  "name": "Quint Dashboard",
+  "name": "Intellect Dashboard",
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["http", "frontend", "panel_custom"],
-  "documentation": "https://github.com/YOUR-USER/quint-dashboard",
+  "documentation": "https://github.com/marlonpdavids-stack/quinteca-intellect-panel",
   "integration_type": "service",
   "iot_class": "calculated",
-  "issue_tracker": "https://github.com/YOUR-USER/quint-dashboard/issues",
+  "issue_tracker": "https://github.com/marlonpdavids-stack/quinteca-intellect-panel/issues",
   "requirements": [],
-  "version": "1.27.0"
+  "version": "1.28.0"
 }
