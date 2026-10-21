@@ -15,6 +15,7 @@ A full-screen, Quinteca-branded control panel for Home Assistant, built for wall
 | `examples/configuration.yaml` | Example `panel_custom` block. |
 | `test/test.js` | Smoke test against a simulated house. |
 | `CHANGELOG.md` | What changed in each version. |
+| `quint-dashboard/` | Moiz's Quint dashboard (Home Assistant custom integration, v1.27.0), copied with its history from github.com/Moiz6649/quint-dashboard. HACS can't install it from this subfolder; copy `quint-dashboard/custom_components/quint` into the box's `custom_components`. |
 
 ## Installing on a client box
 
