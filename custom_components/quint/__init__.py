@@ -285,6 +285,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data["static"] = True
     data["updater"].start()
     title = entry.data.get("title", "Intellect")
+    # v1.28.0: boxes set up under the old name show "Intellect" in the sidebar from now on.
+    if title.strip().lower() in ("quint", "quint dashboard"):
+        title = "Intellect"
+        hass.config_entries.async_update_entry(entry, title=title, data={**entry.data, "title": title})
     js = Path(__file__).parent / "frontend" / "quint-panel.js"
     stamp = int((await hass.async_add_executor_job(js.stat)).st_mtime)
     guard = f"{STATIC_URL}/quint-guard.js?v={VERSION}.{stamp}"
