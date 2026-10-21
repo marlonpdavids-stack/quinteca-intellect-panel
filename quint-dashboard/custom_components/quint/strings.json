@@ -1,0 +1,6 @@
+{
+  "config": {
+    "step": {"user": {"title": "Quint Dashboard", "description": "Adds the Quint dashboard to your sidebar.", "data": {"title": "Dashboard title"}}},
+    "abort": {"single_instance_allowed": "Quint is already configured."}
+  }
+}
