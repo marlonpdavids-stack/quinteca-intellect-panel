@@ -28,6 +28,8 @@ const PAUSE_I = ic('<path d="M8 5v14M16 5v14" stroke-width="3"/>');
 const PHONE_I = SV.intercom.i;
 const VIDEO_I = SV.cameras.i;
 const KEY_I = ic('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-1.5"/>');
+const DOOR_I = ic('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><path d="M12 15v2"/>');
+const DONE_I = ic('<path d="M5 12.5l4.5 4.5L19 7.5"/>');
 const PALETTE_I = ic('<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 1 0 0 20 2 2 0 0 0 2-2 2 2 0 0 1 2-2h2a4 4 0 0 0 4-4A10 10 0 0 0 12 2z"/>');
 const TILES_I = ic('<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="5" rx="1"/><rect x="13" y="10" width="8" height="11" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/>');
 const SCENE_I = ic('<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 16l.7 1.8L21.5 18.5l-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/>');
@@ -68,7 +70,7 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "intellect_cfg";
-const VER = "1.31.0";
+const VER = "1.31.1";
 const GATE_OPEN_MS = 60000; // how long a gate shows "Open" after it is opened from the panel
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
@@ -317,7 +319,10 @@ ha-icon{--mdc-icon-size:24px;display:inline-flex}.tpl{cursor:pointer;min-height:
 .icr{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
 .icb{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);font-size:12px;font-weight:600;line-height:1.1;text-align:center;transition:transform .15s,background .2s}
 .icb .si{font-size:22px}.icb:active{transform:scale(.95)}
-.icb.door{background:rgba(95,211,154,.16);border-color:rgba(95,211,154,.5);color:#a8f0cd}
+.icb{cursor:pointer;box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 4px 12px rgba(0,0,0,.25)}
+.icb:hover{background:rgba(255,255,255,.11)}
+.icb.door .si{color:var(--warn)}.icb.door.armed .si{color:#1a1205}
+.icb.door.done{background:rgba(95,211,154,.16);border-color:rgba(95,211,154,.5);color:#a8f0cd}.icb.door.done .si{color:#a8f0cd}
 .icb.door.armed{background:var(--warn);border-color:var(--warn);color:#1a1205;animation:armed .6s ease-in-out infinite alternate}
 @keyframes armed{from{transform:scale(1)}to{transform:scale(1.04)}}
 .bc.ringing{border-color:var(--ok);animation:ringg 1.1s ease-in-out infinite}
@@ -1136,7 +1141,7 @@ class IntellectDashboard extends HTMLElement {
     if (!this._svOk(svc)) return [];
     return Object.keys(this._h.states).filter((id) => this._svcOf(id) === svc && !this._c.hide.includes(id) && (!room || this._roomOf(id) === room) && this._rmOk(this._roomOf(id)));
   }
-  _nm(id) { return this._h.states[id].attributes.friendly_name || id; }
+  _nm(id) { const n = this._h.states[id].attributes.friendly_name || id; return id.startsWith("camera.") ? n.replace(/\s*[-·]?\s*(high|medium|low)\s+resolution(\s+channel)?(\s*\(insecure\))?$/i, "").trim() || n : n; }
   _svcsAll() {
     const o = this._svcOrder(), keys = Object.keys(SV).filter((x) => (x === "intercom" ? this._icOn() : x === "clock" ? this._clockTile() : x === "camwall" ? this._wallCams().length > 0 : x === "automations" ? this._autoIds().length > 0 : isCs(x) ? this._csHas(x) || (x === "more" && this._admin()) : this._ents(x).length));
     const r = (k) => { const i = o.indexOf(k); return i < 0 ? 1000 + keys.indexOf(k) : i; };
@@ -1878,15 +1883,15 @@ class IntellectDashboard extends HTMLElement {
       if (!(ic.door && ic.door.a)) return this._toast("Set the open-door action in Settings → Intercom");
       const key = "door:" + ic.id;
       if (this._arm !== key) { this._arm = key; clearTimeout(this._armT); this._armT = setTimeout(() => { this._arm = null; this._draw(true); }, 3500); return this._draw(true); }
-      clearTimeout(this._armT); this._arm = null; if (this._run(ic.door)) this._toast("Door opened"); this._draw(true);
+      clearTimeout(this._armT); this._arm = null; if (this._run(ic.door)) { this._toast("Door opened"); this._doorOk = key; clearTimeout(this._okT); this._okT = setTimeout(() => { this._doorOk = null; this._draw(true); }, 5000); } this._draw(true);
     }
   }
   _icCard(ic, big) {
-    const H = this._h.states, E = (t) => this._esc(t), cam = ic.camera && H[ic.camera], ring = this._ringing(ic), door = this._arm === "door:" + ic.id;
+    const H = this._h.states, E = (t) => this._esc(t), cam = ic.camera && H[ic.camera], ring = this._ringing(ic), door = this._arm === "door:" + ic.id, dok = this._doorOk === "door:" + ic.id;
     const pic = cam && cam.attributes.entity_picture && !["unavailable", "unknown"].includes(cam.state) ? this._h.hassUrl(cam.attributes.entity_picture) : "";
     const view = pic ? `<div class="cvw" data-cam="${ic.camera}"><img class="cam" data-src="${pic}" src="${pic}"><span class="cn">${E(this._nm(ic.camera))}</span><span class="live">${ring ? "Ringing" : "Live"}</span><span class="xp">⤢</span></div>` : `<div class="cvw" style="cursor:default;font-size:44px">${PHONE_I}</div>`;
     const b = (kind, ico, t, cls) => `<button class="icb ${cls || ""}" data-ic="${kind}|${E(ic.id)}">${ico}<span>${t}</span></button>`;
-    const btns = [!ic.noVideo && b("video", VIDEO_I, "Video call"), !ic.noAudio && b("audio", PHONE_I, "Audio call"), !ic.noDoor && b("door", KEY_I, door ? "Tap again to open" : "Open door", "door " + (door ? "armed" : ""))].filter(Boolean);
+    const btns = [!ic.noVideo && b("video", VIDEO_I, "Video call"), !ic.noAudio && b("audio", PHONE_I, "Audio call"), !ic.noDoor && b("door", dok ? DONE_I : DOOR_I, dok ? "Door opened" : door ? "Tap again to open" : "Open door", "door " + (dok ? "done" : door ? "armed" : ""))].filter(Boolean);
     return `<div class="bc icm ${ring ? "ringing" : ""} ${big ? "bigic" : ""}" data-id="b:ic:${E(ic.id)}"><div class="bh" ${this._tileGo("intercom")}><span>${E(this._icName(ic))}</span><span class="bs">${ring ? '<b class="rg">Ringing</b>' : "Ready"}</span></div>${view}${btns.length ? `<div class="icr" style="grid-template-columns:repeat(${btns.length},1fr)">${btns.join("")}</div>` : ""}</div>`;
   }
   _icPage() {
@@ -2253,7 +2258,7 @@ class IntellectDashboard extends HTMLElement {
     const snap = this._h.hassUrl(s.attributes.entity_picture), stream = snap.replace("/camera_proxy/", "/camera_proxy_stream/");
     if (this._camId !== id) { this._camId = id; this._camSince = Date.now(); }
     const ic = this._icList().find((x) => x.camera === id) || {}, armed = this._arm === "door:" + ic.id;
-    const vb = [!ic.noAudio && `<button class="icb" data-ic="audio|${E(ic.id || "")}">${PHONE_I}<span>Audio call</span></button>`, !ic.noDoor && `<button class="icb door ${armed ? "armed" : ""}" data-ic="door|${E(ic.id || "")}">${KEY_I}<span>${armed ? "Tap again to open" : "Open door"}</span></button>`].filter(Boolean);
+    const vb = [!ic.noAudio && `<button class="icb" data-ic="audio|${E(ic.id || "")}">${PHONE_I}<span>Audio call</span></button>`, !ic.noDoor && `<button class="icb door ${armed ? "armed" : ""}" data-ic="door|${E(ic.id || "")}">${DOOR_I}<span>${armed ? "Tap again to open" : "Open door"}</span></button>`].filter(Boolean);
     const ictl = ic.id && vb.length ? `<div class="vic">${vb.join("")}</div>` : "";
     const arrows = cams.length > 1 ? `<button class="ib" data-cam="prev">‹</button><button class="ib" data-cam="next">›</button>` : "";
     return `<div class="camv" data-cam="bg"><div class="vh"><span class="live">Live</span><span class="vt">${E(this._nm(id))}</span><span class="grow"></span>${arrows}<button class="ib" data-cam="close">✕</button></div><div class="vb">${this._haOn() && !this._camFb && !(this._haBad || new Set()).has(id) ? this._haHost(id, false, snap) : ""}${this._haOn() && !this._camFb && !(this._haBad || new Set()).has(id) ? "" : `<img class="camx" data-cam="keep" data-src="${stream}" data-snap="${snap}" style="background:#000 url('${E(snap)}') center/contain no-repeat" src="${this._camFb ? snap : stream}">`}</div>${ictl}<div class="vf">${cams.map((i) => `<button class="cc2 ${i === id ? "on" : ""}" data-id="cc:${i}" data-cam="${i}">${E(this._nm(i))}</button>`).join("")}</div></div>`;
