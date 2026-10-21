@@ -70,7 +70,7 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "intellect_cfg";
-const VER = "1.31.1";
+const VER = "1.31.2";
 const GATE_OPEN_MS = 60000; // how long a gate shows "Open" after it is opened from the panel
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
@@ -1891,7 +1891,7 @@ class IntellectDashboard extends HTMLElement {
     const pic = cam && cam.attributes.entity_picture && !["unavailable", "unknown"].includes(cam.state) ? this._h.hassUrl(cam.attributes.entity_picture) : "";
     const view = pic ? `<div class="cvw" data-cam="${ic.camera}"><img class="cam" data-src="${pic}" src="${pic}"><span class="cn">${E(this._nm(ic.camera))}</span><span class="live">${ring ? "Ringing" : "Live"}</span><span class="xp">⤢</span></div>` : `<div class="cvw" style="cursor:default;font-size:44px">${PHONE_I}</div>`;
     const b = (kind, ico, t, cls) => `<button class="icb ${cls || ""}" data-ic="${kind}|${E(ic.id)}">${ico}<span>${t}</span></button>`;
-    const btns = [!ic.noVideo && b("video", VIDEO_I, "Video call"), !ic.noAudio && b("audio", PHONE_I, "Audio call"), !ic.noDoor && b("door", dok ? DONE_I : DOOR_I, dok ? "Door opened" : door ? "Tap again to open" : "Open door", "door " + (dok ? "done" : door ? "armed" : ""))].filter(Boolean);
+    const btns = [!ic.noAudio && b("audio", PHONE_I, "Audio call"), !ic.noDoor && b("door", dok ? DONE_I : DOOR_I, dok ? "Door opened" : door ? "Tap again to open" : "Open door", "door " + (dok ? "done" : door ? "armed" : ""))].filter(Boolean);
     return `<div class="bc icm ${ring ? "ringing" : ""} ${big ? "bigic" : ""}" data-id="b:ic:${E(ic.id)}"><div class="bh" ${this._tileGo("intercom")}><span>${E(this._icName(ic))}</span><span class="bs">${ring ? '<b class="rg">Ringing</b>' : "Ready"}</span></div>${view}${btns.length ? `<div class="icr" style="grid-template-columns:repeat(${btns.length},1fr)">${btns.join("")}</div>` : ""}</div>`;
   }
   _icPage() {
@@ -2443,12 +2443,10 @@ class IntellectDashboard extends HTMLElement {
           row("Doorbell sensor", "optional: a binary_sensor or event that rings", txt("bell", "binary_sensor.doorbell")) +
           row("Open video on ring", "show the big camera by itself when the bell rings", tg(!!ic.auto, 'data-s="icflag|auto"'))) +
         sec("Buttons", "choose which buttons are shown on the tile, page and big camera",
-          row("Video call", "opens the big camera", tg(!ic.noVideo, 'data-s="icflag|noVideo"')) +
           row("Audio call", "", tg(!ic.noAudio, 'data-s="icflag|noAudio"')) +
           row("Open door", "", tg(!ic.noDoor, 'data-s="icflag|noDoor"'))) +
         sec("Open door", "needs two taps to confirm. Use an entity (lock, switch, button, script…) or a service", act("door", "")) +
         sec("Audio call", "an entity or service that starts the call, or a link like sip:101@pbx or tel:+974…", act("audio", "")) +
-        sec("Video call (optional)", "extra action when Video call is tapped; the big camera always opens", act("video", "")) +
         `<datalist id="ic-ents">${Object.keys(this._h.states).sort().map((i) => `<option value="${E(i)}">`).join("")}</datalist>`;
       }
     } else if (tab === "updates") {
