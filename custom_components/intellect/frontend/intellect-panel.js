@@ -59,7 +59,7 @@ const ICONS = {
   home: ic('<path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>'),
 };
 const LOGO_I = ic('<path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 8v8M8 10l4 2 4-2"/>');
-const SET_I = {
+const SET_I = { ss: ic('<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M14.5 8.5a3 3 0 1 0 0 4 3.5 3.5 0 0 1 0-4z"/>'), panels: ic('<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8.5 15.5l2-2.5 2 1.5 3-4"/><circle cx="12" cy="19" r=".5"/>'),
   general: ic('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>'),
   pages: ic('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7M17.5 14v7"/>'),
   rooms: ICONS.door, devices: ICONS.plug, home: ICONS.home,
@@ -70,7 +70,7 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "intellect_cfg";
-const VER = "1.31.3";
+const VER = "1.32.0";
 const GATE_OPEN_MS = 60000; // how long a gate shows "Open" after it is opened from the panel
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
@@ -322,6 +322,7 @@ ha-icon{--mdc-icon-size:24px;display:inline-flex}.tpl{cursor:pointer;min-height:
 .icb{cursor:pointer;box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 4px 12px rgba(0,0,0,.25)}
 .icb:hover{background:rgba(255,255,255,.11)}
 .icb.door .si{color:var(--warn)}.icb.door.armed .si{color:#1a1205}
+.pldot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--mu);margin-right:10px;vertical-align:middle}.pldot.ok{background:var(--ok)}.pldot.w{background:var(--warn)}.pldot.b{background:var(--bad)}
 .icb.door.done{background:rgba(95,211,154,.16);border-color:rgba(95,211,154,.5);color:#a8f0cd}.icb.door.done .si{color:#a8f0cd}
 .icb.door.armed{background:var(--warn);border-color:var(--warn);color:#1a1205;animation:armed .6s ease-in-out infinite alternate}
 @keyframes armed{from{transform:scale(1)}to{transform:scale(1.04)}}
@@ -803,7 +804,7 @@ class IntellectDashboard extends HTMLElement {
   }
   _time() { return this._clock(); }
   connectedCallback() {
-    this._ssStart();
+    this._ssStart(); this._hbStart();
     this._applyBg(); this._layout();
     if (typeof ResizeObserver !== "undefined") { this._ro = new ResizeObserver(() => this._layout()); this._ro.observe(this); }
     this._kd = (e) => { if (e.key === "Escape" && this._cam) { this._cam = null; this._camFb = false; this._draw(true); } };
@@ -820,7 +821,7 @@ class IntellectDashboard extends HTMLElement {
     }, 1000);
     this._iv = setInterval(() => { const r = this.shadowRoot; this._tickClock(); const m = r.querySelector(".tm"); if (m) m.textContent = this._time(); }, 1000);
   }
-  disconnectedCallback() { this._ssStop(); clearInterval(this._iv4); clearInterval(this._iv); clearInterval(this._iv2); clearInterval(this._iv3); clearInterval(this._iv5); window.removeEventListener("keydown", this._kd); if (this._ro) { this._ro.disconnect(); this._ro = null; } Object.values(this._tsub || {}).forEach((p) => p.then((u) => u()).catch(() => {})); this._tsub = {}; this._conn = null; }
+  disconnectedCallback() { this._ssStop(); this._hbStop(); clearInterval(this._iv4); clearInterval(this._iv); clearInterval(this._iv2); clearInterval(this._iv3); clearInterval(this._iv5); window.removeEventListener("keydown", this._kd); if (this._ro) { this._ro.disconnect(); this._ro = null; } Object.values(this._tsub || {}).forEach((p) => p.then((u) => u()).catch(() => {})); this._tsub = {}; this._conn = null; }
   set panel(p) { this._title = (p && p.config && p.config.title) || "Intellect"; }
   set narrow(n) { if (n === this._narrow) return; this._narrow = n; this._draw(true); }
   set route(r) {}
@@ -919,6 +920,13 @@ class IntellectDashboard extends HTMLElement {
   _swap(arr, i, d) { const j = i + d; if (j < 0 || j >= arr.length) return; [arr[i], arr[j]] = [arr[j], arr[i]]; }
   _sact(a, v) {
     const c = this._c;
+    if (a === "pl") {
+      const i = v.indexOf(":"), k = v.slice(0, i), id = v.slice(i + 1);
+      if (k === "refresh") { this._pl = null; return this._draw(true); }
+      if (k === "forget" && !confirm("Forget this wall panel? It comes back if the tablet reports again.")) return;
+      if (k === "report") return this._plLoad({ action: "report" }).then(() => this._toast("Sent"));
+      return this._plLoad({ action: k, id }).then(() => { if (this._pl && this._pl.ok) this._toast({ apply: "Settings sent to the tablet", wake: "Waking the tablet", reload: "The dashboard reloads within a minute" }[k] || "Done"); });
+    }
     if (a === "ss") {
       const i = v.indexOf(":"), k = v.slice(0, i), x = v.slice(i + 1), s = { ...this._ssCfg() };
       if (k === "scan") { this._ssPhotos(true).then(() => this._draw(true)); return; }
@@ -1249,6 +1257,9 @@ class IntellectDashboard extends HTMLElement {
     if (d.pbfile !== undefined) { const fl = t.files && t.files[0]; if (fl) this._pickBgLocal(fl); t.value = ""; return; }
     if (d.sdf !== undefined && this._sd) { this._sd[d.sdf] = t.value; this._draw(true); return; }
     if (adm && d.icf) { const ic = this._icCur(), [a, b] = d.icf.split("."); if (!ic) return; if (b) { ic[a] = ic[a] || {}; ic[a][b] = t.value.trim(); } else ic[a] = t.value.trim(); this._save(); this._draw(true); return; }
+    if (d.pname !== undefined) { try { const n = t.value.trim().slice(0, 40); if (n) localStorage.setItem("intellect_pname", n); else localStorage.removeItem("intellect_pname"); } catch (e) {} this._hb(); this._draw(true); return; }
+    if (adm && d.pll !== undefined) { this._plLoad({ action: "link", id: d.pll, notify: t.value }); return; }
+    if (adm && (d.pls !== undefined || d.plk !== undefined)) { const R = this.shadowRoot, site = (R.querySelector("[data-pls]") || {}).value || "", key = (R.querySelector("[data-plk]") || {}).value || ""; this._plLoad({ action: "portal", site, key }); return; }
     if (adm && d.ssf !== undefined) { this._c.ss = { ...this._ssCfg(), folder: t.value.trim() }; this._ssPh = null; this._save(); this._draw(true); return; }
     if (d.devsel !== undefined) { localStorage.setItem("intellect_dev", t.value); this._layout(); this._draw(true); return; }
     if (adm && d.bgfile !== undefined) { const fl = t.files && t.files[0]; if (fl) this._pickBg(fl); t.value = ""; return; }
@@ -1577,6 +1588,46 @@ class IntellectDashboard extends HTMLElement {
   }
   _top(back = true) { return `<div class="top">${this._brand()}${back ? `<button class="back" data-go='{"p":"home"}'>‹ Home</button>` : ""}</div>`; }
   _credit() { const t = this._c.credit; return this._esc(t === undefined ? "By Quinteca" : t); }
+  /* ---------- wall panel health ---------- */
+  // A tablet that has a wall panel name reports to Home Assistant once a minute (see monitor.py).
+  _pname() { try { return localStorage.getItem("intellect_pname") || ""; } catch (e) { return ""; } }
+  _pid() {
+    let v = ""; try { v = localStorage.getItem("intellect_pid") || ""; if (!v) { v = "p" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); localStorage.setItem("intellect_pid", v); } } catch (e) { v = "p-nostore"; }
+    return v;
+  }
+  _hbStart() {
+    if (!this._onErr) { this._errs = []; this._onErr = () => { this._errs.push(Date.now()); }; window.addEventListener("error", this._onErr); window.addEventListener("unhandledrejection", this._onErr); }
+    this._onVis = () => { if (!document.hidden) this._hb(); };
+    document.addEventListener("visibilitychange", this._onVis);
+    clearInterval(this._hbIv); this._hbIv = setInterval(() => this._hbTick(), 30000);
+    clearTimeout(this._hbT0); this._hbT0 = setTimeout(() => this._hb(), 5000);
+  }
+  _hbStop() { clearInterval(this._hbIv); clearTimeout(this._hbT0); if (this._onVis) document.removeEventListener("visibilitychange", this._onVis); }
+  _hbTick() {
+    // Self-heal: lost Home Assistant for 2 minutes, reload (at most once every 10 minutes).
+    if (this._h && this._h.connected === false) { this._lost = this._lost || Date.now(); if (Date.now() - this._lost > 120e3) this._reloadOnce(); } else this._lost = 0;
+    if (Date.now() - (this._hbAt || 0) >= 55e3) this._hb();
+  }
+  _reloadOnce() {
+    let last = 0; try { last = +sessionStorage.getItem("intellect_rl") || 0; } catch (e) {}
+    if (Date.now() - last < 600e3) return;
+    try { sessionStorage.setItem("intellect_rl", String(Date.now())); } catch (e) {}
+    location.reload();
+  }
+  async _hb() {
+    const name = this._pname(); if (!name || !this._h || !this._h.callApi) return;
+    this._hbAt = Date.now();
+    this._errs = (this._errs || []).filter((t) => Date.now() - t < 300e3);
+    try {
+      const r = await this._h.callApi("POST", "intellect/heartbeat", { pid: this._pid(), name, ver: VER, page: this._v.p || "", vis: !document.hidden, ss: !!this._ssShown, err: this._errs.length, ua: navigator.userAgent });
+      if (r && r.cmd === "reload") { try { sessionStorage.removeItem("intellect_rl"); } catch (e) {} location.reload(); }
+    } catch (e) {}
+  }
+  async _plLoad(action) {
+    try { this._pl = action ? await this._h.callApi("POST", "intellect/panels", action) : await this._h.callApi("GET", "intellect/panels"); if (this._pl && this._pl.ok === false && this._pl.error) this._toast(this._pl.error); }
+    catch (e) { this._pl = { error: "Update Intellect and restart Home Assistant to use wall panel health." }; }
+    this._draw(true);
+  }
   /* ---------- screensaver ---------- */
   // Shared settings live in this._c.ss; each device can force it on or off (localStorage intellect_ss).
   _ssCfg() { return { on: false, idle: 5, mode: "a", night: "b", face: "analog", folder: "intellect", speed: "normal", ...(this._c.ss || {}) }; }
@@ -2290,7 +2341,7 @@ class IntellectDashboard extends HTMLElement {
     const sec = (t, note, rows) => `<div class="ssec"><div class="shd"><span>${t}</span>${note ? `<small>${note}</small>` : ""}</div>${rows}</div>`;
     const tg = (on, a) => `<button class="sw ${on ? "on" : ""}" ${a}></button>`;
     const up = (a, v, off) => `<button class="ib2" data-s="${a}|${v}" ${off ? "disabled" : ""}>${a.endsWith("up") ? "▲" : "▼"}</button>`;
-    const tabs = !this._admin() ? [...(this._mgr() ? [["users", "Users", "add users, limit services and rooms"], ["updates", "Updates", "automatic updates and restart"]] : []), ["scenes", "Scenes", "add your own scenes"], ["rphoto", "Room photos", "pick a photo per room"], ["bg", "Background", "change it on this device"], ["ss", "Screensaver", "on or off on this device"]] : [["general", "General", "title, background, layout"], ["pages", "Pages", "services, order, titles"], ["rooms", "Rooms", "floors, order and names"], ["rphoto", "Room photos", "background of each room"], ["devices", "Devices", "room and visibility per device"], ["rdev", "Room devices", "hide or show devices room by room"], ["srooms", "Service rooms", "hide unused rooms in each service"], ["home", "Home page", "clock, weather, services"], ["ss", "Screensaver", "family photos or a clock when idle"], ["tiles", "Home tiles", "choose devices per tile"], ["wall", "Camera wall", "many cameras on one screen"], ["intercom", "Intercoms", "cameras, door, calls"], ["autos", "Automations", "choose what users can run"], ["users", "Users", "add users, limit services and rooms"], ["access", "Access", "default page and lock users"], ["updates", "Updates", "automatic updates and restart"], ["scenes", "Scenes", "add and edit scenes"], ["bg", "Background", "your own on this device"], ["cards", "Cards", "custom cards you added"]];
+    const tabs = !this._admin() ? [...(this._mgr() ? [["users", "Users", "add users, limit services and rooms"], ["updates", "Updates", "automatic updates and restart"]] : []), ["scenes", "Scenes", "add your own scenes"], ["rphoto", "Room photos", "pick a photo per room"], ["bg", "Background", "change it on this device"], ["ss", "Screensaver", "on or off on this device"]] : [["general", "General", "title, background, layout"], ["pages", "Pages", "services, order, titles"], ["rooms", "Rooms", "floors, order and names"], ["rphoto", "Room photos", "background of each room"], ["devices", "Devices", "room and visibility per device"], ["rdev", "Room devices", "hide or show devices room by room"], ["srooms", "Service rooms", "hide unused rooms in each service"], ["home", "Home page", "clock, weather, services"], ["ss", "Screensaver", "family photos or a clock when idle"], ["panels", "Wall panels", "keep screens on, health, alerts"], ["tiles", "Home tiles", "choose devices per tile"], ["wall", "Camera wall", "many cameras on one screen"], ["intercom", "Intercoms", "cameras, door, calls"], ["autos", "Automations", "choose what users can run"], ["users", "Users", "add users, limit services and rooms"], ["access", "Access", "default page and lock users"], ["updates", "Updates", "automatic updates and restart"], ["scenes", "Scenes", "add and edit scenes"], ["bg", "Background", "your own on this device"], ["cards", "Cards", "custom cards you added"]];
     const adm = this._admin();
     const tsSeg = (cur, attr, none) => `<div class="seg sm" style="flex-wrap:wrap">${Object.entries(TSIZES).map(([k, t]) => `<button class="${cur === k ? "on" : ""}" ${attr}="${attr === "data-s" ? "tsz|" : "tsd|"}${k}">${t.n}</button>`).join("")}${none ? `<button ${attr}="tsd|">Same as shared</button>` : ""}</div>`;
     let tab2 = tab;
@@ -2307,6 +2358,28 @@ class IntellectDashboard extends HTMLElement {
         (adm ? "" : sec("Arrangement", "hold a tile or card for 2 seconds, then drag it onto the card whose place you want",
         row("Your own order", "tiles and cards are arranged on this device only", '<button class="sbtn" data-sc="ordreset|">Back to the shared order</button>'))) +
         sec("Background", u ? "this device only" : "using the shared look", `<div style="padding:4px 4px 12px">${this._pbControls(u, b)}</div>`);
+    } else if (tab === "panels") {
+      if (!this._pl && !this._plBusy) { this._plBusy = true; this._plLoad().then(() => { this._plBusy = false; }); }
+      const P = this._pl || {}, L = P.panels || [], T = P.tablets || [], po = P.portal || {};
+      const ago = (s) => s < 90 ? "just now" : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 172800 ? `${Math.round(s / 3600)} h ago` : `${Math.round(s / 86400)} days ago`;
+      const ST = { online: ["Online", "ok"], error: ["Errors on screen", "w"], background: ["Dashboard behind another app", "w"], offline: ["Offline", "b"] };
+      const card = (p) => {
+        const [st, cl] = ST[p.status] || [p.status, ""];
+        const sel = `<select data-pll="${E(p.id)}"><option value="">Not linked</option>${T.map((t) => `<option value="${E(t)}" ${t === p.notify ? "selected" : ""}>${E(t.replace(/^mobile_app_/, "").replace(/_/g, " "))}</option>`).join("")}</select>`;
+        const info = [`last seen ${ago(p.ago)}`, p.ver && "v" + p.ver, p.battery != null && `battery ${p.battery}%${p.charging === false ? " (not charging)" : ""}`, p.heals && `${p.heals} self-heal${p.heals === 1 ? "" : "s"}`].filter(Boolean).join(" · ");
+        return sec(`<span class="pldot ${cl}"></span>${E(p.name)}`, `${st} · ${E(info)}`,
+          row("Companion app", "the tablet's Home Assistant app, so settings can be pushed and the dashboard brought back", sel) +
+          row("Wall settings", "keep screen on, 30 min screen timeout, always connected, open Intellect", `<button class="sbtn" data-s="pl|apply:${E(p.id)}" ${p.notify ? "" : "disabled"}>Apply wall panel settings</button>`) +
+          row("Fix it now", "wake the screen and bring Intellect to the front, or reload the dashboard", `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="sbtn" data-s="pl|wake:${E(p.id)}" ${p.notify ? "" : "disabled"}>Wake</button><button class="sbtn" data-s="pl|reload:${E(p.id)}">Reload</button><button class="sbtn" data-s="pl|forget:${E(p.id)}">Forget</button></div>`));
+      };
+      body = (P.error ? sec("Wall panels", "", `<div class="lbl" style="padding:6px 4px 12px">${E(P.error)}</div>`) : "") +
+        (!this._pl ? sec("Wall panels", "loading…", "") : !L.length ? sec("Wall panels", "none yet", '<div class="lbl" style="padding:6px 4px 12px">On each wall tablet open Settings → Screensaver → This device and type a <b>Wall panel name</b> (e.g. Kitchen). It appears here within a minute.</div>') : L.map(card).join("")) +
+        sec("Quinteca alerts", po.status ? `portal: ${E(po.status)}${po.last != null ? " · sent " + ago(po.last) : ""}` : "send panel health to the Quinteca portal",
+          row("Site code", "the client code, e.g. 222DAVI", `<input type="text" data-pls value="${E(po.site || "")}" placeholder="222DAVI">`) +
+          row("Portal key", "from the portal: Infrastructure → client → Wall panels → Create key", `<input type="text" data-plk value="${E(po.key || "")}" placeholder="paste the key">`) +
+          row("Send now", "report straight away", '<button class="sbtn" data-s="pl|report:">Send</button><button class="sbtn" data-s="pl|refresh:" style="margin-left:8px">Refresh</button>')) +
+        sec("One-time set-up on each Samsung tablet", "these can't be pushed remotely",
+          '<div class="lbl" style="padding:6px 4px 12px;line-height:1.6">1. Settings → Lock screen → Screen lock type → <b>None</b>.<br>2. Settings → About tablet → Software information → tap Build number 7 times; then Developer options → <b>Stay awake</b> on.<br>3. Settings → Battery → Background usage limits → <b>Never sleeping apps</b> → add Home Assistant; turn off "Put unused apps to sleep".<br>4. Settings → Battery → <b>Protect battery</b> on (the tablet is always charging).<br>5. Home Assistant app → Settings → Companion app → Manage sensors: turn on <b>Battery level</b> and <b>Battery state</b>.<br>6. Here: link the tablet and press <b>Apply wall panel settings</b>. Accept the "display over other apps" prompt on the tablet the first time.</div>');
     } else if (tab === "ss") {
       const s = this._ssCfg(), dv = this._ssDev(), P = this._ssPh;
       const seg = (cur, key, opts) => `<div class="seg sm" style="flex-wrap:wrap">${opts.map(([k, n]) => `<button class="${String(cur) === String(k) ? "on" : ""}" data-s="ss|${key}:${k}">${n}</button>`).join("")}</div>`;
@@ -2324,7 +2397,9 @@ class IntellectDashboard extends HTMLElement {
         row("Photos", found, '<button class="sbtn" data-s="ss|scan:1">Check folder</button>')) : "") +
       sec("This device", dv ? "this device only" : "using the shared setting",
         row("Screensaver here", "turn it off on a phone, or on for one panel only", devSeg) +
-        row("Preview", "show it now; tap the screen to close", '<button class="sbtn" data-sc="sspv|">Show now</button>'));
+        row("Preview", "show it now; tap the screen to close", '<button class="sbtn" data-sc="sspv|">Show now</button>')) +
+      sec("Wall panel", this._pname() ? "this tablet reports its health" : "not a wall panel",
+        row("Wall panel name", "give a wall tablet a name (e.g. Kitchen) so it reports to Home Assistant and Quinteca is told if it goes offline. Leave empty on phones", `<input type="text" data-pname value="${E(this._pname())}" placeholder="Kitchen">`));
     } else if (tab === "general") {
       const bg = { preset: "midnight", mode: "preset", dim: 0, blur: 0, ...(c.bg || {}) }, dv = localStorage.getItem("intellect_dev") || "auto";
       body = sec("Settings file", "settings are stored on the server and shared by every user; a file makes them portable",

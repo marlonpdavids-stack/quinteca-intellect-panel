@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN, PANEL_PATH, STATIC_URL, VERSION
+from .monitor import PanelMonitor
 from .updater import IntellectUpdater, read_disk_version
 from .util import clean_perms, is_newer, valid_image, valid_new_user
 
@@ -145,6 +146,50 @@ class IntellectUsersView(HomeAssistantView):
         return self.json_message("Unknown action", 400)
 
 
+class IntellectHeartbeatView(HomeAssistantView):
+    """A wall panel says it is alive (once a minute). Any signed-in user: the wall tablets use a normal account."""
+
+    url = "/api/intellect/heartbeat"
+    name = "api:intellect:heartbeat"
+    requires_auth = True
+
+    def __init__(self, monitor: PanelMonitor) -> None:
+        self._mon = monitor
+
+    async def post(self, request):
+        body = await request.json()
+        if not isinstance(body, dict):
+            return self.json_message("Bad heartbeat", 400)
+        return self.json(await self._mon.heartbeat(request.get("hass_user"), body))
+
+
+class IntellectPanelsView(HomeAssistantView):
+    """Admin: every wall panel, link it to its Companion app, push wall settings, Quinteca portal link."""
+
+    url = "/api/intellect/panels"
+    name = "api:intellect:panels"
+    requires_auth = True
+
+    def __init__(self, monitor: PanelMonitor) -> None:
+        self._mon = monitor
+
+    async def get(self, request):
+        user = request.get("hass_user")
+        if user is None or not user.is_admin:
+            return self.json_message("Admin required", 403)
+        return self.json({"panels": self._mon.listing(), "tablets": self._mon.notify_targets(), "portal": self._mon.portal_info()})
+
+    async def post(self, request):
+        user = request.get("hass_user")
+        if user is None or not user.is_admin:
+            return self.json_message("Admin required", 403)
+        body = await request.json()
+        if not isinstance(body, dict):
+            return self.json_message("Bad request", 400)
+        res = await self._mon.action(body)
+        return self.json({**res, "panels": self._mon.listing(), "tablets": self._mon.notify_targets(), "portal": self._mon.portal_info()})
+
+
 class IntellectVersionView(HomeAssistantView):
     """Running / installed version (the browser reloads itself when it is out of date)."""
 
@@ -276,6 +321,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data["updater"] = updater
         hass.http.register_view(IntellectUsersView(hass, store))
         hass.http.register_view(IntellectVersionView(hass, updater))
+        monitor = PanelMonitor(hass)
+        await monitor.load()
+        data["monitor"] = monitor
+        hass.http.register_view(IntellectHeartbeatView(monitor))
+        hass.http.register_view(IntellectPanelsView(monitor))
         hass.http.register_view(IntellectUpdateView(updater))
         hass.http.register_view(IntellectBackgroundView(Store(hass, 1, f"{DOMAIN}.background")))
         hass.http.register_view(IntellectRoomImageView(Store(hass, 1, f"{DOMAIN}.roomimg")))
@@ -284,6 +334,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         data["static"] = True
     data["updater"].start()
+    data["monitor"].start()
     title = entry.data.get("title", "Intellect")
     js = Path(__file__).parent / "frontend" / "intellect-panel.js"
     stamp = int((await hass.async_add_executor_job(js.stat)).st_mtime)
@@ -308,6 +359,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     updater = hass.data.get(DOMAIN, {}).get("updater")
     if updater:
         updater.stop()
+    monitor = hass.data.get(DOMAIN, {}).get("monitor")
+    if monitor:
+        monitor.stop()
     guard = hass.data.get(DOMAIN, {}).pop("guard", None)
     if guard:
         frontend.remove_extra_js_url(hass, guard)
