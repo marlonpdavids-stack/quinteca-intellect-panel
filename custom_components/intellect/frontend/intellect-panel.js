@@ -68,7 +68,8 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "intellect_cfg";
-const VER = "1.29.1";
+const VER = "1.29.2";
+const GATE_OPEN_MS = 60000; // how long a gate shows "Open" after it is opened from the panel
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
 const TSIZES = { xl: { n: "Extra large", z: 1.3, m: 1.3 }, l: { n: "Large", z: 1, m: 1 }, s: { n: "Small", z: 0.8, m: 0.9 }, xs: { n: "Very small", z: 0.62, m: 0.8 } };
@@ -1169,7 +1170,7 @@ class IntellectDashboard extends HTMLElement {
       if (k === "del") { this._c.custom[r].splice(+i, 1); this._save(this._v.p !== "settings"); this._syncTpl(); return this._draw(true); }
       if (k === "save") return this._saveCC();
     }
-    if (d.act) { const [dom, srv] = d.act.split("."); const data = d.x ? JSON.parse(d.x) : {}; this._h.callService(dom, srv, { entity_id: d.e, ...data }); return; }
+    if (d.act) { const [dom, srv] = d.act.split("."); const data = d.x ? JSON.parse(d.x) : {}; this._call(dom, srv, { entity_id: d.e, ...data }); return; }
     if (d.tog) {
       const [k, v] = d.tog.split(":");
       if (k === "menu") return this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
@@ -1203,12 +1204,12 @@ class IntellectDashboard extends HTMLElement {
     if (adm && d.cred !== undefined) { this._c.credit = t.value.trim().slice(0, 30); this._save(); this._draw(true); return; }
     if (adm && d.ttl !== undefined) { this._c.title = t.value.trim().slice(0, 30); this._save(); this._draw(true); return; }
     if (adm && d.svct) { this._c.svcTitle = this._c.svcTitle || {}; this._c.svcTitle[d.svct] = t.value.trim().replace(/['"<>\\&]/g, "").slice(0, 24); this._save(); this._draw(true); return; }
-    if (d.slider) { const [dom, srv, key, div] = d.slider.split("|"); this._h.callService(dom, srv, { entity_id: d.e, [key]: +t.value / +div }); }
+    if (d.slider) { const [dom, srv, key, div] = d.slider.split("|"); this._call(dom, srv, { entity_id: d.e, [key]: +t.value / +div }); }
     if (adm && d.rname !== undefined) { this._c.rooms[+d.rname].name = t.value; this._save(); }
     if (adm && d.fname !== undefined) { this._c.floors[+d.fname].name = t.value.slice(0, 24); this._save(); }
     if (adm && d.rfl !== undefined) { const r = this._c.rooms[+d.rfl]; if (t.value) r.floor = t.value; else delete r.floor; this._save(); this._draw(true); return; }
     if (adm && d.map) { this._c.map[d.map] = t.value; this._save(); }
-    if (d.sel) { const [dom, srv, key] = d.sel.split("|"); this._h.callService(dom, srv, { entity_id: d.e, [key]: t.value }); }
+    if (d.sel) { const [dom, srv, key] = d.sel.split("|"); this._call(dom, srv, { entity_id: d.e, [key]: t.value }); }
     if (adm && d.dd && this._dlg) { this._dlg[d.dd] = t.value; if (d.dd === "dom") this.shadowRoot.getElementById("cc-list").innerHTML = this._opts(t.value); if (d.dd === "mode" || d.dd === "tap" || d.dd === "place") this._draw(true); }
     if (adm && d.uname !== undefined) { this._c.name = t.value; this._save(); this._draw(true); }
   }
@@ -1322,7 +1323,7 @@ class IntellectDashboard extends HTMLElement {
     this._wd = null; this._drag = false;
     if (D.moved && D.p != null) {
       (this._wopt = this._wopt || {})[D.id] = { p: D.p, t: Date.now() };
-      this._h.callService("cover", "set_cover_position", { entity_id: D.id, position: D.p });
+      this._call("cover", "set_cover_position", { entity_id: D.id, position: D.p });
     }
     return true;
   }
@@ -1380,8 +1381,8 @@ class IntellectDashboard extends HTMLElement {
     const it = this._findTpl(uid); if (!it) return;
     const t = it.tap || "details";
     if (t === "details") return this._details(it);
-    if (t === "toggle") { if (it.entity) this._h.callService("homeassistant", "toggle", { entity_id: it.entity }); return; }
-    if (t === "action") { const [d, sv] = (it.service || "").split("."); if (d && sv) this._h.callService(d, sv, { ...(it.entity ? { entity_id: it.entity } : {}), ...(it.data || {}) }); return; }
+    if (t === "toggle") { if (it.entity) this._call("homeassistant", "toggle", { entity_id: it.entity }); return; }
+    if (t === "action") { const [d, sv] = (it.service || "").split("."); if (d && sv) this._call(d, sv, { ...(it.entity ? { entity_id: it.entity } : {}), ...(it.data || {}) }); return; }
     if (t === "path" && it.path) {
       if (/^https?:/.test(it.path)) window.open(it.path, "_blank");
       else if (it.path.startsWith("/")) { history.pushState(null, "", it.path); window.dispatchEvent(new CustomEvent("location-changed")); }
@@ -1562,8 +1563,25 @@ class IntellectDashboard extends HTMLElement {
     if (sun) { const below = sun.state === "below_horizon", iso = below ? sun.attributes.next_rising : sun.attributes.next_setting; if (iso && !isNaN(Date.parse(iso))) t += ` · ${below ? "Sunrise" : "Sunset"} ${this._clock(new Date(iso))}`; }
     return { ic, t: this._esc(t), s: this._esc(`${Math.round(a.temperature)}° ${cond.toLowerCase()}`) };
   }
+  // Every command goes through here, so a gate opened from the panel can show "Open" for a minute.
+  _call(d, sv, x) {
+    const ids = [].concat((x && x.entity_id) || []).flatMap((v) => String(v).split(",")).map((v) => v.trim()).filter(Boolean);
+    if (/^(unlock|open|press|turn_on|toggle|open_cover|trigger)$/.test(sv)) ids.filter((i) => this._gate(i)).forEach((i) => {
+      (this._opened = this._opened || {})[i] = Date.now();
+      clearTimeout(this._gateT); this._gateT = setTimeout(() => this._draw(), GATE_OPEN_MS + 500);
+    });
+    return this._h.callService(d, sv, x);
+  }
+  // A gate with no open/close sensor (UniFi Access has none): a lock, switch, button or script whose name says gate.
+  _gate(i) {
+    const s = this._h && this._h.states[i]; if (!s) return false;
+    const d = i.split(".")[0], dc = s.attributes.device_class, nm = (s.attributes.friendly_name || i).toLowerCase();
+    if (d === "cover" || (d === "binary_sensor" && ["door", "window", "garage_door", "opening"].includes(dc))) return false;
+    return ["lock", "switch", "button", "input_button", "script", "binary_sensor", "event"].includes(d) && /gate|port[aã]o/.test(nm);
+  }
   _sec(i) {
     const s = this._h.states[i], d = i.split(".")[0], dc = s.attributes.device_class, v = s.state, cap = (x) => x.charAt(0).toUpperCase() + x.slice(1).replace(/_/g, " ");
+    if (this._gate(i)) return this._opened && Date.now() - (this._opened[i] || 0) < GATE_OPEN_MS ? ["Open", "w"] : ["Closed", ""];
     if (v === "unavailable" || v === "unknown") return ["Unavailable", ""];
     if (d === "alarm_control_panel") { const M = { disarmed: "Disarmed", armed_home: "Armed, home", armed_away: "Armed, away", armed_night: "Armed, night", armed_vacation: "Armed, vacation", armed_custom_bypass: "Armed, custom", arming: "Arming…", pending: "Pending", disarming: "Disarming…", triggered: "Triggered" }; return [M[v] || cap(v), v === "triggered" ? "b" : ""]; }
     if (d === "lock") return v === "locked" ? ["Locked", ""] : [cap(v), "w"];
@@ -1620,10 +1638,10 @@ class IntellectDashboard extends HTMLElement {
     if (a.startsWith("/")) { history.pushState(null, "", a); window.dispatchEvent(new CustomEvent("location-changed")); return true; }
     if (S[a]) {
       const d = a.split(".")[0], M = { lock: (S[a].attributes.supported_features || 0) & 1 ? "open" : "unlock", button: "press", input_button: "press", script: "turn_on", scene: "turn_on", automation: "trigger", cover: "open_cover", valve: "open_valve" };
-      this._h.callService(d, M[d] || "turn_on", { entity_id: a, ...data }); return true;
+      this._call(d, M[d] || "turn_on", { entity_id: a, ...data }); return true;
     }
     const m = /^([a-z_]+)\.([a-z0-9_]+)$/i.exec(a);
-    if (m) { this._h.callService(m[1], m[2], { ...(tgt ? { entity_id: tgt } : {}), ...data }); return true; }
+    if (m) { this._call(m[1], m[2], { ...(tgt ? { entity_id: tgt } : {}), ...data }); return true; }
     this._toast("Action not recognised: " + a); return false;
   }
   _icAct(v) {
@@ -1668,7 +1686,7 @@ class IntellectDashboard extends HTMLElement {
     return it;
   }
   _applyScene(sc) {
-    const cs = (d, sv, x) => this._h.callService(d, sv, x);
+    const cs = (d, sv, x) => this._call(d, sv, x);
     (sc.items || []).forEach((it) => {
       if (!this._h.states[it.e]) return;
       const d = it.e.split(".")[0], on = !["off", "closed", "standby", "unavailable", "unknown"].includes(it.st);
