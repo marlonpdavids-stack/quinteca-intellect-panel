@@ -70,7 +70,7 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "intellect_cfg";
-const VER = "1.32.1";
+const VER = "1.32.2";
 const GATE_OPEN_MS = 60000; // how long a gate shows "Open" after it is opened from the panel
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
@@ -323,6 +323,7 @@ ha-icon{--mdc-icon-size:24px;display:inline-flex}.tpl{cursor:pointer;min-height:
 .icb:hover{background:rgba(255,255,255,.11)}
 .icb.door .si{color:var(--warn)}.icb.door.armed .si{color:#1a1205}
 .pldot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--mu);margin-right:10px;vertical-align:middle}.pldot.ok{background:var(--ok)}.pldot.w{background:var(--warn)}.pldot.b{background:var(--bad)}
+.srow.srw{grid-template-columns:minmax(0,1fr);gap:10px}.sspk{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;width:100%}.sspk button{display:flex;flex-direction:column;gap:3px;padding:8px 8px 10px;border-radius:12px;border:1px solid var(--bd);background:rgba(0,0,0,.25);color:#dfe4ee;text-align:left;cursor:pointer}.sspk button b{font-size:13px;margin-top:6px}.sspk button small{font-size:11.5px;color:var(--mu);line-height:1.3}.sspk button.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset;background:rgba(232,201,143,.08)}.sspk .pv{display:block;aspect-ratio:16/9;border-radius:8px;overflow:hidden}.sspk .pv svg{width:100%;height:100%;display:block}
 .icb.door.done{background:rgba(95,211,154,.16);border-color:rgba(95,211,154,.5);color:#a8f0cd}.icb.door.done .si{color:#a8f0cd}
 .icb.door.armed{background:var(--warn);border-color:var(--warn);color:#1a1205;animation:armed .6s ease-in-out infinite alternate}
 @keyframes armed{from{transform:scale(1)}to{transform:scale(1.04)}}
@@ -1260,6 +1261,7 @@ class IntellectDashboard extends HTMLElement {
     if (d.pname !== undefined) { try { const n = t.value.trim().slice(0, 40); if (n) localStorage.setItem("intellect_pname", n); else localStorage.removeItem("intellect_pname"); } catch (e) {} this._hb(); this._draw(true); return; }
     if (adm && d.pll !== undefined) { this._plLoad({ action: "link", id: d.pll, notify: t.value }); return; }
     if (adm && (d.pls !== undefined || d.plk !== undefined)) { const R = this.shadowRoot, site = (R.querySelector("[data-pls]") || {}).value || "", key = (R.querySelector("[data-plk]") || {}).value || ""; this._plLoad({ action: "portal", site, key }); return; }
+    if (adm && d.ssi !== undefined) { this._c.ss = { ...this._ssCfg(), idle: +t.value || 5 }; this._save(); this._draw(true); return; }
     if (adm && d.ssf !== undefined) { this._c.ss = { ...this._ssCfg(), folder: t.value.trim() }; this._ssPh = null; this._save(); this._draw(true); return; }
     if (d.devsel !== undefined) { localStorage.setItem("intellect_dev", t.value); this._layout(); this._draw(true); return; }
     if (adm && d.bgfile !== undefined) { const fl = t.files && t.files[0]; if (fl) this._pickBg(fl); t.value = ""; return; }
@@ -1607,6 +1609,20 @@ class IntellectDashboard extends HTMLElement {
     // Self-heal: lost Home Assistant for 2 minutes, reload (at most once every 10 minutes).
     if (this._h && this._h.connected === false) { this._lost = this._lost || Date.now(); if (Date.now() - this._lost > 120e3) this._reloadOnce(); } else this._lost = 0;
     if (Date.now() - (this._hbAt || 0) >= 55e3) this._hb();
+    if (Date.now() - (this._cfgAt || 0) >= 55e3) this._cfgPoll();
+  }
+  // Shared settings changed on another device (e.g. the installer's laptop): pick them up without a reload.
+  async _cfgPoll() {
+    this._cfgAt = Date.now();
+    if (!this._h || !this._srv || this._v.p === "settings" || this._dirty || document.hidden) return;
+    try {
+      const d = await this._h.callApi("GET", "intellect/config");
+      if (!d || !Object.keys(d).length) return;
+      const nc = { rooms: [], map: {}, hide: [], name: "", custom: {}, order: {}, ...d };
+      if (JSON.stringify(nc) === JSON.stringify(this._c)) return;
+      this._c = nc; try { localStorage.setItem(KEY, JSON.stringify(nc)); } catch (e) {}
+      this._titles && this._titles(); this._applyBg(); this._ssKindNow = null; this._last = null; this._draw(true);
+    } catch (e) {}
   }
   _reloadOnce() {
     let last = 0; try { last = +sessionStorage.getItem("intellect_rl") || 0; } catch (e) {}
@@ -2387,13 +2403,30 @@ class IntellectDashboard extends HTMLElement {
       const s = this._ssCfg(), dv = this._ssDev(), P = this._ssPh;
       const seg = (cur, key, opts) => `<div class="seg sm" style="flex-wrap:wrap">${opts.map(([k, n]) => `<button class="${String(cur) === String(k) ? "on" : ""}" data-s="ss|${key}:${k}">${n}</button>`).join("")}</div>`;
       const found = P && P.folder === String(s.folder || "").trim().replace(/^\/+|\/+$/g, "").replace(/^media\/?/, "") ? (P.err ? `Folder not found (${E(P.err)})` : `${P.items.length} photo${P.items.length === 1 ? "" : "s"} found`) : "not checked yet";
+      const thumb = (k) => {
+        const bg = k === "c" ? "#05070b" : k === "bd" ? "#060a12" : "url(#g)";
+        const defs = '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1626"/><stop offset="1" stop-color="#1d2230"/></linearGradient></defs>';
+        const pill = (x, y, w, c) => `<rect x="${x}" y="${y}" width="${w}" height="7" rx="3.5" fill="${c || "rgba(233,230,223,.18)"}"/>`;
+        let g = "";
+        if (k === "a" || k === "an") g = '<circle cx="80" cy="38" r="21" fill="rgba(10,20,34,.6)" stroke="rgba(233,230,223,.3)"/><line x1="80" y1="38" x2="80" y2="24" stroke="#e9e6df" stroke-width="2.4" stroke-linecap="round"/><line x1="80" y1="38" x2="91" y2="44" stroke="#e9e6df" stroke-width="2" stroke-linecap="round"/><circle cx="80" cy="38" r="1.8" fill="#f2b856"/>' + (k === "a" ? '<rect x="58" y="65" width="44" height="4" rx="2" fill="rgba(233,230,223,.5)"/>' + pill(52, 74, 26) + pill(82, 74, 26) : "");
+        else if (k === "dg") g = '<text x="80" y="52" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="#e9e6df">17:08</text>';
+        else if (k === "b" || k === "bd") g = `<g opacity="${k === "bd" ? 0.6 : 1}"><rect x="12" y="10" width="26" height="3" rx="1.5" fill="rgba(233,230,223,.5)"/><text x="12" y="50" font-family="Georgia,serif" font-size="27" fill="#e9e6df">17:08</text><rect x="12" y="56" width="34" height="4" rx="2" fill="rgba(233,230,223,.45)"/>${pill(12, 74, 30)}${pill(46, 74, 30)}</g>`;
+        else if (k === "photos") g = '<rect x="-6" y="0" width="62" height="90" fill="#8b6a4f"/><rect x="58" y="0" width="54" height="90" fill="#4f6f86"/><rect x="114" y="0" width="60" height="90" fill="#6f7f52"/><rect width="160" height="90" fill="url(#sh)"/><defs><linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset=".45" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".75"/></linearGradient></defs><text x="12" y="72" font-family="Georgia,serif" font-size="20" fill="#fff">17:08</text>' + pill(12, 78, 30);
+        else if (k === "c") g = '<text x="30" y="48" font-family="Georgia,serif" font-size="18" fill="#8d8679" opacity=".8">17:08</text><rect x="31" y="54" width="22" height="2.5" rx="1" fill="#5b5750"/>';
+        else if (k === "same") g = '<circle cx="80" cy="45" r="11" fill="none" stroke="#f2b856" stroke-width="2"/><path d="M80 24v5M80 61v5M59 45h5M96 45h5M65 30l3.5 3.5M91.5 56.5L95 60M65 60l3.5-3.5M91.5 33.5L95 30" stroke="#f2b856" stroke-width="2" stroke-linecap="round"/>';
+        return `<svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice">${defs}<rect width="160" height="90" fill="${bg}"/>${g}</svg>`;
+      };
+      const pick = (cur, key, opts) => `<div class="sspk">${opts.map(([k, n, sub, tk]) => `<button class="${String(cur) === String(k) ? "on" : ""}" data-s="ss|${key}:${k}"><span class="pv">${thumb(tk || k)}</span><b>${n}</b><small>${sub}</small></button>`).join("")}</div>`;
+      const wide = (l, sub, ctl) => `<div class="srow srw"><div class="sl"><div class="sn">${l}</div>${sub ? `<div class="ss">${sub}</div>` : ""}</div><div class="sc">${ctl}</div></div>`;
+      const mode = s.mode === "clock" ? "a" : s.mode, night = s.night === "clock" ? "b" : s.night;
+      const idleSel = `<select data-ssi>${[1, 2, 5, 10, 15, 30].map((m) => `<option value="${m}" ${+s.idle === m ? "selected" : ""}>${m} minute${m === 1 ? "" : "s"} without a touch</option>`).join("")}</select>`;
       const devSeg = `<div class="seg sm" style="flex-wrap:wrap">${[["", "Same as shared"], ["on", "Always on"], ["off", "Off"]].map(([k, n]) => `<button class="${dv === k ? "on" : ""}" data-sc="ssd|${k}">${n}</button>`).join("")}</div>`;
       body = (adm ? sec("Screensaver", "shared by every wall panel; it starts when nobody has touched the screen for a while and a tap wakes it",
         row("Screensaver", "turn it on for all panels", tg(s.on, 'data-s="ss|on:toggle"')) +
-        row("Start after", "minutes without a touch", seg(s.idle, "idle", [[1, "1 min"], [2, "2"], [5, "5"], [10, "10"], [15, "15"], [30, "30"]])) +
-        row("During the day", "A: analog clock with status. B: large time, greeting and status. Or family photos scrolling with the clock on top", seg(s.mode === "clock" ? "a" : s.mode, "mode", [["a", "A · Quiet clock"], ["b", "B · Time and status"], ["photos", "Family photos"]])) +
-        row("Day clock", "the analog face from the design, or large digital numbers", seg(s.face, "face", [["analog", "Analog"], ["digital", "Digital"]])) +
-        row("At night", "after sunset. B dimmed keeps the status; C is only a faint time and date", seg(s.night === "clock" ? "b" : s.night, "night", [["b", "B · dimmed"], ["c", "C · Night mode"], ["same", "Same as day"]]))) +
+        row("Start after", "how long the screen waits before the screensaver", idleSel) +
+        wide("During the day", "what the screensaver shows while the sun is up", pick(mode, "mode", [["a", "A · Quiet clock", "analog clock and home status"], ["b", "B · Time and status", "large time, greeting and status"], ["photos", "Family photos", "photos glide past, clock on top"]])) +
+        (mode === "a" ? wide("Clock face", "for A · Quiet clock", pick(s.face === "digital" ? "digital" : "analog", "face", [["analog", "Analog", "the clock face from the design", "an"], ["digital", "Digital", "large numbers", "dg"]])) : "") +
+        wide("At night", "after sunset, so it isn't too bright in a dark room", pick(night, "night", [["b", "B · dimmed", "time and status, darker", "bd"], ["c", "C · Night mode", "only a faint time and date"], ["same", "Same as day", "keep the day screensaver"]]))) +
       sec("Family photos", "upload them in Home Assistant: Media, then Local media, into this folder",
         row("Photo folder", "a folder inside Local media (/media); empty uses all of Local media", `<input type="text" data-ssf value="${E(s.folder || "")}" placeholder="intellect">`) +
         row("Scroll speed", "how fast the photos glide across", seg(s.speed, "speed", [["slow", "Slow"], ["normal", "Normal"], ["fast", "Fast"]])) +
