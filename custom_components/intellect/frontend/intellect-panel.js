@@ -30,6 +30,12 @@ const VIDEO_I = SV.cameras.i;
 const KEY_I = ic('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-1.5"/>');
 const DOOR_I = ic('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><path d="M12 15v2"/>');
 const DONE_I = ic('<path d="M5 12.5l4.5 4.5L19 7.5"/>');
+const CHEV_I = ic('<path d="M15 5l-7 7 7 7"/>');
+const RAIN_I = ic('<path d="M18 14H7a4 4 0 1 1 .9-7.9A6 6 0 0 1 19 7a3.5 3.5 0 0 1-1 7z"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3"/>');
+const PART_I = ic('<circle cx="8" cy="8" r="3"/><path d="M8 2v1M2 8h1M3.8 3.8l.7.7M12.2 3.8l-.7.7"/><path d="M19 20H10a3.5 3.5 0 1 1 .8-6.9A5 5 0 0 1 20 15a2.5 2.5 0 0 1-1 5z"/>');
+const DROP_I = ic('<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>');
+const GRID_I = ic('<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/>');
+const MORE_I = ic('<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>');
 const PALETTE_I = ic('<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 1 0 0 20 2 2 0 0 0 2-2 2 2 0 0 1 2-2h2a4 4 0 0 0 4-4A10 10 0 0 0 12 2z"/>');
 const TILES_I = ic('<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="5" rx="1"/><rect x="13" y="10" width="8" height="11" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/>');
 const SCENE_I = ic('<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 16l.7 1.8L21.5 18.5l-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/>');
@@ -60,6 +66,9 @@ const ICONS = {
 };
 const LOGO_I = ic('<path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 8v8M8 10l4 2 4-2"/>');
 const SET_I = { ss: ic('<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M14.5 8.5a3 3 0 1 0 0 4 3.5 3.5 0 0 1 0-4z"/>'), panels: ic('<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8.5 15.5l2-2.5 2 1.5 3-4"/><circle cx="12" cy="19" r=".5"/>'),
+  ntf: ic('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>'),
+  adv: ic('<path d="M12 3l2.1 5.2L19.5 9l-4 3.7 1.1 5.5L12 15.6 7.4 18.2l1.1-5.5-4-3.7 5.4-.8z"/>'),
+  health: ic('<path d="M3 12h4l2-6 4 12 2-6h6"/>'),
   general: ic('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>'),
   pages: ic('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7M17.5 14v7"/>'),
   rooms: ICONS.door, devices: ICONS.plug, home: ICONS.home,
@@ -70,11 +79,23 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "intellect_cfg";
-const VER = "1.32.2";
+const VER = "1.37.0";
 const GATE_OPEN_MS = 60000; // how long a gate shows "Open" after it is opened from the panel
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
-const TSIZES = { xl: { n: "Extra large", z: 1.3, m: 1.3 }, l: { n: "Large", z: 1, m: 1 }, s: { n: "Small", z: 0.8, m: 0.9 }, xs: { n: "Very small", z: 0.62, m: 0.8 } };
+const BELL_I = ic('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>');
+const NT = {
+  alarm: { n: "Alarm triggered", d: "when the alarm goes off", on: true },
+  safety: { n: "Smoke, gas or water leak", d: "smoke, carbon monoxide, gas and leak sensors", on: true },
+  open: { n: "Left open", d: "a door, gate or window that stays open for too long", on: true },
+  unlock: { n: "Door unlocked", d: "when a lock is unlocked", on: false },
+  motion: { n: "Motion", d: "when a motion sensor detects movement", on: false },
+  offline: { n: "Device offline", d: "a device stops answering for 2 minutes", on: false },
+  battery: { n: "Low battery", d: "a battery falls below 15%", on: true },
+  ha: { n: "Home Assistant messages", d: "messages from automations and Home Assistant", on: true },
+};
+const NT_SAFE = { smoke: "Smoke detected", gas: "Gas detected", carbon_monoxide: "Carbon monoxide detected", moisture: "Water leak", heat: "Heat alert", safety: "Safety alert", tamper: "" };
+const TSIZES = { xl: { n: "Extra large", z: 1.3, m: 1.3 }, l: { n: "Large", z: 1, m: 1 }, m: { n: "Medium", z: 0.9, m: 0.95 }, s: { n: "Small", z: 0.8, m: 0.88 }, xs: { n: "Extra small", z: 0.62, m: 0.78 } };
 const isCs = (s) => typeof s === "string" && (s === "more" || s.startsWith("cs:"));
 const BG = {
   midnight: "radial-gradient(900px 560px at 88% -6%,rgba(176,122,74,.55),transparent),radial-gradient(760px 620px at -6% 92%,rgba(46,104,150,.50),transparent),linear-gradient(160deg,#17233a,#0c1220 55%,#0a0e18)",
@@ -95,7 +116,7 @@ const SWATCH = {
 const FRESH = () => ({ rooms: [], floors: [], map: {}, hide: [], name: "", custom: {}, order: {} });
 
 const CSS = `
-:host{display:block;--vh:100vh;height:var(--vh);overflow-y:auto;--ac:#e8c98f;--ok:#5fd39a;--warn:#f0b35a;--bad:#ff6b6b;--mu:#9aa6bd;--tx:#eef1f6;--bd:rgba(255,255,255,.10);--cd:rgba(12,16,26,.55);--serif:"Cormorant Garamond","Intellect Serif",Georgia,"Times New Roman",serif;color:var(--tx);font-family:"Inter","Intellect Sans",-apple-system,"SF Pro Display","Segoe UI",Roboto,sans-serif}
+:host{display:block;--vh:100vh;height:var(--vh);overflow-y:auto;--ac:#e8c98f;--ok:#5fd39a;--warn:#f0b35a;--bad:#ff6b6b;--mu:#9aa6bd;--tx:#eef1f6;--bd:rgba(255,255,255,.10);--cd:rgba(12,16,26,.55);--ta:.55;--tc:rgba(12,16,26,var(--ta));--tbd:rgba(255,255,255,calc(var(--ta) * .18));--serif:"Cormorant Garamond","Intellect Serif",Georgia,"Times New Roman",serif;color:var(--tx);font-family:"Inter","Intellect Sans",-apple-system,"SF Pro Display","Segoe UI",Roboto,sans-serif}
 @supports (height:100dvh){:host{--vh:100dvh}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 .si{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.12em}
@@ -110,7 +131,7 @@ main{flex:1;display:flex;flex-direction:column;min-width:0}
 .brand{display:flex;align-items:center;gap:12px;font-size:19px;letter-spacing:7px;font-weight:500;text-transform:uppercase;min-height:34px}
 .ib{background:rgba(255,255,255,.07);border:1px solid var(--bd);border-radius:50%;width:38px;height:38px;font-size:18px;display:grid;place-items:center;padding:0;flex:none;letter-spacing:0}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-.page{padding:34px 44px 30px;max-width:1500px;width:100%;margin:0 auto;flex:1}
+.page{padding:8px 44px 30px;max-width:1500px;width:100%;margin:0 auto;flex:1}
 h1{font-family:var(--serif);font-weight:400;font-size:46px;line-height:1.05;margin:6px 0 8px}
 .page>h1,.page>.top+h1{margin-bottom:14px}
 h2{font-weight:600;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mu);margin:30px 0 12px}
@@ -118,9 +139,9 @@ h2{font-weight:600;font-size:11px;letter-spacing:2px;text-transform:uppercase;co
 .cap{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:#a9b4c9;margin-bottom:12px}
 .back{background:rgba(255,255,255,.07);border:1px solid var(--bd);border-radius:10px;color:#fff;padding:9px 16px;font-size:14px}
 /* ===== home ===== */
-.home{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;padding:26px 18px 22px;flex:1;align-content:start}
-.hl{display:flex;flex-direction:column;min-width:0}
-.hr{min-width:0;display:flex;flex-direction:column}
+.home{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;padding:0 18px 22px;flex:1;align-content:start}
+/* readable text when the tiles are see-through */:host([data-tl="1"]) .bc,:host([data-tl="1"]) .card,:host([data-tl="1"]) .tile{text-shadow:0 1px 10px rgba(0,0,0,.6)}
+.hgr{margin:-14px 4px 10px;text-shadow:0 2px 18px rgba(0,0,0,.55)}.hh{margin-top:-42px;min-height:40px;display:flex;align-items:center;padding:0 60px 0 4px;position:relative;z-index:2}.hall{min-width:0;display:flex;flex-direction:column;min-height:120px}.hbt .wx{margin-top:6px;font-size:14px}.hbt .dt{margin-top:0}.hbt .scn .cap{margin-bottom:10px}.bcol>.cw{zoom:var(--z,1)}.bwide+.bento,.bento+.bwide,.bento+.addg,.bwide+.addg{margin-top:16px}.addg{margin-top:16px}
 .clk{font-family:var(--serif);font-size:56px;font-weight:400;line-height:1.12;margin-top:20px;letter-spacing:-.5px;white-space:nowrap;max-width:100%}
 .clk2{font-family:var(--serif);font-size:44px;font-weight:400;line-height:1;letter-spacing:-1px;white-space:nowrap}
 .clk2 small{font-family:"Inter",sans-serif;font-size:.24em;font-weight:600;letter-spacing:2px;margin-left:.45em;color:#c3cbdb;vertical-align:.85em}
@@ -134,7 +155,7 @@ h2{font-weight:600;font-size:11px;letter-spacing:2px;text-transform:uppercase;co
 .dt{font-size:16px;color:#d3d9e6;margin-top:8px}
 .wx{display:flex;align-items:center;gap:10px;margin-top:16px;color:#d3d9e6;font-size:15px}.wx .si{font-size:20px;color:var(--ac);flex:none}
 .gr{font-family:var(--serif);font-style:italic;font-size:34px;margin-top:26px;font-weight:400;line-height:1.1}
-.scn{margin-top:26px}
+.scn{margin-top:0}
 .scg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .scb{display:flex;align-items:center;gap:10px;text-align:left;padding:14px 14px;border-radius:8px;border:1px solid rgba(120,160,220,.22);background:rgba(28,52,90,.50);font-size:14px;font-weight:500;min-width:0;transition:background .15s}
 .scb i{width:8px;height:8px;border-radius:50%;border:1.5px solid #cfd8ea;flex:none}
@@ -146,7 +167,7 @@ h2{font-weight:600;font-size:11px;letter-spacing:2px;text-transform:uppercase;co
 .bwide{margin-top:16px}
 .bc.cam1{padding:8px}
 .cam1 .cvw{aspect-ratio:16/9;min-height:0;flex:none}
-.wallpage{max-width:none;padding-top:26px;padding-bottom:20px}
+.wallpage{max-width:none;padding-top:0;padding-bottom:20px}
 .wallg{display:grid;width:100%}
 .wallg .wt{min-height:0;height:100%;border-radius:12px}
 .wallg .wt .wo{font-size:13px;color:#8b7d6c}
@@ -154,7 +175,7 @@ h2{font-weight:600;font-size:11px;letter-spacing:2px;text-transform:uppercase;co
 .wallg .wt img.wallx{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;margin:0}
 .scb{width:100%}
 .cvw .xp{position:absolute;right:12px;bottom:8px;z-index:1;font-size:18px;text-shadow:0 1px 4px #000a;opacity:.9}
-.bc{background:var(--cd);border:1px solid var(--bd);border-radius:20px;padding:20px 22px 20px;position:relative;min-width:0;display:flex;flex-direction:column}
+.bc{background:var(--tc);border:1px solid var(--tbd);border-radius:20px;padding:20px 22px 20px;position:relative;min-width:0;display:flex;flex-direction:column}
 .bc.wide{grid-column:1/-1}
 .bh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;color:#aeb8cc;cursor:pointer}
 .bh .bs{letter-spacing:0;text-transform:none;font-weight:500;font-size:13px;color:#c3cbdb;display:flex;align-items:center;gap:6px}.bh .si{font-size:17px}
@@ -233,7 +254,7 @@ h2{font-weight:600;font-size:11px;letter-spacing:2px;text-transform:uppercase;co
 /* tile size (Settings): everything inside a tile or card is scaled by --z */
 .bc,.grid>.kw,.grid>.cw,.grid>.tile,.grid>.card,.abody>.kw,.abody>.cw,.abody>.tile,.abody>.card{zoom:var(--z,1)}
 .bc .kw,.bc .cw,.bc .tile,.bc .card{zoom:1}
-.tile,.card{position:relative;background:var(--cd);border:1px solid var(--bd);border-radius:18px;padding:18px}
+.tile,.card{position:relative;background:var(--tc);border:1px solid var(--tbd);border-radius:18px;padding:18px}
 .tile{cursor:pointer;min-height:120px;display:flex;flex-direction:column;justify-content:space-between}
 .tile:active{transform:scale(.98)}
 .bdg{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:22px;flex:none;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);transition:.2s}
@@ -270,7 +291,7 @@ textarea{width:100%;min-height:96px;background:rgba(0,0,0,.3);border:1px solid v
 .rh{display:flex;align-items:center;gap:12px;margin:26px 0 12px}.rh .grow{cursor:pointer}.rn{font-family:var(--serif);font-size:30px;font-weight:400}.rb{margin:0}.rb button{flex:none;padding:8px 14px;font-size:13px}
 .kw{position:relative}.kw,.cw{border-radius:18px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .holding{animation:hold 2s linear forwards}@keyframes hold{from{box-shadow:0 0 0 0 transparent}to{box-shadow:0 0 0 5px var(--ac)}}
-[data-sk],[data-k]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}.dtgt{outline:3px dashed var(--ac);outline-offset:3px}
+[data-sk],[data-k],[data-hi]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}.dtgt{outline:3px dashed var(--ac);outline-offset:3px}[data-hz].dtgt{outline-offset:8px;border-radius:18px}
 .moving{opacity:.28;outline:2px dashed var(--ac);outline-offset:-2px}
 .gh{position:fixed;left:0;top:0;z-index:140;pointer-events:none;will-change:transform}
 .gh.carry{left:50%;top:auto;bottom:150px;transform:translateX(-50%) scale(.5)!important;transform-origin:bottom center;pointer-events:none}
@@ -280,7 +301,7 @@ textarea{width:100%;min-height:96px;background:rgba(0,0,0,.3);border:1px solid v
 .hint{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ac);color:#000;padding:10px 18px;border-radius:24px;font-weight:600;z-index:130;white-space:nowrap}
 ha-icon{--mdc-icon-size:24px;display:inline-flex}.tpl{cursor:pointer;min-height:96px}.tv{font-size:30px;font-weight:300;line-height:1.15;margin:4px 0 2px;word-break:break-word}
 /* ===== rooms page ===== */
-.area{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;padding:22px 16px 20px;flex:1;align-content:start}
+.area{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;padding:0 16px 20px;flex:1;align-content:start}
 .rl{display:flex;flex-direction:column;min-width:0}
 .rlist{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
 .rli{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--bd);color:#e3e7ef;font-size:15px;text-align:left;flex:none;white-space:nowrap}
@@ -310,7 +331,7 @@ ha-icon{--mdc-icon-size:24px;display:inline-flex}.tpl{cursor:pointer;min-height:
 .lt input[type=range]{margin-top:10px}
 .btn2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:auto;padding-top:16px}
 .btn2 button{padding:11px 6px;border-radius:9px;border:1px solid rgba(255,255,255,.26);background:none;font-size:13px;font-weight:600}.btn2 button:active{background:var(--ac);color:#000}
-.seg.sm{margin-top:12px;padding:3px}.seg.sm button{padding:8px 4px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg.sm{margin-top:12px;padding:3px;flex-wrap:wrap;gap:3px}.seg.sm button{flex:1 1 auto;padding:8px 12px;font-size:12px;white-space:nowrap}
 /* ===== intercom ===== */
 .aul{display:flex;flex-direction:column}
 .aur{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--bd)}.aur:first-child{border-top:0}
@@ -372,6 +393,100 @@ nav button.t.act .si{color:var(--c,#12151c);animation:pop .55s cubic-bezier(.3,1
 .camv{position:fixed;inset:0;z-index:120;background:rgba(3,5,10,.985);display:flex;flex-direction:column}
 .camv .vh{display:flex;align-items:center;gap:14px;padding:16px 20px}
 .camv .vt{font-family:var(--serif);font-size:30px;line-height:1}
+.amo{--aw:100vw;--ah:100vh;position:fixed;inset:0;z-index:200;overflow:hidden;color:var(--tx);cursor:pointer;animation:ambin .9s ease;-webkit-user-select:none;user-select:none;background:#070b18}
+@keyframes ambin{from{opacity:0}to{opacity:1}}
+.amo.pv{position:absolute;inset:auto;left:0;top:0;width:1280px;height:720px;--aw:1280px;--ah:720px;transform-origin:0 0;transform:scale(var(--s,.3));animation:none;pointer-events:none;z-index:0}
+.amfg{position:absolute;inset:0}
+.amo .ab{font-size:11px;letter-spacing:5px;text-transform:uppercase;font-weight:600;color:#e7ebf4}
+.amo .ab.tl{position:absolute;left:clamp(22px,calc(var(--aw)*.04),56px);top:clamp(20px,calc(var(--ah)*.05),44px)}
+.amo .awt{position:absolute;right:clamp(22px,calc(var(--aw)*.04),56px);top:clamp(20px,calc(var(--ah)*.05),44px);display:flex;gap:8px;align-items:center;font-size:13px;color:#d3d9e6}.amo .awt .si{font-size:16px;color:var(--ac)}
+.amo .atw{position:absolute;left:50%;transform:translateX(-50%);bottom:clamp(14px,calc(var(--ah)*.03),28px);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(195,203,219,.5);white-space:nowrap}
+.amo .acn{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px}
+.amo .ad{font-family:var(--serif);font-style:italic;font-size:clamp(22px,calc(var(--ah)*.034),34px);margin-top:18px;color:#f1ece0}
+.amo .ag{font-size:12px;letter-spacing:5px;text-transform:uppercase;color:#c3cbdb;margin-top:10px}
+.amo .ach{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.clk2.big{font-size:clamp(72px,calc(var(--aw)*.12),170px);letter-spacing:-2px;line-height:.95}.clk2.big small{font-size:.2em}
+.aclk.am{width:min(calc(var(--ah)*.42),calc(var(--aw)*.7),360px);height:min(calc(var(--ah)*.42),calc(var(--aw)*.7),360px)}
+/* notifications on the screen saver */
+.amo .anf{position:absolute;right:clamp(22px,calc(var(--aw)*.04),56px);bottom:clamp(40px,calc(var(--ah)*.08),72px);display:flex;flex-direction:column;gap:9px;width:min(340px,calc(var(--aw) - 44px))}
+.amo .anh{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(195,203,219,.75);text-align:right}
+.amo .anc{display:flex;gap:11px;align-items:flex-start;padding:11px 15px;border-radius:15px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);text-align:left}
+.amo .anc i{width:8px;height:8px;border-radius:50%;background:var(--ac);margin-top:5px;flex:none}.amo .anc.crit{background:rgba(120,30,40,.45);border-color:rgba(255,107,107,.55)}.amo .anc.crit i{background:var(--bad)}
+.amo .anc b{display:block;font-size:14px;font-weight:600}.amo .anc span{display:block;font-size:12px;color:#c3cbdb;margin-top:2px}
+/* 1 Aurora */
+.amo.aurora{background:radial-gradient(120% 90% at 50% 0%,#101a3a,#060914 70%)}
+.amo .bl{position:absolute;width:72%;aspect-ratio:1;border-radius:50%;will-change:transform;pointer-events:none}
+.amo .b1{left:-18%;top:-34%;background:radial-gradient(closest-side,rgba(45,212,191,.55),transparent);animation:dr1 38s ease-in-out infinite alternate}
+.amo .b2{right:-22%;top:8%;background:radial-gradient(closest-side,rgba(139,92,246,.55),transparent);animation:dr2 46s ease-in-out infinite alternate}
+.amo .b3{left:14%;bottom:-52%;background:radial-gradient(closest-side,rgba(244,114,182,.42),transparent);animation:dr3 54s ease-in-out infinite alternate}
+@keyframes dr1{to{transform:translate(34%,22%) scale(1.2)}}@keyframes dr2{to{transform:translate(-30%,18%) scale(.85)}}@keyframes dr3{to{transform:translate(26%,-26%) scale(1.15)}}
+.amo.aurora .clk2.big{font-size:clamp(84px,calc(var(--aw)*.15),220px);text-shadow:0 0 60px rgba(160,200,255,.35);font-weight:300}
+/* 2 Starry night */
+.amo.night{background:radial-gradient(120% 100% at 50% 100%,#0c1630,#03050c 70%);cursor:pointer}
+.amo .sk{position:absolute;inset:0}.amo .sk i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:.2;animation:twk 4s ease-in-out infinite}.amo .sk i.s2{width:3px;height:3px;animation-duration:6s}
+@keyframes twk{0%,100%{opacity:.15}50%{opacity:.9}}
+.amo .moon{position:absolute;right:calc(var(--aw)*.16);top:calc(var(--ah)*.16);width:clamp(48px,calc(var(--ah)*.12),92px);aspect-ratio:1;border-radius:50%;box-shadow:inset -.32em .1em 0 0 #ebe4cc;font-size:clamp(48px,calc(var(--ah)*.12),92px);opacity:.85;filter:drop-shadow(0 0 22px rgba(235,228,204,.35))}
+.amo .nmid{position:absolute;left:clamp(22px,calc(var(--aw)*.07),90px);bottom:calc(var(--ah)*.2);animation:shf 120s ease-in-out infinite alternate}
+@keyframes shf{to{transform:translate(18px,-14px)}}
+.amo.night .clk2.big{color:rgba(238,241,246,.5);font-size:clamp(64px,calc(var(--aw)*.11),150px)}
+.amo.night .ad3{margin-top:12px;font-size:12px;letter-spacing:5px;color:rgba(238,241,246,.32);text-transform:uppercase}
+.amo.night .anf{opacity:.7}.amo.night .anc{background:rgba(255,255,255,.04)}
+/* 3 Classic analog */
+.amo.analog{background:radial-gradient(90% 80% at 50% 38%,#18233f,#070a12 75%)}
+.amo.analog .aclk.am{filter:drop-shadow(0 0 44px rgba(232,201,143,.2))}
+.amo.analog .aclk .fc{fill:rgba(255,255,255,.05);stroke:rgba(232,201,143,.45);stroke-width:2}
+/* 4 Photo frame */
+.amo.frame{background:#06090f}
+.amo .fb{position:absolute;inset:-6%;background-image:var(--sv-img,var(--qbg-img,none));background-size:cover;background-position:center;animation:kb 50s ease-in-out infinite alternate;will-change:transform}
+@keyframes kb{from{transform:scale(1) translate(0,0)}to{transform:scale(1.12) translate(-2%,-1.5%)}}
+.amo .fs{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.05) 38%,rgba(0,0,0,.78))}
+.amo .fmid{position:absolute;left:clamp(22px,calc(var(--aw)*.05),70px);bottom:clamp(40px,calc(var(--ah)*.1),90px);display:flex;flex-direction:column;align-items:flex-start;max-width:62%}
+.amo.frame .clk2.big{text-shadow:0 4px 40px rgba(0,0,0,.6)}.amo.frame .ad{margin-top:12px}.amo.frame .ach{justify-content:flex-start;margin-top:16px}
+:host([data-dev="phone"]) .amo:not(.pv) .bl{width:140%}
+:host([data-dev="phone"]) .amo:not(.pv) .anf{left:16px;right:16px;width:auto;bottom:46px}
+:host([data-dev="phone"]) .amo:not(.pv) .fmid{bottom:240px;max-width:none;right:22px}
+:host([data-dev="phone"]) .amo:not(.pv) .nmid{bottom:300px}
+:host([data-dev="phone"]) .amo:not(.pv) .moon{right:22px}
+/* 5 Home overview */
+.amo.home .fs{background:linear-gradient(90deg,rgba(4,8,16,.78),rgba(4,8,16,.45) 55%,rgba(4,8,16,.7))}
+.amo .hmid{position:absolute;left:clamp(22px,calc(var(--aw)*.05),70px);top:calc(var(--ah)*.2);display:flex;flex-direction:column;align-items:flex-start}
+.amo.home .clk2.big{font-size:clamp(64px,calc(var(--aw)*.1),150px)}
+.amo.home .ad{margin-top:10px}
+.amo .afg{position:absolute;right:clamp(22px,calc(var(--aw)*.04),56px);top:50%;transform:translateY(-52%);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:min(calc(var(--aw)*.5),600px)}
+.amo .afc{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:20px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);min-width:0;text-align:left}
+.amo .afc:first-child:nth-last-child(odd){grid-column:1/-1}
+.amo .afi{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:rgba(255,255,255,.1);flex:none;font-size:22px;color:#dfe5f1}.amo .afi .si{width:22px;height:22px}
+.amo .aft{min-width:0;display:flex;flex-direction:column}.amo .aft small{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(195,203,219,.8)}
+.amo .aft b{font-family:var(--serif);font-weight:400;font-size:clamp(20px,calc(var(--aw)*.021),28px);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.amo .aft span{font-size:12px;color:#c3cbdb;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.amo .afc.ok .afi{background:rgba(52,201,139,.22);color:#6ee7b7}.amo .afc.warn .afi{background:rgba(240,179,90,.25);color:#ffd9a0}.amo .afc.bad{border-color:rgba(255,107,107,.55);background:rgba(120,30,40,.4)}.amo .afc.bad .afi{background:rgba(255,107,107,.3);color:#ffc2c2}.amo .afc.on .afi{background:rgba(232,201,143,.22);color:#f1d9a0}
+.amo.home .anf{right:auto;left:clamp(22px,calc(var(--aw)*.05),70px)}.amo.home .anh{text-align:left}
+:host([data-dev="phone"]) .amo:not(.pv) .afg{right:16px;left:16px;width:auto;top:auto;bottom:216px;transform:none;gap:10px}
+:host([data-dev="phone"]) .amo:not(.pv) .afc{padding:11px 12px;gap:10px;border-radius:16px}:host([data-dev="phone"]) .amo:not(.pv) .afi{width:34px;height:34px}
+:host([data-dev="phone"]) .amo:not(.pv) .hmid{top:70px;left:22px}:host([data-dev="phone"]) .amo:not(.pv).home .anf{left:16px}
+/* choosing a screen saver in Settings */
+.ssub{padding:10px 4px 2px}.ssub .sn{font-size:15px;font-weight:600}.ssub .ss{font-size:12px;color:var(--mu);margin-top:3px}
+.hbt .ckr{display:flex;align-items:center;gap:18px}.hbt .ckr .aclk.tl{width:104px;flex:none}.hbt .ckr .clk2{font-size:44px;flex:none}.hbt .ckd{min-width:0}.hbt .ckd .dt{margin-top:0;font-size:15px}.hbt .ckd .wx{margin-top:6px}
+.svgrid{align-items:start;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin:6px 0 16px}
+.svc{border:2px solid var(--bd);border-radius:16px;padding:8px 8px 10px;background:rgba(255,255,255,.03);display:flex;flex-direction:column;gap:8px;min-width:0}
+.svc.on{border-color:var(--ac);background:rgba(255,255,255,.07)}
+.svp{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:10px;background:#000;cursor:pointer}
+.svp.off{display:grid;place-items:center;color:#8d9ab8;font-size:13px;letter-spacing:3px;text-transform:uppercase;background:repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0 8px,transparent 8px 16px)}
+.svf{display:flex;flex-direction:column;gap:3px;padding:0 4px}.svf b{font-size:14px}.svf small{font-size:12px;color:var(--mu)}
+.svf .sbtn{margin-top:6px;align-self:flex-start}
+.amc{display:inline-flex;align-items:center;gap:9px;padding:9px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);font-size:13px;color:#dfe5f1}
+.amc i{width:7px;height:7px;border-radius:50%;background:var(--ok)}.amc.warn{border-color:rgba(240,179,90,.5);background:rgba(240,179,90,.12);color:#ffd9a0}.amc.warn i{background:var(--warn)}.amc.bad{border-color:rgba(255,107,107,.5);background:rgba(255,107,107,.12);color:#ffc2c2}.amc.bad i{background:var(--bad)}
+.amo.c .clk2.big{color:rgba(238,241,246,.34);font-size:clamp(64px,10vw,130px)}.amo.c .ad3{margin-top:12px;font-size:12px;letter-spacing:5px;color:rgba(238,241,246,.2)}
+:host([data-dev="phone"]) .amo .amid{left:22px;right:22px}
+.nbn{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:260;display:flex;flex-direction:column;gap:10px;width:min(440px,calc(100vw - 24px))}
+.nb{background:rgba(14,19,32,.97);border:1px solid var(--bd);border-radius:16px;padding:13px 16px;display:grid;gap:3px;box-shadow:0 14px 40px rgba(0,0,0,.5);animation:nbin .35s ease;cursor:pointer}
+@keyframes nbin{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+.nb b{font-size:15px}.nb span{font-size:13px;color:#c3cbdb}.nb small{font-size:11px;color:var(--mu)}
+.nb.crit{border-color:rgba(255,107,107,.65);background:rgba(52,17,21,.97)}.nb.crit b{color:#ffb3b3}
+.app::before{content:"";display:block;height:46px;flex:none}.nbell.tbell{position:fixed;top:10px;right:14px;z-index:30;background:rgba(14,19,30,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}.nbell{position:relative}.nbd{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;border-radius:9px;background:var(--bad);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 4px;font-family:Inter,sans-serif}
+.nlist{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto;margin-top:10px}
+.nli{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--bd);border-radius:14px;background:rgba(255,255,255,.03)}
+.nli>i{width:8px;height:8px;border-radius:50%;background:var(--ac);margin-top:6px;flex:none}.nli.crit>i{background:var(--bad)}
+.nlt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.nlt b{font-size:14px}.nlt span{font-size:13px;color:#c3cbdb}.nlt small{font-size:11px;color:var(--mu)}
 .hav{position:relative;overflow:hidden;pointer-events:none}.hav>*{display:block;width:100%;height:100%}.camv .hav{width:100%;height:100%;border-radius:12px}.wallh{position:absolute;inset:0}
 .camv .vb{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 20px}
 .camv img{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;border-radius:12px;background:#000}
@@ -432,6 +547,126 @@ nav button.t.act .si{color:var(--c,#12151c);animation:pop .55s cubic-bezier(.3,1
 :host([data-dev="tablet"]) .page{padding:28px 28px 24px}
 :host([data-dev="tablet"]) .clk{font-size:56px}
 :host([data-dev="phone"]) .scg{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* ===== phone: clean and friendly ===== */
+input[type=file]{max-width:100%;font-size:13px;color:var(--mu)}
+input[type=file]::file-selector-button{border:0;border-radius:10px;padding:10px 14px;margin-right:10px;background:rgba(255,255,255,.14);color:#fff;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.mgrab{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,.25);margin:0 auto 14px}
+.mgr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.mi{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:14px 6px;border-radius:18px;border:1px solid var(--bd);background:rgba(255,255,255,.06);color:#fff;font-size:13px;min-height:96px;transition:transform .15s,background .2s}
+.mi:active{transform:scale(.95)}.mi.act{border-color:var(--c);background:rgba(255,255,255,.12)}
+.mi i{font-style:normal;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c);font-size:22px}
+.mi span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mo .dlg{padding:12px 16px calc(18px + env(safe-area-inset-bottom))}
+:host([data-dev="phone"]) .app::before{height:0}
+:host([data-dev="phone"]) .nbell.tbell{top:8px;right:12px;width:44px;height:44px}
+:host([data-dev="phone"]) .page{padding:8px 14px 28px}
+:host([data-dev="phone"]) .top{min-height:48px;margin-bottom:8px;padding-right:56px}
+:host([data-dev="phone"]) .hh{margin-top:0;min-height:48px;padding:0 56px 0 2px}
+:host([data-dev="phone"]) .hgr{margin:4px 2px 14px;font-size:28px}
+:host([data-dev="phone"]) .back{padding:11px 16px;min-height:44px;border-radius:14px;font-size:15px}
+:host([data-dev="phone"]) .ib{width:44px;height:44px}
+:host([data-dev="phone"]) nav{padding:6px 6px calc(6px + env(safe-area-inset-bottom));gap:0}
+:host([data-dev="phone"]) .tabs2{overflow:visible;gap:0;padding:0}
+:host([data-dev="phone"]) .tind{top:0;bottom:0;border-radius:16px}
+:host([data-dev="phone"]) nav button.t{min-width:0;min-height:56px;padding:8px 2px 6px;font-size:11px;border-radius:16px;gap:4px}
+:host([data-dev="phone"]) nav button.t .si{font-size:24px}:host([data-dev="phone"]) nav button.t ha-icon{--mdc-icon-size:24px}
+:host([data-dev="phone"]) .card .row:has(>.sw){flex-wrap:wrap;row-gap:10px}
+:host([data-dev="phone"]) .card .row:has(>.sw)>.bdg{order:1}
+:host([data-dev="phone"]) .card .row:has(>.sw)>.sw{order:2;margin-left:auto}
+:host([data-dev="phone"]) .card .row:has(>.sw)>.grow{order:3;flex:1 1 100%}
+:host([data-dev="phone"]) .nm{overflow-wrap:anywhere}
+:host([data-dev="phone"]) .sw{width:54px;height:32px;border-radius:16px}
+:host([data-dev="phone"]) .sw::after{width:26px;height:26px;top:3px;left:3px}
+:host([data-dev="phone"]) .sw.on::after{left:25px}
+:host([data-dev="phone"]) .btns button{min-height:46px;font-size:15px}
+:host([data-dev="phone"]) input[type=range]{height:32px}
+:host([data-dev="phone"]) input[type=range]::-webkit-slider-thumb{width:28px;height:28px;margin-top:-12px}
+:host([data-dev="phone"]) .sbar{margin:0 0 14px;gap:10px}
+:host([data-dev="phone"]) .sbar h1{font-size:34px}
+:host([data-dev="phone"]) .sbtns{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:8px}
+:host([data-dev="phone"]) .sbtn{padding:13px 10px;min-height:46px;text-align:center}
+:host([data-dev="phone"]) .snav{margin:0 -14px;padding:2px 14px 10px;gap:8px;scrollbar-width:none}
+:host([data-dev="phone"]) .snav::-webkit-scrollbar{display:none}
+:host([data-dev="phone"]) .sti{padding:11px 16px;border-radius:999px;gap:8px;min-height:46px}
+:host([data-dev="phone"]) .sti .si{font-size:18px}:host([data-dev="phone"]) .sti b{font-size:14px}
+:host([data-dev="phone"]) .ssec{padding:16px 14px}
+:host([data-dev="phone"]) .shd small{text-align:left}
+/* ===== phone: Basalte-style ===== */
+:host([data-dev="phone"]){--serif:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--tc:rgba(24,38,82,calc(var(--ta,.6) + .06));--tbd:rgba(255,255,255,.07)}
+.pbar{position:sticky;top:0;z-index:40;flex:none;display:flex;align-items:center;gap:2px;height:calc(58px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 6px 0;background:rgba(17,26,58,.97);box-shadow:0 2px 14px rgba(0,0,0,.4)}
+.pb{position:relative;width:46px;height:46px;border:0;border-radius:50%;background:none;color:#fff;display:grid;place-items:center;font-size:25px;padding:0;flex:none}
+.pb:active{background:rgba(255,255,255,.14)}
+.pb .si{font-size:26px;stroke-width:1.5}
+.pt{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding-left:4px;overflow:hidden}
+.pt b{font-size:23px;font-weight:700;letter-spacing:-.4px;text-transform:lowercase;white-space:nowrap}
+.pt i{width:2px;height:24px;background:#f08c2c;flex:none}
+.pt span{font-size:22px;font-weight:300;color:#cdd5e8}
+.pt .pn{font-size:21px;font-weight:400;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr{display:flex;align-items:center;flex:none}
+.pb.nbell{background:none;border:0;-webkit-backdrop-filter:none;backdrop-filter:none}
+.pb .nbd{top:6px;right:5px}
+:host([data-dev="phone"]) .top,:host([data-dev="phone"]) .hh,:host([data-dev="phone"]) .hgr{display:none}
+:host([data-dev="phone"]) .page>h1,:host([data-dev="phone"]) .sbar h1{display:none}
+:host([data-dev="phone"]) .page{padding:14px 14px 28px}
+:host([data-dev="phone"]) main{padding-bottom:20px}
+.psec{display:flex;align-items:center;gap:14px;margin:26px 2px 12px;font-size:26px;font-weight:300;color:rgba(255,255,255,.82);text-shadow:0 1px 10px rgba(0,0,0,.5)}
+.psec::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.28)}
+.psep{height:1px;background:rgba(255,255,255,.2);margin:22px 2px}
+.ptg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.ptl{position:relative;aspect-ratio:1/1;border:0;border-radius:2px;background:var(--tc);color:#fff;text-align:left;padding:0;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;box-shadow:0 4px 14px -6px rgba(0,0,0,.55);transition:transform .15s,background .2s}
+.ptl:active{transform:scale(.96)}
+.ptl i{flex:1;display:grid;place-items:center;font-style:normal;font-size:clamp(40px,13vw,58px);color:#eef1f8;padding-top:16px}
+.ptl i .si{stroke-width:.9;font-size:1em}.ptl i ha-icon{--mdc-icon-size:clamp(40px,13vw,58px)}
+.ptl span{padding:0 10px 10px;font-size:15px;line-height:1.15;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptl small{position:absolute;right:8px;top:8px;font-size:11px;color:#ffd08a;background:rgba(0,0,0,.28);padding:2px 7px;border-radius:9px}
+.ptl.sct.on{box-shadow:inset 4px 0 0 #3ddc84,0 4px 14px -6px rgba(0,0,0,.55)}
+.ptl.pwr i{color:#fff}.ptl.pwr.on i{color:#ff8a1f}.ptl.pwr.on span{color:#ff8a1f}
+.ptg.sys .ptl{background:rgba(20,22,30,.55)}
+.phero{margin:12px 2px 4px;text-shadow:0 2px 14px rgba(0,0,0,.45)}
+.hgr2{font-size:17px;font-weight:300;color:rgba(255,255,255,.85);margin:4px 0 10px}
+.hwx{display:grid;grid-template-columns:1fr auto;grid-template-areas:"i t" "c h";align-items:center;row-gap:8px;margin:4px 0 4px}
+.hwi{grid-area:i;font-size:96px;line-height:1}.hwi .si{stroke-width:.9;font-size:1em}
+.hwt{grid-area:t;font-size:84px;font-weight:300;line-height:1;letter-spacing:-2px}
+.hwc{grid-area:c;font-size:19px;font-weight:500;text-transform:capitalize}
+.hwh{grid-area:h;justify-self:end;font-size:19px;display:flex;align-items:center;gap:6px}.hwh .si{font-size:22px}
+.hfc{display:grid;grid-template-columns:repeat(4,1fr);margin:18px 0 4px}
+.hfc>div{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0;font-size:14px;border-left:1px solid rgba(255,255,255,.5)}.hfc>div:first-child{border-left:0}
+.hfc i{font-style:normal;font-size:38px}.hfc i .si{stroke-width:1;font-size:1em}.hfc b{font-weight:400;font-size:22px;margin-top:6px}
+.hck{display:flex;align-items:center;gap:16px;margin:18px 0 0}.hck .dt{font-size:16px;color:rgba(255,255,255,.85);font-weight:300}
+.hck .clk2,.hck .clk{font-size:54px;font-weight:300}
+:host([data-dev="phone"]) .phh .hall{margin-top:0}
+.rchips{position:sticky;top:calc(58px + env(safe-area-inset-top));z-index:30;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:12px 14px;margin:0 -14px;background:rgba(32,50,104,.92)}
+.rchips::-webkit-scrollbar{display:none}
+.rchips button{flex:none;border:0;border-radius:999px;padding:7px 14px;background:none;color:#d4dbef;font-size:15px;min-height:36px}
+.rchips button.on{background:rgba(255,255,255,.88);color:#16203f}
+.area.rooms{padding:0 14px 24px}
+.area.rooms .psec{margin-top:20px}
+.rgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.rcard{position:relative;aspect-ratio:3/4;border-radius:2px;background:#25315a center/cover no-repeat;overflow:hidden;display:flex;align-items:flex-end;box-shadow:0 4px 14px -6px rgba(0,0,0,.6)}
+.rcard::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.7))}
+.rcard.noimg{background:linear-gradient(160deg,#2a3a76,#18214a)}
+.rcard .rci{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-size:70px;color:rgba(255,255,255,.22)}.rcard .rci .si{stroke-width:.9}
+.rcard>span{position:relative;padding:0 12px 12px;font-size:17px;font-weight:400;text-shadow:0 1px 8px #000a}
+.rbd{position:absolute;top:8px;right:8px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(40,44,56,.78);color:#8a93a8;display:grid;place-items:center;font-size:22px;padding:0;z-index:2}
+.rbd.on{background:rgba(255,255,255,.92);color:#f5a623}
+.rbd .si{stroke-width:1.6}
+.proom .rm2{padding:0 14px 28px}
+.proom .abody{display:flex;flex-direction:column;gap:12px}
+.dial{position:relative;display:grid;grid-template-columns:150px 1fr;align-items:center;gap:8px;padding:14px;border-radius:2px;background:var(--tc);box-shadow:0 4px 14px -6px rgba(0,0,0,.55);margin-bottom:10px}
+.dial.hot{background:linear-gradient(160deg,rgba(150,60,70,.78),rgba(90,25,35,.85))}.dial.cool{background:linear-gradient(160deg,rgba(40,100,160,.78),rgba(20,50,100,.85))}
+.dial .dr{width:150px;height:150px}.dial .dr circle{fill:none;stroke-width:5;stroke-linecap:round}.dial .d0{stroke:rgba(255,255,255,.25)}.dial .d1{stroke:#fff}
+.dial .dv{position:absolute;left:14px;top:14px;width:150px;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.dial .dv b{font-size:44px;font-weight:300;line-height:1}.dial .dv small{font-size:18px;margin-top:6px;color:rgba(255,255,255,.85)}
+.dial .di{font-size:16px;text-transform:capitalize;display:flex;flex-direction:column;gap:6px;padding-left:10px}.dial .dn{color:rgba(255,255,255,.7);font-size:13px}
+.dial .dpm{position:absolute;right:12px;bottom:10px;display:flex;gap:8px}
+.dial .dpm button{width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.1);color:#fff;font-size:24px;padding:0}
+:host([data-dev="phone"]) .bc{border-radius:2px}:host([data-dev="phone"]) .card{border-radius:2px}:host([data-dev="phone"]) .tile{border-radius:2px}
+:host([data-dev="phone"]) .btns button,:host([data-dev="phone"]) .rb button{border-radius:2px}
+:host([data-dev="phone"]) .rh{border-bottom:1px solid rgba(255,255,255,.22);padding-bottom:8px;margin:22px 0 12px}
+:host([data-dev="phone"]) .rn{font-weight:300;font-size:25px}
+:host([data-dev="phone"]) .sub{display:block}
+
+
 :host([data-dev="tablet"]) .scg{grid-template-columns:repeat(3,minmax(0,1fr))}
 :host([data-dev="tablet"]) nav{padding:10px 20px calc(10px + env(safe-area-inset-bottom))}
 :host([data-dev="tablet"]) nav button.t,:host([data-dev="desktop"]) nav button.t{flex:none;flex-direction:row;font-size:15px;font-weight:500;padding:12px 20px;gap:0}
@@ -441,13 +676,9 @@ nav button.t.act .si{color:var(--c,#12151c);animation:pop .55s cubic-bezier(.3,1
 :host([data-dev="desktop"]) .abody{gap:18px}
 :host([data-dev="desktop"]) .scg{grid-template-columns:repeat(2,minmax(0,1fr))}
 :host([data-dev="desktop"]) .camv .vh,:host([data-dev="desktop"]) .camv .vb,:host([data-dev="desktop"]) .camv .vf{padding-left:44px;padding-right:44px}
-:host([data-wide="1"]) .home{grid-template-columns:minmax(300px,390px) minmax(0,1fr);gap:40px}
 :host([data-wide="1"]) .scg{grid-template-columns:repeat(2,minmax(0,1fr))}
-:host([data-wide="1"]) .hl{position:sticky;top:28px;align-self:start;height:max(calc(var(--vh) - 116px),540px)}
-:host([data-dev="desktop"][data-wide="1"]) .hl{top:40px;height:max(calc(var(--vh) - 132px),540px)}
 :host([data-wide="1"]) .clk{font-size:clamp(54px,4.6vw,72px);margin-top:34px}
 :host([data-wide="1"]) .gr{font-size:36px;margin-top:34px}
-:host([data-wide="1"]) .scn{margin-top:auto;padding-top:26px}
 :host([data-wide="1"]) .area{grid-template-columns:minmax(220px,270px) minmax(0,1fr);gap:40px}
 :host([data-wide="1"]) .rlist{flex-direction:column;overflow:visible}
 :host([data-wide="1"]) .rli{width:100%;padding:13px 14px;background:none;border-color:transparent;font-size:16px}
@@ -530,10 +761,11 @@ class IntellectDashboard extends HTMLElement {
   }
   _pdown(e) {
     if (e.button > 0 || e.target.type === "range" || this._mv) return;
-    const path = e.composedPath(), kk = path.find((n) => n.dataset && n.dataset.k), tp = path.find((n) => n.dataset && n.dataset.tpl), sk = kk ? null : path.find((n) => n.dataset && n.dataset.sk), k = kk || sk;
+    const path = e.composedPath(), kk = path.find((n) => n.dataset && n.dataset.k), tp = path.find((n) => n.dataset && n.dataset.tpl), hin = kk ? null : path.find((n) => n.dataset && n.dataset.hi), k = kk || hin;
     if (!k || this._dlg || this._cam) return;
+    if (this._c.noArrange && !this._admin() && !this._mgr()) return;
     this._lp = { x: e.clientX, y: e.clientY };
-    this._hold = { k, x: e.clientX, y: e.clientY, id: e.pointerId, pt: e.pointerType, t: Date.now(), tpl: tp ? tp.dataset.tpl : "", sk: sk ? sk.dataset.sk : "" };
+    this._hold = { k, x: e.clientX, y: e.clientY, id: e.pointerId, pt: e.pointerType, t: Date.now(), tpl: tp ? tp.dataset.tpl : "", hi: hin ? hin.dataset.hi : "" };
     if (!tp) { k.classList.add("holding"); this._ht = setTimeout(() => this._startMove(), HOLD_MS); }
   }
   _startMove() {
@@ -544,15 +776,15 @@ class IntellectDashboard extends HTMLElement {
     // the lifted copy floats under the finger; the original stays as a faded placeholder
     const gh = document.createElement("div"), cp = el.cloneNode(true);
     gh.className = "gh"; gh.style.width = r.width + "px";
-    cp.classList.remove("moving", "holding", "dtgt"); ["data-k", "data-sk", "data-id"].forEach((a) => cp.removeAttribute(a));
+    cp.classList.remove("moving", "holding", "dtgt"); ["data-k", "data-sk", "data-id", "data-hb", "data-hi"].forEach((a) => cp.removeAttribute(a));
     cp.style.zoom = z; cp.style.width = r.width / z + "px";
     gh.appendChild(cp); this.shadowRoot.appendChild(gh);
-    const m = (this._mv = { el, sk: this._hold.sk || "", tgt: "", te: null, gh, pt: this._hold.pt, ox: lp.x - r.left, oy: lp.y - r.top });
+    const m = (this._mv = { el, hi: this._hold.hi || "", tgt: "", te: null, gh, pt: this._hold.pt, ox: lp.x - r.left, oy: lp.y - r.top });
     this._hold = null;
     gh.style.transform = `translate(${lp.x - m.ox}px,${lp.y - m.oy}px)`;
     m.as = setInterval(() => this._mvStep(), 30);
     if (navigator.vibrate) navigator.vibrate(40);
-    this._hint("Drag onto the card whose place you want, then release");
+    this._hint(m.hi ? "Drag it anywhere on the screen, then release. It goes where you drop it" : "Drag onto the card whose place you want, then release");
   }
   _mvStep() {
     const m = this._mv, p = this._lp; if (!m || !p || m.carry) return;
@@ -563,14 +795,28 @@ class IntellectDashboard extends HTMLElement {
     const hit = this.shadowRoot.elementFromPoint(p.x, p.y);
     this.shadowRoot.querySelectorAll(".dtgt").forEach((x) => x.classList.remove("dtgt"));
     m.te = null; m.tgt = "";
-    if (m.sk) {
-      const t = hit && hit.closest && hit.closest("[data-sk]");
-      if (t && t.dataset.sk !== m.sk) { m.te = t; m.tgt = t.dataset.sk; }
+    if (m.hi) {
+      const t = hit && hit.closest && hit.closest("[data-hi]");
+      if (t) { if (t.dataset.hi !== m.hi) { m.te = t; m.tgt = t.dataset.hi; } }
+      else { const z = hit && hit.closest && hit.closest(".home"); if (z) { const q = this._nearHi(p, m.hi); if (q) { m.te = q.el; m.tgt = q.tgt; } } }   // dropped on empty space: the nearest item decides
     } else {
       const t = hit && hit.closest && hit.closest("[data-k]");
       if (t && t !== m.el && t.parentNode === m.el.parentNode) m.te = t;
     }
     if (m.te) m.te.classList.add("dtgt");
+  }
+  _nearHi(p, self) {
+    let best = null, bd = 1e9, maxB = -1e9;
+    this.shadowRoot.querySelectorAll(".hall [data-hi]").forEach((e) => {
+      if (e.dataset.hi === self) return;
+      const r = e.getBoundingClientRect(); if (!r.width) return;
+      maxB = Math.max(maxB, r.bottom);
+      const dx = p.x < r.left ? r.left - p.x : p.x > r.right ? p.x - r.right : 0, dy = p.y < r.top ? r.top - p.y : p.y > r.bottom ? p.y - r.bottom : 0, d = Math.hypot(dx, dy);
+      if (d < bd) { bd = d; best = e; }
+    });
+    if (!best) return null;
+    if (p.y > maxB) return { el: this.shadowRoot.querySelector(".hall"), tgt: "zone:end" };   // below everything: put it last
+    return { el: best, tgt: best.dataset.hi };
   }
   _pmove(e) {
     this._lp = { x: e.clientX, y: e.clientY };
@@ -589,7 +835,7 @@ class IntellectDashboard extends HTMLElement {
     }
     if (!this._mv || this._mv.carry) return;
     // a finger lifted over nothing keeps the tile in hand: tap the card where it should go
-    if (this._mv.pt === "touch" && !this._mv.te) return this._carry();
+    if (this._mv.pt === "touch" && (!this._mv.te || this._mv.tgt.startsWith("zone:"))) return this._carry();
     this._endMove(true);
   }
   _pcancel() {
@@ -603,16 +849,17 @@ class IntellectDashboard extends HTMLElement {
     m.gh.classList.add("carry"); m.gh.style.transform = "";
     this.shadowRoot.querySelectorAll(".dtgt").forEach((x) => x.classList.remove("dtgt"));
     m.to = setTimeout(() => this._endMove(false), 90000);
-    this._hint("Tap the card where it should go", true);
+    this._hint(this._mv.hi ? "Tap where it should go. It takes the place of the item you tap" : "Tap the card where it should go", true);
   }
   _carryClick(e) {
     const m = this._mv, path = e.composedPath();
     if (Date.now() < m.armed) return;
     if (path.some((n) => n.dataset && n.dataset.carry === "cancel")) return this._endMove(false);
-    const t = m.sk ? path.find((n) => n.dataset && n.dataset.sk) : path.find((n) => n.dataset && n.dataset.k && n.parentNode === m.el.parentNode);
+    const t = m.hi ? path.find((n) => n.dataset && n.dataset.hi) || (path.some((n) => n.classList && n.classList.contains("home")) ? "near" : null) : path.find((n) => n.dataset && n.dataset.k && n.parentNode === m.el.parentNode);
     if (!t) return;
     if (t === m.el) return this._endMove(false);
-    m.te = t; m.tgt = m.sk ? t.dataset.sk : "";
+    if (t === "near") { const q = this._nearHi({ x: e.clientX, y: e.clientY }, m.hi); if (!q) return; m.te = q.el; m.tgt = q.tgt; }
+    else { m.te = t; m.tgt = m.hi ? t.dataset.hi : ""; }
     this._endMove(true);
   }
   _endMove(apply) {
@@ -622,7 +869,7 @@ class IntellectDashboard extends HTMLElement {
     el.classList.remove("moving");
     this.shadowRoot.querySelectorAll(".dtgt").forEach((x) => x.classList.remove("dtgt"));
     if (apply) {
-      if (m.sk) { if (m.tgt) this._svcMove(m.sk, m.tgt); }
+      if (m.hi) { if (m.tgt) this._hMove(m.hi, m.tgt); }
       else if (m.te) {
         grid.insertBefore(el, m.te.compareDocumentPosition(el) & 2 ? m.te.nextSibling : m.te);   // the card takes the place of the one it was dropped on
         const ctx = grid.dataset.grid; if (ctx) this._ordSet(ctx, Array.from(grid.children).filter((c) => c.dataset && c.dataset.k).map((c) => c.dataset.k));
@@ -806,7 +1053,7 @@ class IntellectDashboard extends HTMLElement {
   _time() { return this._clock(); }
   connectedCallback() {
     this._ssStart(); this._hbStart();
-    this._applyBg(); this._layout();
+    this._applyBg(); this._layout(); this._hInit();
     if (typeof ResizeObserver !== "undefined") { this._ro = new ResizeObserver(() => this._layout()); this._ro.observe(this); }
     this._kd = (e) => { if (e.key === "Escape" && this._cam) { this._cam = null; this._camFb = false; this._draw(true); } };
     window.addEventListener("keydown", this._kd);
@@ -820,9 +1067,13 @@ class IntellectDashboard extends HTMLElement {
       if (img._busy && Date.now() - img._busy < 8000) return;
       img._busy = Date.now(); this._snapLoad(img, img.dataset.snap, () => { img._busy = 0; });
     }, 1000);
+    this._lastAct = Date.now(); this._actf = () => this._act(); this._visf = () => { if (!document.hidden) this._wake(); };
+    ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"].forEach((ev) => window.addEventListener(ev, this._actf, { passive: true, capture: true }));
+    document.addEventListener("visibilitychange", this._visf);
+    this._iv6 = setInterval(() => { this._ambTick(); this._keepAwake(); this._ntfTick(); }, 1000);
     this._iv = setInterval(() => { const r = this.shadowRoot; this._tickClock(); const m = r.querySelector(".tm"); if (m) m.textContent = this._time(); }, 1000);
   }
-  disconnectedCallback() { this._ssStop(); this._hbStop(); clearInterval(this._iv4); clearInterval(this._iv); clearInterval(this._iv2); clearInterval(this._iv3); clearInterval(this._iv5); window.removeEventListener("keydown", this._kd); if (this._ro) { this._ro.disconnect(); this._ro = null; } Object.values(this._tsub || {}).forEach((p) => p.then((u) => u()).catch(() => {})); this._tsub = {}; this._conn = null; }
+  disconnectedCallback() { this._ssStop(); this._hbStop(); this._hOff(); clearInterval(this._iv4); clearInterval(this._iv); clearInterval(this._iv2); clearInterval(this._iv3); clearInterval(this._iv5); clearInterval(this._iv6); clearInterval(this._nsi); this._wakeOff(); if (this._amb) this._ambHide(); if (this._actf) ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"].forEach((ev) => window.removeEventListener(ev, this._actf, true)); if (this._visf) document.removeEventListener("visibilitychange", this._visf); window.removeEventListener("keydown", this._kd); if (this._ro) { this._ro.disconnect(); this._ro = null; } Object.values(this._tsub || {}).forEach((p) => p.then((u) => u()).catch(() => {})); this._tsub = {}; this._conn = null; }
   set panel(p) { this._title = (p && p.config && p.config.title) || "Intellect"; }
   set narrow(n) { if (n === this._narrow) return; this._narrow = n; this._draw(true); }
   set route(r) {}
@@ -835,7 +1086,8 @@ class IntellectDashboard extends HTMLElement {
     if (!this._loading) { this._loading = true; this._loadCfg(); }
     if (this._lvc) Object.values(this._lvc).forEach((e) => (e.hass = h));
     if (this.shadowRoot) this.shadowRoot.querySelectorAll("[data-hl]").forEach((x) => { if (x._card) x._card.hass = h; });
-    if (this._loaded && h.connection !== this._conn) { this._conn = h.connection; this._tsub = {}; this._syncTpl(); }
+    if (this._loaded && h.connection !== this._conn) { this._conn = h.connection; this._tsub = {}; this._syncTpl(); this._ntfSub(); this._nQuiet = Date.now() + 20000; }
+    if (this._loaded) this._ntfScan(h);
     if (!this._c.rooms.length && h.areas && Object.keys(h.areas).length) this._importRooms(false);
     if (this._loaded && this._track && !this._relevant(h)) return;
     if (this._pending) return;
@@ -857,10 +1109,11 @@ class IntellectDashboard extends HTMLElement {
   _revert() {
     try { const pm = { perms: this._c.perms, manager: this._c.manager, upInstall: this._c.upInstall, upRestart: this._c.upRestart }; this._c = { ...FRESH(), ...JSON.parse(this._snap), ...pm }; } catch (e) {}
     localStorage.setItem(KEY, JSON.stringify(this._c));
-    this._dirty = false; this._applyBg(); this._syncTpl();
+    this._dirty = false; this._applyBg(); this._applyTs(); this._syncTpl();
   }
   _toast(t) { this._hint(t); clearTimeout(this._tt); this._tt = setTimeout(() => this._hint(""), 1800); }
-  _bgu() { try { return JSON.parse(localStorage.getItem("intellect_bgu") || "null"); } catch (e) { return null; } }
+  _look() { return !(this._c && this._c.noLook && !this._admin() && !this._mgr()); }
+  _bgu() { if (!this._look()) return null; try { return JSON.parse(localStorage.getItem("intellect_bgu") || "null"); } catch (e) { return null; } }
   _applyBg() {
     if (this._rbgOn) { this.style.setProperty("--qbg-img", `url("${this._rbgOn}")`); this.style.setProperty("--qbg-dim", "0.5"); this.style.setProperty("--qbg-blur", "0px"); return; }
     const u = this._bgu(), b = { preset: "midnight", mode: "preset", dim: 0, blur: 0, ...(u || this._c.bg || {}) }, data = u ? u.data : this._bgData;
@@ -868,9 +1121,10 @@ class IntellectDashboard extends HTMLElement {
     this.style.setProperty("--qbg-img", img);
     this.style.setProperty("--qbg-dim", String(Math.max(0, Math.min(80, +b.dim || 0)) / 100));
     this.style.setProperty("--qbg-blur", Math.max(0, Math.min(20, +b.blur || 0)) + "px");
+    this._applySv();
   }
   _loadBg() {
-    this._h.callApi("GET", "intellect/roomimg").then((d) => { this._rsrv = d && typeof d === "object" ? d : {}; this._draw(); }).catch(() => {});
+    this._h.callApi("GET", "intellect/roomimg").then((d) => { this._rsrv = d && typeof d === "object" ? d : {}; this._applySv(); this._draw(); }).catch(() => {});
     this._h.callApi("GET", "intellect/background").then((d) => { this._bgData = (d && d.data) || ""; this._applyBg(); this._draw(); }).catch(() => {});
   }
   _bgLocal(patch) {
@@ -904,13 +1158,19 @@ class IntellectDashboard extends HTMLElement {
     c.order = { ...(c.order || {}), ...(o.order || {}) };
     ["name", "title", "bg", "pills"].forEach((k) => { if (o[k]) c[k] = o[k]; });
     if (typeof o.credit === "string") c.credit = o.credit;
+    if (Array.isArray(o.hlist)) c.hlist = o.hlist.filter((x) => typeof x === "string");
+    else if (o.hlay && Array.isArray(o.hlay.l) && Array.isArray(o.hlay.r)) c.hlist = [...o.hlay.l, ...o.hlay.r].filter((x) => typeof x === "string");
+    if (Array.isArray(o.hbOrder)) c.hbOrder = o.hbOrder.filter((x) => ["clock", "wx", "greet", "scenes"].includes(x));
     if (o.tiles) c.tiles = { ...(c.tiles || {}), ...o.tiles };
     if (o.intercoms) c.intercoms = o.intercoms; else if (o.intercom) { c.intercoms = [{ id: "ic1", ...o.intercom }]; delete c.intercom; }
     if (Array.isArray(o.scenes)) o.scenes.forEach((x) => { if (x && x.id && !(c.scenes || []).some((y) => y.id === x.id)) (c.scenes = c.scenes || []).push(x); });
     ["noClock", "noScenes", "noWeather", "noRooms"].forEach((k) => { if (typeof o[k] === "boolean") c[k] = o[k]; });
     if (TSIZES[o.tsz]) c.tsz = o.tsz;
+    if (o.tileAlpha !== undefined && Number.isFinite(+o.tileAlpha)) c.tileAlpha = Math.max(0, Math.min(100, Math.round(+o.tileAlpha)));
     if (o.eng === "std" || o.eng === "auto") c.eng = o.eng;
     if (o.cks === "analog" || o.cks === "digital") c.cks = o.cks;
+    if (o.ntf && typeof o.ntf === "object") { const x = o.ntf, y = {}; if (typeof x.on === "boolean") y.on = x.on; if ([3, 5, 10, 30].includes(+x.mins)) y.mins = +x.mins; if (x.types && typeof x.types === "object") { y.types = {}; Object.keys(NT).forEach((k) => { if (typeof x.types[k] === "boolean") y.types[k] = x.types[k]; }); } c.ntf = y; }
+    if (o.scr && typeof o.scr === "object") { const x = o.scr, y = {}; if (typeof x.awake === "boolean") y.awake = x.awake; if (typeof x.night === "boolean") y.night = x.night; if (["off", "aurora", "night", "analog", "frame", "home", "a", "b", "c"].includes(x.idle)) y.idle = { a: "analog", b: "aurora", c: "night" }[x.idle] || x.idle; ["mins", "n1", "n2"].forEach((k) => { if (Number.isFinite(+x[k])) y[k] = +x[k]; }); c.scr = y; }
     if (typeof o.clockTile === "boolean") c.clockTile = o.clockTile;
     if (o.wall && typeof o.wall === "object") c.wall = o.wall;
     c.svcTitle = { ...(c.svcTitle || {}), ...(o.svcTitle || {}) };
@@ -971,11 +1231,16 @@ class IntellectDashboard extends HTMLElement {
       else if (k === "up" || k === "dn") { const l = [...(w.ids || [])], j = l.indexOf(id); if (j >= 0) { this._swap(l, j, k === "up" ? -1 : 1); w.ids = l; } }
     }
     else if (a === "tsz") { if (TSIZES[v]) c.tsz = v; }
+    else if (a === "scr") { const i = v.indexOf("|"), k = v.slice(0, i), x = v.slice(i + 1), o = (c.scr = c.scr || {}); if (["awake", "night"].includes(k)) o[k] = x === "1"; else if (["idle"].includes(k)) o.idle = x; else o[k] = +x; this._wkT = 0; this._ambHide(); }
+    else if (a === "hbreset") { delete c.hbOrder; delete c.hlay; delete c.hlist; try { localStorage.removeItem("intellect_hbo"); localStorage.removeItem("intellect_hlay"); localStorage.removeItem("intellect_hlist"); } catch (e) {} }
+    else if (a === "ntf") { const i = v.indexOf("|"), k = v.slice(0, i), x = v.slice(i + 1), o = (c.ntf = c.ntf || {}); if (k === "on") o.on = x === "1"; else if (k === "mins") o.mins = +x; else if (k.startsWith("t:") && NT[k.slice(2)]) (o.types = o.types || {})[k.slice(2)] = x === "1"; }
     else if (a === "cks") c.cks = v === "analog" ? "analog" : "digital";
     else if (a === "ctile") c.clockTile = !c.clockTile;
     else if (a === "eng") { c.eng = v === "std" ? "std" : "auto"; this._haOff = false; this._haBad = new Set(); this._haOkN = 0; try { localStorage.removeItem("intellect_haoff"); } catch (e) {} this._last = null; }
     else if (a === "clk") c.noClock = !c.noClock;
-    else if (a === "flag" && ["noClock", "noScenes", "noWeather", "noRooms", "dflt", "lock"].includes(v)) c[v] = !c[v];
+    else if (a === "flag" && ["noClock", "noScenes", "noWeather", "noRooms", "dflt", "lock", "noArrange", "noLook", "hideUnavail"].includes(v)) c[v] = !c[v];
+    else if (a === "adv") { const i = v.indexOf("|"), k = v.slice(0, i), x = v.slice(i + 1), q = (c.quiet = c.quiet || {}); if (k === "home") c.homeAfter = [0, 1, 2, 5, 10, 30].includes(+x) ? +x : 0; else if (k === "qon") q.on = x === "1"; else if (k === "qfrom") q.from = +x; else if (k === "qto") q.to = +x; else if (k === "qcrit") q.crit = x === "1"; }
+    else if (a === "hhide") { if (!c.hide.includes(v)) c.hide.push(v); }
     else if (a === "srsel") { this._sr = v; return this._draw(true); }
     else if (a === "srt" || a === "srempty" || a === "srall") {
       const sv = this._svcsAll().filter((k) => k !== "intercom" && k !== "automations" && k !== "camwall" && k !== "clock"), cur = sv.includes(this._sr) ? this._sr : sv[0]; if (!cur) return;
@@ -996,6 +1261,7 @@ class IntellectDashboard extends HTMLElement {
   }
   _input(e) {
     const t = e.target, d = t.dataset;
+    if (d.ta !== undefined && this._admin()) { this._c.tileAlpha = +t.value; this._applyTa(); return; }
     if (d.bg && this._admin()) { this._c.bg = { ...(this._c.bg || {}), [d.bg]: +t.value }; this._applyBg(); }
     if (d.sdq !== undefined && this._sd) { this._sd.q = t.value.toLowerCase(); this._draw(true); }
     if (d.pbr) { this._bgLocal({ [d.pbr]: +t.value }); }
@@ -1148,7 +1414,8 @@ class IntellectDashboard extends HTMLElement {
   }
   _ents(svc, room) {
     if (!this._svOk(svc)) return [];
-    return Object.keys(this._h.states).filter((id) => this._svcOf(id) === svc && !this._c.hide.includes(id) && (!room || this._roomOf(id) === room) && this._rmOk(this._roomOf(id)));
+    const hu = this._c.hideUnavail && !this._admin(), S = this._h.states;
+    return Object.keys(S).filter((id) => this._svcOf(id) === svc && !this._c.hide.includes(id) && (!hu || S[id].state !== "unavailable") && (!room || this._roomOf(id) === room) && this._rmOk(this._roomOf(id)));
   }
   _nm(id) { const n = this._h.states[id].attributes.friendly_name || id; return id.startsWith("camera.") ? n.replace(/\s*[-·]?\s*(high|medium|low)\s+resolution(\s+channel)?(\s*\(insecure\))?$/i, "").trim() || n : n; }
   _svcsAll() {
@@ -1159,7 +1426,7 @@ class IntellectDashboard extends HTMLElement {
   _svcsList() { return this._svcsAll().filter((x) => x !== "clock"); }
   _svcs() { const h = this._c.svcHide || []; return this._svcsAll().filter((x) => x !== "clock" && !h.includes(x)); }
   _svcsHome() { const h = this._c.svcHide || []; return this._svcsAll().filter((x) => !h.includes(x)); }
-  _clockTile() { let v = ""; try { v = localStorage.getItem("intellect_ct") || ""; } catch (e) {} return v === "1" ? true : v === "0" ? false : !!this._c.clockTile; }
+  _clockTile() { return false; }   // the clock is a home block (drag it anywhere); there is no separate clock tile
   _clockStyle() { let v = ""; try { v = localStorage.getItem("intellect_ck") || ""; } catch (e) {} return v === "analog" || v === "digital" ? v : this._c.cks === "analog" ? "analog" : "digital"; }
   _titles() { const T = this._c.svcTitle || {}; Object.keys(SV).forEach((k) => { SV[k].n = T[k] || (k.startsWith("cs:") ? k.slice(3) : SV_DEF[k]); }); }
   _svcRooms(s) { const h = (this._c.roomHide || {})[s] || []; return this._rooms().filter((r) => !h.includes(r.id)); }
@@ -1189,10 +1456,43 @@ class IntellectDashboard extends HTMLElement {
   _rmOk(r) { const p = this._perm(); return !p || !r || !(p.roomOff || []).includes(r); }
   _entOk(id) { return this._svOk(this._svcOf(id)) && this._rmOk(this._roomOf(id)); }
   _sceneOk(x) { return !this._perm() || (this._rmOk(x.room) && (x.items || []).every((i) => this._entOk(i.e))); }
-  _nav(p, x = {}) {
-    if (this._v.p === "settings" && p !== "settings" && this._dirty) { if (!confirm("Discard unsaved settings changes?")) return; this._revert(); }
+  _nav(p, x = {}, pop) {
+    if (this._v.p === "settings" && p !== "settings" && this._dirty) { if (!confirm("Discard unsaved settings changes?")) return false; this._revert(); }
     if (p === "settings" && this._v.p !== "settings") { this._snap = JSON.stringify(this._c); this._dirty = false; }
-    this._v = { p, ...x }; this._draw(true);
+    const nv = { p, ...x };
+    if (!pop && this._hOn && JSON.stringify(nv) !== JSON.stringify(this._v)) {
+      this._hd = (this._hd || 0) + 1; this._hv = (this._hv || []).slice(0, this._hd); this._hv[this._hd] = nv;
+      try { history.pushState({ qn: this._hd }, ""); } catch (e) {}
+    }
+    this._more = false; this._v = nv; this._draw(true);
+    return true;
+  }
+  /* the phone's back button: one step back at a time, press twice on Home to leave */
+  _hInit() {
+    if (this._hOn) return;
+    this._hOn = true; this._hv = [{ ...this._v }]; this._hd = 0;
+    try { history.pushState({ qn: 0 }, ""); } catch (e) {}
+    this._pop = (e) => this._onPop(e);
+    window.addEventListener("popstate", this._pop);
+  }
+  _hOff() { this._hOn = false; clearTimeout(this._exT); if (this._pop) window.removeEventListener("popstate", this._pop); this._pop = null; }
+  _ov() { return !!(this._cam || this._more || this._pers || this._nc || this._dlg || this._sd); }
+  _ovClose() {
+    if (this._cam) { this._cam = null; this._camFb = false; } else if (this._more) this._more = false; else if (this._pers) this._pers = false; else if (this._nc) this._nc = false; else if (this._sd) this._sd = null; else if (this._dlg) this._dlg = null;
+    this._draw(true);
+  }
+  _leave() { this._hOff(); try { history.back(); } catch (e) {} }
+  _onPop(e) {
+    const st = e.state, n = st && typeof st.qn === "number" ? st.qn : null, keep = () => { try { history.pushState({ qn: this._hd }, ""); } catch (er) {} };
+    if (this._ov()) { this._ovClose(); if (n === null) this._hd = 0; keep(); return; }
+    if (n === null) {
+      if (this.getAttribute("data-dev") === "desktop" || this._exitArm) { this._exitArm = false; return this._leave(); }
+      this._exitArm = true; this._toast("Press back again to exit");
+      clearTimeout(this._exT); this._exT = setTimeout(() => { this._exitArm = false; }, 2000);
+      this._hd = 0; keep(); return;
+    }
+    const v = this._hv[n] || { p: "home" }, { p, ...x } = v;
+    if (this._nav(p, x, true)) this._hd = n; else keep();
   }
   _tileGo(s) { return s === "cameras" || s === "security" || s === "intercom" || s === "automations" || s === "camwall" ? `data-go='${JSON.stringify({ p: s })}'` : `data-go='${JSON.stringify({ p: "rooms", svc: s })}'`; }
 
@@ -1200,7 +1500,7 @@ class IntellectDashboard extends HTMLElement {
   _click(e) {
     if (this._mv && this._mv.carry) return this._carryClick(e);
     if (this._sup && Date.now() < this._sup) return;
-    const t = e.composedPath().find((n) => n.dataset && (n.dataset.go || n.dataset.act || n.dataset.tog || n.dataset.cc || n.dataset.tpl || n.dataset.s || n.dataset.cam || n.dataset.sc !== undefined || n.dataset.ic || n.dataset.pers || n.dataset.pb || n.dataset.pick || n.dataset.rimgb || n.dataset.um || n.dataset.out));
+    const t = e.composedPath().find((n) => n.dataset && (n.dataset.go || n.dataset.act || n.dataset.tog || n.dataset.cc || n.dataset.tpl || n.dataset.s || n.dataset.cam || n.dataset.sc !== undefined || n.dataset.ic || n.dataset.pers || n.dataset.more || n.dataset.ntf || n.dataset.pb || n.dataset.pick || n.dataset.rimgb || n.dataset.um || n.dataset.out));
     if (!t) return;
     const d = t.dataset;
     if ((d.cc || d.s || (d.tog && !d.tog.startsWith("menu"))) && !this._admin()) return;
@@ -1210,7 +1510,9 @@ class IntellectDashboard extends HTMLElement {
     if (d.ic) return this._icAct(d.ic);
     if (d.rimgb) return this._rimgDel(d.rimgb);
     if (d.pick) { const i = d.pick.indexOf("|"); (this._pick = this._pick || {})[d.pick.slice(0, i)] = d.pick.slice(i + 1); return this._draw(true); }
-    if (d.pers) { if (d.pers === "bg" && e.composedPath()[0] !== t) return; this._pers = d.pers === "open"; return this._draw(true); }
+    if (d.ntf) { if (d.ntf === "bg" && e.composedPath()[0] !== t) return; if (d.ntf === "bg") { this._nc = false; return this._draw(true); } return this._ntfAct(d.ntf); }
+    if (d.more) { if (d.more === "bg" && e.composedPath()[0] !== t) return; this._more = d.more === "open"; return this._draw(true); }
+    if (d.pers) { if (d.pers === "bg" && e.composedPath()[0] !== t) return; this._pers = d.pers === "open"; if (this._pers) this._more = false; return this._draw(true); }
     if (d.pb) {
       const i = d.pb.indexOf("|"), a = d.pb.slice(0, i), v = d.pb.slice(i + 1);
       if (a === "preset") this._bgLocal({ preset: v, mode: "preset" });
@@ -1226,6 +1528,7 @@ class IntellectDashboard extends HTMLElement {
     }
     if (d.tpl) return this._tap(d.tpl);
     if (d.s) { const i = d.s.indexOf("|"); return this._sact(d.s.slice(0, i), d.s.slice(i + 1)); }
+    if (d.hb && this._hd > 0 && this._hOn) { try { history.back(); } catch (er) {} return; }
     if (d.go) { const { p, ...x } = JSON.parse(d.go); return this._nav(p, x); }
     if (d.cc) {
       const [k, r, i] = d.cc.split(":");
@@ -1264,12 +1567,14 @@ class IntellectDashboard extends HTMLElement {
     if (adm && d.ssi !== undefined) { this._c.ss = { ...this._ssCfg(), idle: +t.value || 5 }; this._save(); this._draw(true); return; }
     if (adm && d.ssf !== undefined) { this._c.ss = { ...this._ssCfg(), folder: t.value.trim() }; this._ssPh = null; this._save(); this._draw(true); return; }
     if (d.devsel !== undefined) { localStorage.setItem("intellect_dev", t.value); this._layout(); this._draw(true); return; }
+    if (d.svfile !== undefined) { const fl = t.files && t.files[0]; if (fl) this._pickRoomImg(fl, "__saver"); t.value = ""; return; }
     if (adm && d.bgfile !== undefined) { const fl = t.files && t.files[0]; if (fl) this._pickBg(fl); t.value = ""; return; }
     if (adm && d.import !== undefined) {
       const fl = t.files && t.files[0];
       if (fl) fl.text().then((tx) => { try { this._importCfg(JSON.parse(tx)); this._toast("Imported — press Save"); } catch (er) { this._toast("Not a valid settings file"); } });
       t.value = ""; return;
     }
+    if (adm && d.ta !== undefined) { this._c.tileAlpha = +t.value; this._applyTa(); this._save(); this._draw(true); return; }
     if (adm && d.bg) { this._save(); return; }
     if (adm && d.wn !== undefined) { const w = (this._c.wall = this._c.wall || {}); w.n = Math.max(1, Math.min(32, +t.value || 4)); this._save(); this._draw(true); return; }
     if (adm && d.cred !== undefined) { this._c.credit = t.value.trim().slice(0, 30); this._save(); this._draw(true); return; }
@@ -1325,11 +1630,38 @@ class IntellectDashboard extends HTMLElement {
     if (this._admin()) { this._c.order[ctx] = list; this._save(); return; }
     try { const o = this._lo(); o[ctx] = list; localStorage.setItem("intellect_ord", JSON.stringify(o)); } catch (e) { this._toast("Not enough space to save the arrangement"); }
   }
-  _svcMove(from, to) {
-    const l = this._svcsAll(), i = l.indexOf(from), j = l.indexOf(to); if (i < 0 || j < 0) return;
-    l.splice(i, 1); l.splice(j, 0, from);
-    if (this._admin()) { this._c.svcOrder = l; this._save(); return; }
-    try { localStorage.setItem("intellect_svo", JSON.stringify(l)); } catch (e) {}
+  _hbKeys() { return ["clock", ...(this._c.noScenes ? [] : ["scenes"])]; }   // the greeting is plain text at the top; the weather lives inside the clock tile
+  _hbOrder() {
+    let o = null;
+    if (!this._admin()) { try { const l = JSON.parse(localStorage.getItem("intellect_hbo") || "null"); if (Array.isArray(l)) o = l; } catch (e) {} }
+    if (!o) o = Array.isArray(this._c.hbOrder) ? this._c.hbOrder : [];
+    const keys = this._hbKeys(), r = (k) => { const i = o.indexOf(k); return i < 0 ? 1000 + keys.indexOf(k) : i; };
+    return keys.slice().sort((a, b) => r(a) - r(b));
+  }
+  /* ---------- home layout: every item sits in the left or the right area and can be dragged anywhere ---------- */
+  _hItems() {
+    const adm = this._admin(), c = this._c;
+    const cards = this._sort("home:cards", (c.custom.home || []).map((it, i) => ({ it, i })).filter((x) => adm || !x.it.off), (x) => "c:" + (x.it.uid || "i" + x.i));
+    return { b: this._hbOrder().map((k) => "b:" + k), s: this._svcsHome().map((k) => "s:" + k), c: cards.map((x) => "c:" + (x.it.uid || "i" + x.i)) };
+  }
+  _hlayStored() {
+    const ok = (o) => (Array.isArray(o) ? o : o && Array.isArray(o.l) && Array.isArray(o.r) ? [...o.l, ...o.r] : null);   // older two-area layouts are joined into one list
+    if (!this._admin()) { for (const k of ["intellect_hlist", "intellect_hlay"]) { try { const o = ok(JSON.parse(localStorage.getItem(k) || "null")); if (o) return o; } catch (e) {} } }
+    return ok(this._c.hlist) || ok(this._c.hlay);
+  }
+  _hlist() {
+    const it = this._hItems(), all = new Set([...it.b, ...it.s, ...it.c]), st = this._hlayStored(), out = [], seen = new Set();
+    if (st) st.forEach((k) => { if (all.has(k) && !seen.has(k)) { seen.add(k); out.push(k); } });
+    [...it.b, ...it.s, ...it.c].forEach((k) => { if (!seen.has(k)) out.push(k); });
+    return out;
+  }
+  _hMove(from, to) {
+    const l = this._hlist(), fi = l.indexOf(from); if (fi < 0 || from === to) return;
+    l.splice(fi, 1);
+    if (to.startsWith("zone:")) l.push(from);
+    else { const orig = this._hlist(), ti = orig.indexOf(to); if (ti < 0) return; l.splice(ti, 0, from); }   // the item takes the place of the one it was dropped on
+    if (this._admin()) { this._c.hlist = l; delete this._c.hlay; this._save(); return; }
+    try { localStorage.setItem("intellect_hlist", JSON.stringify(l)); localStorage.removeItem("intellect_hlay"); } catch (e) { this._toast("Not enough space to save the arrangement"); }
   }
   _svcOrder() { if (!this._admin()) { try { const l = JSON.parse(localStorage.getItem("intellect_svo") || "null"); if (Array.isArray(l)) return l; } catch (e) {} } return this._c.svcOrder || []; }
   _sort(ctx, arr, key) {
@@ -1421,11 +1753,6 @@ class IntellectDashboard extends HTMLElement {
     });
     return `${this._top()}<h1>${SV[s].i} ${SV[s].n}</h1><div class="sub">${adm ? "Admin · add cards to any room with ＋" : "Grouped by room"}</div>${parts.join("") || '<div class="card">No cards yet.</div>'}`;
   }
-  _homeCards() {
-    const adm = this._admin(), n = (this._c.custom.home || []).filter((x) => adm || !x.off).length;
-    if (!n && !adm) return "";
-    return `${n ? "<h2>My cards</h2>" : ""}<div class="grid" data-grid="home:cards" style="margin-top:${n ? 0 : 16}px">${this._customCards("home", "home:cards", "", true)}${adm ? `<div class="tile add" data-cc="open:home"><div class="bdg" style="--c:#8d9ab8">＋</div><div class="nm">Add card</div></div>` : ""}</div>`;
-  }
   _esc(t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
   _findTpl(uid) { return Object.values(this._c.custom).flat().find((x) => x.uid === uid); }
   _syncTpl() {
@@ -1461,11 +1788,13 @@ class IntellectDashboard extends HTMLElement {
   }
   _customCards(rid, ctx, key, showOff, noTile) {
     const items = (this._c.custom[rid] || []).map((it, i) => ({ it, i })).filter((x) => (!key || this._csKey(x.it) === key) && (!x.it.off || (showOff && this._admin())) && !(noTile && x.it.tile));
-    return this._sort(ctx, items, (x) => "c:" + x.it.uid).map(({ it, i }) => {
-      const rm = this._admin() ? `${rid === "home" ? "" : `<button class="rm pin ${it.tile ? "on" : ""}" data-cc="pin:${rid}:${i}" title="${it.tile ? "Shown in the room as a tile: tap to stop" : "Show in the room as a tile"}">⌂</button>`}<button class="rm eye" data-cc="vis:${rid}:${i}" title="${it.off ? "Hidden: tap to show" : "Shown: tap to hide"}">${it.off ? "⊘" : "◉"}</button><button class="rm" data-cc="del:${rid}:${i}">✕</button>` : "", k = "c:" + it.uid;
-      if (it.off) return `<div class="cw cwoff" data-k="${k}">${it.type === "template" ? this._tplCard(it) : it.type === "lovelace" ? `<div class="card"><div class="nm">${this._esc(it.name || "Lovelace card")}</div></div>` : this._gen(it)}${rm}<span class="hdn">Hidden</span></div>`;
-      return it.type === "template" ? `<div class="cw" data-k="${k}">${this._tplCard(it)}${rm}</div>` : it.type === "lovelace" ? `<div class="cw lvw" data-k="${k}"><div data-lv="${rid}:${i}"></div>${rm}</div>` : `<div class="cw" data-k="${k}">${this._gen(it)}${rm}</div>`;
-    }).join("");
+    return this._sort(ctx, items, (x) => "c:" + x.it.uid).map(({ it, i }) => this._ccHtml(rid, it, i, false)).join("");
+  }
+  _ccHtml(rid, it, i, home) {
+    const rm = this._admin() ? `${rid === "home" ? "" : `<button class="rm pin ${it.tile ? "on" : ""}" data-cc="pin:${rid}:${i}" title="${it.tile ? "Shown in the room as a tile: tap to stop" : "Show in the room as a tile"}">⌂</button>`}<button class="rm eye" data-cc="vis:${rid}:${i}" title="${it.off ? "Hidden: tap to show" : "Shown: tap to hide"}">${it.off ? "⊘" : "◉"}</button><button class="rm" data-cc="del:${rid}:${i}">✕</button>` : "", k = "c:" + (it.uid || "i" + i);
+    const at = home ? `data-hi="${k}" data-id="${k}"` : `data-k="${k}"`;
+    if (it.off) return `<div class="cw cwoff" ${at}>${it.type === "template" ? this._tplCard(it) : it.type === "lovelace" ? `<div class="card"><div class="nm">${this._esc(it.name || "Lovelace card")}</div></div>` : this._gen(it)}${rm}<span class="hdn">Hidden</span></div>`;
+    return it.type === "template" ? `<div class="cw" ${at}>${this._tplCard(it)}${rm}</div>` : it.type === "lovelace" ? `<div class="cw lvw" ${at}><div data-lv="${rid}:${i}"></div>${rm}</div>` : `<div class="cw" ${at}>${this._gen(it)}${rm}</div>`;
   }
   _roomTiles(rid) {
     return (this._c.custom[rid] || []).map((it, i) => ({ it, i })).filter((x) => x.it.tile && !x.it.off && this._svOk(this._csKey(x.it))).map(({ it, i }) => {
@@ -1589,7 +1918,7 @@ class IntellectDashboard extends HTMLElement {
     return `<div class="brand">${menu}<span>${this._esc(this._c.title || this._title || "Intellect")}</span></div>`;
   }
   _top(back = true) { return `<div class="top">${this._brand()}${back ? `<button class="back" data-go='{"p":"home"}'>‹ Home</button>` : ""}</div>`; }
-  _credit() { const t = this._c.credit; return this._esc(t === undefined ? "By Quinteca" : t); }
+  _credit() { const t = this._c.credit; return this._esc(t === undefined ? "Intellect by Quinteca" : t); }
   /* ---------- wall panel health ---------- */
   // A tablet that has a wall panel name reports to Home Assistant once a minute (see monitor.py).
   _pname() { try { return localStorage.getItem("intellect_pname") || ""; } catch (e) { return ""; } }
@@ -1820,8 +2149,276 @@ class IntellectDashboard extends HTMLElement {
     if (f === "24") o.hourCycle = "h23"; else if (f === "12") o.hour12 = true;
     try { return dt.toLocaleTimeString((L && L.language) || [], o); } catch (e) { return dt.toLocaleTimeString([], o); }
   }
-  _clockBlock(where) {
-    if (this._clockStyle() === "analog") {
+  _ntf() {
+    const t = {}; Object.keys(NT).forEach((k) => (t[k] = NT[k].on));
+    let p = {}; try { p = JSON.parse(localStorage.getItem("intellect_ntf") || "{}") || {}; } catch (e) {}
+    const sh = this._c.ntf || {}, o = { on: true, mins: 5, ...sh, ...p, types: { ...t, ...(sh.types || {}), ...(p.types || {}) } };
+    if (!["phone", "beep", "off"].includes(o.sound)) o.sound = o.snd ? "beep" : "phone";   // older choice: a beep, otherwise follow the phone
+    o.on = o.on !== false; o.mins = [3, 5, 10, 30].includes(+o.mins) ? +o.mins : 5;
+    return o;
+  }
+  _ntf0() { const sh = this._c.ntf || {}, t = {}; Object.keys(NT).forEach((k) => (t[k] = NT[k].on)); const o = { on: true, mins: 5, ...sh, types: { ...t, ...(sh.types || {}) } }; o.on = o.on !== false; o.mins = [3, 5, 10, 30].includes(+o.mins) ? +o.mins : 5; return o; }
+  _ntfPers() { try { const p = JSON.parse(localStorage.getItem("intellect_ntf") || "null"); return p && Object.keys(p).length ? p : null; } catch (e) { return null; } }
+  _nList() { if (!this._nl) { try { const l = JSON.parse(localStorage.getItem("intellect_nl") || "[]"); this._nl = Array.isArray(l) ? l : []; } catch (e) { this._nl = []; } } return this._nl; }
+  _nSave() { try { localStorage.setItem("intellect_nl", JSON.stringify(this._nList().slice(0, 50))); } catch (e) {} }
+  _nVis(id) { const sv = this._svcOf(id); return !sv || (this._svOk(sv) && !(this._c.hide || []).includes(id) && this._rmOk(this._roomOf(id))); }
+  _nOpenEnt(id, n) {
+    const d = id.split(".")[0], dc = n.attributes.device_class, sec = this._svcOf(id) === "security";
+    if (d === "cover") return (sec || ["door", "garage", "gate", "window"].includes(dc)) && ["open", "opening"].includes(n.state);
+    if (d === "binary_sensor") return (["door", "garage_door", "window", "opening"].includes(dc) || (sec && !["motion", "occupancy", "presence", "tamper", "smoke", "gas", "moisture", "carbon_monoxide"].includes(dc))) && n.state === "on";
+    return false;
+  }
+  _ntfScan(h) {
+    const S = h.states, prev = this._nS || (this._nS = {}), o2 = this._nOpen || (this._nOpen = {}), of = this._nOff || (this._nOff = {}), now = Date.now();
+    if (!this._nInit) { this._nInit = true; this._nQuiet = now + 20000; }
+    for (const id in S) {
+      const n = S[id], o = prev[id]; if (n === o) continue; prev[id] = n;
+      if (this._nOpenEnt(id, n)) { if (!o2[id]) o2[id] = { t: now, done: false }; } else delete o2[id];
+      if (n.state === "unavailable") { if (!of[id]) of[id] = { t: now, done: false }; } else delete of[id];
+      if (o && o.state !== n.state && now >= this._nQuiet) this._ntfChange(id, o, n);
+    }
+  }
+  _ntfChange(id, o, n) {
+    if (!this._nVis(id)) return;
+    const d = id.split(".")[0], dc = n.attributes.device_class, nm = n.attributes.friendly_name || id, ns = n.state, os = o.state;
+    if (d === "alarm_control_panel" && ns === "triggered") return this._notify({ type: "alarm", ent: id, title: "Alarm triggered", msg: nm, crit: true });
+    if (d === "binary_sensor" && ns === "on" && os !== "on") {
+      if (NT_SAFE[dc]) return this._notify({ type: "safety", ent: id, title: NT_SAFE[dc], msg: nm, crit: true });
+      if (dc === "battery") return this._notify({ type: "battery", ent: id, title: "Low battery", msg: nm, day: true });
+      if (["motion", "occupancy"].includes(dc)) return this._notify({ type: "motion", ent: id, title: "Motion detected", msg: nm });
+    }
+    if (d === "lock" && ns === "unlocked" && os === "locked") return this._notify({ type: "unlock", ent: id, title: "Door unlocked", msg: nm });
+    if (d === "sensor" && dc === "battery") { const v = parseFloat(ns), ov = parseFloat(os); if (isFinite(v) && v < 15 && v >= 0 && !(isFinite(ov) && ov < 15)) this._notify({ type: "battery", ent: id, title: "Low battery", msg: nm + " · " + Math.round(v) + "%", day: true }); }
+  }
+  _ntfTick() {
+    if (!this._nInit && this._h && this._loaded) this._ntfScan(this._h);
+    if (!this._nInit) return;
+    const now = Date.now(), nt = this._ntf(), S = this._h.states;
+    Object.entries(this._nOpen || {}).forEach(([id, x]) => { if (!x.done && now - x.t >= nt.mins * 60000 && S[id]) { x.done = true; if (this._nVis(id)) this._notify({ type: "open", ent: id, title: "Left open", msg: `${S[id].attributes.friendly_name || id} has been open for ${nt.mins} minutes` }); } });
+    Object.entries(this._nOff || {}).forEach(([id, x]) => { if (!x.done && now - x.t >= 120000 && S[id] && S[id].state === "unavailable") { x.done = true; if (this._svcOf(id) && this._nVis(id) && now >= (this._nQuiet || 0)) this._notify({ type: "offline", ent: id, title: "Device offline", msg: `${S[id].attributes.friendly_name || id} is not answering` }); } });
+  }
+  _ntfSub() {
+    const c = this._h && this._h.connection; if (!c || !c.subscribeMessage) return;
+    if (this._nUnsub) this._nUnsub.then((u) => u()).catch(() => {});
+    const seen = (this._nPn = new Set());
+    this._nUnsub = Promise.resolve(c.subscribeMessage((m) => {
+      const l = (m && m.notifications) || {};
+      if (m && m.type === "current") { Object.keys(l).forEach((i) => seen.add(i)); return; }
+      if (m && m.type === "added") Object.entries(l).forEach(([i, x]) => { if (seen.has(i)) return; seen.add(i); this._notify({ type: "ha", ent: "pn:" + i, title: (x && x.title) || "Home Assistant", msg: String((x && x.message) || "").replace(/[*_`#>]/g, "").slice(0, 200) }); });
+    }, { type: "persistent_notification/subscribe" })).catch(() => () => {});
+  }
+  _inQuiet() { const q = this._c && this._c.quiet; if (!q || !q.on) return false; const h = new Date().getHours(), a = q.from == null ? 22 : +q.from, b = q.to == null ? 7 : +q.to; return a > b ? h >= a || h < b : h >= a && h < b; }
+  _notify(n) {
+    const nt = this._ntf(), now = Date.now();
+    if (!n.force && (!nt.on || !nt.types[n.type])) return;
+    const key = n.type + ":" + (n.ent || n.title);
+    this._nK = this._nK || {};
+    if (!n.force && this._nK[key] && now - this._nK[key] < (n.day ? 86400000 : 60000)) return;
+    this._nK[key] = now;
+    const it = { id: now.toString(36) + Math.random().toString(36).slice(2, 6), type: n.type, title: n.title, msg: n.msg || "", t: now, crit: !!n.crit, read: false };
+    this._nList().unshift(it); this._nl = this._nList().slice(0, 50); this._nSave();
+    if (this._inQuiet() && !(it.crit && (this._c.quiet || {}).crit !== false)) { this._nBadge(); return; }
+    this._ntfBanner(it);
+    if (it.crit && this._amb) this._ambHide();
+    if (nt.sound === "beep") this._beep(it.crit);
+    else if (nt.sound === "phone") this._sysNotify(it, key);
+    this._nBadge();
+  }
+  // The phone itself decides how a system notification sounds: a silent phone, Do Not Disturb or a low volume are all respected.
+  _sysState() { return !window.Notification ? "none" : window.isSecureContext === false ? "insecure" : Notification.permission; }
+  async _sysNotify(it, key) {
+    if (this._sysState() !== "granted") return false;
+    const opt = { body: it.msg || "", tag: key || it.id, silent: false, requireInteraction: !!it.crit, vibrate: it.crit ? [200, 100, 200, 100, 200] : [150] };
+    try { const reg = navigator.serviceWorker && navigator.serviceWorker.getRegistration ? await navigator.serviceWorker.getRegistration() : null; if (reg && reg.showNotification) { await reg.showNotification(it.title, opt); return true; } } catch (e) {}
+    try { new Notification(it.title, opt); return true; } catch (e) {}
+    return false;
+  }
+  _beep(crit) {
+    try {
+      const A = window.AudioContext || window.webkitAudioContext; if (!A) return;
+      const ac = this._ac || (this._ac = new A()); const n = crit ? 3 : 1;
+      for (let i = 0; i < n; i++) { const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + i * 0.28; o.frequency.value = crit ? 960 : 700; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.25, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + 0.25); }
+    } catch (e) {}
+  }
+  _ntfBanner(it) {
+    const R = this.shadowRoot; let box = R.getElementById("nbn");
+    if (!box) { box = document.createElement("div"); box.id = "nbn"; box.className = "nbn"; R.appendChild(box); }
+    const b = document.createElement("div"); b.className = "nb" + (it.crit ? " crit" : ""); b.dataset.ntf = "dismiss|" + it.id;
+    b.innerHTML = `<b>${this._esc(it.title)}</b>${it.msg ? `<span>${this._esc(it.msg)}</span>` : ""}<small>${it.crit ? "Tap to dismiss" : "now"}</small>`;
+    box.prepend(b); while (box.children.length > 4) box.lastChild.remove();
+    if (!it.crit) setTimeout(() => b.remove(), 9000);
+  }
+  _nBadge() {
+    const n = this._nList().filter((x) => !x.read).length, b = this.shadowRoot.querySelector(".nbell");
+    if (!b) return;
+    let d = b.querySelector(".nbd");
+    if (!n) { if (d) d.remove(); return; }
+    if (!d) { d = document.createElement("span"); d.className = "nbd"; b.appendChild(d); }
+    d.textContent = n > 9 ? "9+" : String(n);
+  }
+  _ago(t) { const m = Math.floor((Date.now() - t) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.floor(m / 60) + " h ago" : new Date(t).toLocaleDateString(); }
+  _ntfAct(v) {
+    const i = v.indexOf("|"), a = i < 0 ? v : v.slice(0, i), id = i < 0 ? "" : v.slice(i + 1);
+    if (a === "open") { this._nc = true; this.shadowRoot.querySelectorAll(".nb").forEach((x) => x.remove()); this._nList().forEach((x) => (x.read = true)); this._nSave(); return this._draw(true); }
+    if (a === "close") { this._nc = false; return this._draw(true); }
+    if (a === "bg") return;
+    if (a === "dismiss") { const R = this.shadowRoot, b = Array.from(R.querySelectorAll(".nb")).find((x) => x.dataset.ntf === "dismiss|" + id); if (b) b.remove(); const x = this._nList().find((y) => y.id === id); if (x) { x.read = true; this._nSave(); } return this._nBadge(); }
+    if (a === "del") { this._nl = this._nList().filter((x) => x.id !== id); this._nSave(); return this._draw(true); }
+    if (a === "clear") { this._nl = []; this._nSave(); this.shadowRoot.querySelectorAll(".nb").forEach((x) => x.remove()); return this._draw(true); }
+    if (a === "test") { this._notify({ type: "test", force: true, title: "Test notification", msg: "This is how notifications look on this device" }); return; }
+    if (a === "settings") { this._nc = false; return this._nav("settings", { tab: "ntf" }); }
+  }
+  _ntfPanel() {
+    if (!this._nc) return "";
+    const E = (t) => this._esc(t), l = this._nList();
+    const rows = l.length ? l.map((x) => `<div class="nli ${x.crit ? "crit" : ""}" data-id="n:${E(x.id)}"><i></i><div class="nlt"><b>${E(x.title)}</b>${x.msg ? `<span>${E(x.msg)}</span>` : ""}<small>${E(this._ago(x.t))}</small></div><button class="ib2" data-ntf="del|${E(x.id)}" title="Remove">✕</button></div>`).join("") : '<div class="hintx" style="padding:18px 4px">No notifications yet.</div>';
+    return `<div class="ov" data-ntf="bg"><div class="dlg"><div class="shd"><span>Notifications</span><small>${l.length} recent</small></div><div class="nlist">${rows}</div><div class="btns" style="margin-top:16px"><button data-ntf="settings">Settings</button>${l.length ? '<button data-ntf="clear">Clear all</button>' : ""}<button class="pri" data-ntf="close">Done</button></div></div></div>`;
+  }
+  _scr() {
+    const d = { awake: true, idle: "off", mins: 5, night: true, n1: 22, n2: 6 };
+    let p = {}; try { p = JSON.parse(localStorage.getItem("intellect_scr") || "{}") || {}; } catch (e) {}
+    const o = { ...d, ...(this._c.scr || {}), ...p };
+    o.awake = o.awake !== false; o.night = o.night !== false;
+    o.idle = { a: "analog", b: "aurora", c: "night" }[o.idle] || o.idle; if (!["off", "aurora", "night", "analog", "frame", "home"].includes(o.idle)) o.idle = "off";
+    o.mins = [1, 2, 5, 10, 30].includes(+o.mins) ? +o.mins : 5;
+    o.n1 = Math.max(0, Math.min(23, Math.round(+o.n1))); if (isNaN(o.n1)) o.n1 = 22;
+    o.n2 = Math.max(0, Math.min(23, Math.round(+o.n2))); if (isNaN(o.n2)) o.n2 = 6;
+    return o;
+  }
+  _scr0() { const o = { awake: true, idle: "off", mins: 5, night: true, n1: 22, n2: 6, ...(this._c.scr || {}) }; o.awake = o.awake !== false; o.night = o.night !== false; return o; }
+  _scrPers() { try { const p = JSON.parse(localStorage.getItem("intellect_scr") || "null"); return p && Object.keys(p).length ? p : null; } catch (e) { return null; } }
+  async _wake() {
+    if (!this._scr().awake || document.hidden) return this._wakeOff();
+    if (navigator.wakeLock && navigator.wakeLock.request) {
+      if (this._wl) return;
+      try { const wl = await navigator.wakeLock.request("screen"); this._wl = wl; if (wl.addEventListener) wl.addEventListener("release", () => { if (this._wl === wl) this._wl = null; }); return; } catch (e) {}
+    }
+    this._nsOn();
+  }
+  _keepAwake() {
+    const sc = this._scr(), on = !!this._wl || (this._nsv && !this._nsv.paused);
+    if (sc.awake && !on && Date.now() - (this._wkT || 0) > 20000) { this._wkT = Date.now(); this._wake(); }
+    else if (!sc.awake && on) this._wakeOff();
+  }
+  _wakeOff() { if (this._wl) { try { this._wl.release(); } catch (e) {} this._wl = null; } if (this._nsv) { try { this._nsv.pause(); } catch (e) {} } }
+  _nsOn() {
+    if (!this._nsv) {
+      const cv = document.createElement("canvas"); cv.width = 16; cv.height = 16;
+      const x = cv.getContext && cv.getContext("2d"); if (!x || !cv.captureStream) return;
+      let t = 0; this._nsi = setInterval(() => { x.fillStyle = ++t % 2 ? "#010101" : "#000"; x.fillRect(0, 0, 16, 16); }, 400);
+      const v = document.createElement("video"); v.muted = true; v.loop = true; v.setAttribute("playsinline", ""); v.setAttribute("aria-hidden", "true");
+      v.style.cssText = "position:fixed;left:0;top:0;width:2px;height:2px;opacity:.02;pointer-events:none";
+      try { v.srcObject = cv.captureStream(2); } catch (e) { return; }
+      this.shadowRoot.appendChild(v); this._nsv = v;
+    }
+    const pr = this._nsv.play(); if (pr && pr.catch) pr.catch(() => { this._nsNeed = true; });
+  }
+  _act() { this._lastAct = Date.now(); if (this._nsNeed) { this._nsNeed = false; this._nsOn(); } }
+  _inNight(sc) { const h = new Date().getHours(); return sc.n1 > sc.n2 ? h >= sc.n1 || h < sc.n2 : h >= sc.n1 && h < sc.n2; }
+  _ambStyle(sc) { if (sc.idle === "off") return ""; if (sc.idle === "night") return "night"; return sc.night && this._inNight(sc) ? "night" : sc.idle; }
+  _ambTick() {
+    if (!this._h || !this._loaded) return;
+    if (this._amb && this._amb.pv) {   // a preview from Settings: closes on touch, or after half a minute
+      if ((this._lastAct || 0) > this._amb.t || document.hidden || Date.now() - this._amb.t > 30000) return this._ambHide();
+      return this._ambDraw(this._amb.st0, true);
+    }
+    const ha = +(this._c.homeAfter || 0);
+    if (ha > 0 && this._v.p !== "home" && this._v.p !== "settings" && !this._amb && !this._cam && !this._dlg && !this._nc && !this._more && !this._pers && !this._sd && !this._mv && !this._hold && Date.now() - (this._lastAct || 0) >= ha * 60000) { this._lastAct = Date.now(); this._nav("home"); }
+    // Only one screensaver at a time: when the family-photos screensaver (Settings → Screensaver) is on here, this idle screen stays off.
+    const sc = this._scr(), st = this._ssOn() ? null : this._ambStyle(sc);
+    const busy = this._cam || this._dlg || this._nc || this._mv || this._hold || (this._v && this._v.p === "settings") || document.hidden || this._icList().some((x) => this._ringing(x));
+    if (this._amb) {
+      if (!st || busy || (this._lastAct || 0) > this._amb.t) return this._ambHide();
+      return this._ambDraw(st);
+    }
+    if (!st || busy) return;
+    if (Date.now() - (this._lastAct || 0) >= sc.mins * 60000) this._ambShow(st);
+  }
+  _ambShow(st, pv) {
+    const d = document.createElement("div"); d.id = "amo"; d.className = "amo " + st;
+    d.addEventListener("pointerdown", (e) => { e.stopPropagation(); this._lastAct = Date.now(); }, true);
+    d.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); this._ambHide(); });
+    this.shadowRoot.appendChild(d); this._amb = { el: d, t: Date.now(), st: "", fg: "", pv: !!pv, st0: st };
+    this._ambDraw(st, pv);
+  }
+  _ambHide() { const a = this._amb; this._amb = null; this._lastAct = Date.now(); if (a && a.el) a.el.remove(); }
+  _ambDraw(st, pv) {
+    const a = this._amb, [bg, fg] = this._ambParts(st, pv);
+    if (a.st !== st) { a.st = st; a.fg = ""; a.el.className = "amo " + st; a.el.innerHTML = bg + '<div class="amfg"></div>'; }
+    if (a.fg !== fg) { a.fg = fg; a.el.querySelector(".amfg").innerHTML = fg.replaceAll("@@C@@", this._clockHtml()); }
+    this._tickClock();
+  }
+  _ambPrev(st) { const [bg, fg] = this._ambParts(st, true); return `<div class="amo pv ${st}" data-ks="1">${bg}<div class="amfg">${fg}</div></div>`; }
+  _fitPrev() {
+    const R = this.shadowRoot; if (!R) return;
+    R.querySelectorAll(".svp .amo.pv").forEach((e) => { const w = e.parentNode.clientWidth; if (w > 0) { const v = `scale(${(w / 1280).toFixed(4)})`; if (e.style.transform !== v) e.style.transform = v; } });
+  }
+  _ambNtf(pv) {
+    const E = (t) => this._esc(t), phone = this.getAttribute("data-dev") === "phone", l = this._nList().filter((x) => !x.read);
+    let it = l.slice(0, phone ? 2 : 3), n = l.length;
+    if (!it.length && pv) { it = [{ title: "Front gate left open", msg: "Open for 5 minutes" }, { title: "Motion detected", msg: "Garden camera" }]; n = 2; }
+    if (!it.length) return "";
+    return `<div class="anf"><div class="anh">${n} new notification${n === 1 ? "" : "s"}</div>${it.map((x) => `<div class="anc ${x.crit ? "crit" : ""}"><i></i><div><b>${E(x.title)}</b>${x.msg ? `<span>${E(x.msg)}</span>` : ""}</div></div>`).join("")}${n > it.length ? `<div class="anh">+ ${n - it.length} more</div>` : ""}</div>`;
+  }
+  _ambFacts() {
+    const H = this._h.states, E = (t) => this._esc(t), out = [];
+    const card = (ic, lab, val, sub, tone) => out.push(`<div class="afc ${tone || ""}"><div class="afi">${ic}</div><div class="aft"><small>${E(lab)}</small><b>${E(val)}</b>${sub ? `<span>${E(sub)}</span>` : ""}</div></div>`);
+    const sids = this._tileIds("security");
+    if (sids.length) {
+      const trig = sids.some((i) => this._sec(i)[1] === "b"), open = sids.filter((i) => !i.startsWith("alarm_control_panel.") && this._sec(i)[1] === "w"), al = sids.find((i) => i.startsWith("alarm_control_panel."));
+      const alt = al ? this._sec(al)[0] : "";
+      if (trig) card(SHIELD_I, "Security", "Alarm triggered", alt, "bad");
+      else if (open.length) card(SHIELD_I, "Security", open.length === 1 ? this._nm(open[0]) + " " + this._sec(open[0])[0].toLowerCase() : open.length + " open", alt, "warn");
+      else card(SHIELD_I, "Security", "All secure", alt || "Doors and gates closed", "ok");
+    }
+    const lt = this._ents("lights");
+    if (lt.length) { const n = lt.filter((i) => H[i].state === "on").length; card(SV.lights.i, "Lighting", n ? n + " on" : "All off", `of ${lt.length} lights`, n ? "on" : ""); }
+    const cl = this._ents("climate").find((i) => H[i].attributes.current_temperature != null);
+    if (cl) { const a = H[cl].attributes; card(SV.climate.i, this._nm(cl), this._fmt(a.current_temperature) + "°", [a.temperature != null && !["off", "unavailable"].includes(H[cl].state) ? "set to " + this._fmt(a.temperature) + "°" : "", a.current_humidity != null ? a.current_humidity + "% humidity" : ""].filter(Boolean).join(" · ")); }
+    const md = this._ents("media").find((i) => H[i].state === "playing");
+    if (md) { const a = H[md].attributes; card(SV.media.i, "Now playing", a.media_title || this._nm(md), [a.media_artist, this._nm(md)].filter(Boolean).join(" · "), "on"); }
+    const cams = this._ents("cameras");
+    if (cams.length) { const mo = Object.keys(H).some((i) => i.startsWith("binary_sensor.") && H[i].state === "on" && ["motion", "occupancy"].includes(H[i].attributes.device_class)); card(VIDEO_I, "Cameras", mo ? "Motion seen" : "No motion", `${cams.length} camera${cams.length > 1 ? "s" : ""}`, mo ? "warn" : ""); }
+    return out.slice(0, 5).join("");
+  }
+  _ambStatus() {
+    const H = this._h.states, E = (t) => this._esc(t), out = [], ids = this._tileIds("security");
+    if (ids.length) {
+      const trig = ids.some((i) => this._sec(i)[1] === "b"), open = ids.filter((i) => !i.startsWith("alarm_control_panel.") && this._sec(i)[1] === "w");
+      if (trig) out.push(`<span class="amc bad"><i></i>Alarm triggered</span>`);
+      else if (open.length) out.push(`<span class="amc warn"><i></i>${open.length === 1 ? E(this._nm(open[0]) + " " + this._sec(open[0])[0].toLowerCase()) : open.length + " open"}</span>`);
+      else out.push(`<span class="amc"><i></i>All gates and doors closed</span>`);
+    }
+    const n = this._ents("cameras").length;
+    if (n) { const mo = Object.keys(H).some((i) => i.startsWith("binary_sensor.") && H[i].state === "on" && ["motion", "occupancy"].includes(H[i].attributes.device_class)); out.push(`<span class="amc ${mo ? "warn" : ""}"><i></i>${n} camera${n > 1 ? "s" : ""} · ${mo ? "motion" : "no motion"}</span>`); }
+    return out.join("");
+  }
+  _stars() {
+    if (this._starH) return this._starH;
+    let r = 7, h = ""; const rnd = () => ((r = (r * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 52; i++) h += `<i class="${i % 5 === 0 ? "s2" : ""}" style="left:${(rnd() * 100).toFixed(1)}%;top:${(rnd() * 78).toFixed(1)}%;animation-delay:-${(rnd() * 6).toFixed(1)}s"></i>`;
+    return (this._starH = `<div class="sk">${h}</div>`);
+  }
+  _ambParts(st, pv) {
+    const E = (t) => this._esc(t), c = this._c, wx = c.noWeather ? null : this._wx(), L = this._h.locale, lang = (L && L.language) || undefined, now = new Date();
+    const brand = E(c.title || this._title || "Intellect"), cr = this._credit(), hr = now.getHours();
+    const dl = now.toLocaleDateString(lang, { weekday: "long", day: "numeric", month: "long" }), ds = now.toLocaleDateString(lang, { weekday: "short", day: "numeric", month: "short" }).toUpperCase().replace(/,/g, "");
+    const g = hr < 12 ? "Good morning" : hr < 18 ? "Good afternoon" : "Good evening";
+    const wshort = wx ? wx.t.split(" · ").slice(0, 2).join(" · ") : "";
+    const top = `<div class="ab tl">${brand}</div>${wx ? `<div class="awt">${wx.ic}<span>${wshort}</span></div>` : ""}`;
+    const foot = `${this._ambNtf(pv)}${pv ? "" : `<span class="atw">Tap to wake${cr ? " · " + cr : ""}</span>`}`;
+    const chips = `<div class="ach">${this._ambStatus()}</div>`;
+    if (st === "aurora") return ['<i class="bl b1"></i><i class="bl b2"></i><i class="bl b3"></i>', `${top}<div class="acn"><div class="clk2 big" data-clk="d">@@C@@</div><div class="ad">${E(dl)}</div><div class="ag">${g}</div>${chips}</div>${foot}`];
+    if (st === "night") return [`${this._stars()}<i class="moon"></i>`, `<div class="nmid"><div class="clk2 big" data-clk="d">@@C@@</div><div class="ad3">${E(ds)}</div></div>${foot}`];
+    if (st === "analog") return ["", `${top}<div class="acn">${this._clockBlock("am", "analog")}<div class="ad">${E(dl)}</div>${chips}</div>${foot}`];
+    if (st === "home") {
+      const f = this._ambFacts();
+      return ['<div class="fb"></div><div class="fs"></div>', `${top}<div class="hmid"><div class="clk2 big" data-clk="d">@@C@@</div><div class="ag">${g}</div><div class="ad">${E(dl)}</div></div><div class="afg">${f}</div>${foot}`];
+    }
+    return ['<div class="fb"></div><div class="fs"></div>', `${top}<div class="fmid"><div class="clk2 big" data-clk="d">@@C@@</div><div class="ag">${g}</div><div class="ad">${E(dl)}</div>${chips}</div>${foot}`];
+  }
+  _clockBlock(where, force) {
+    if ((force || this._clockStyle()) === "analog") {
       let t = "";
       for (let i = 0; i < 60; i++) { const a = (i * 6 * Math.PI) / 180, mj = i % 5 === 0, r1 = mj ? 82 : 88, r2 = 94; t += `<line x1="${(100 + r1 * Math.sin(a)).toFixed(1)}" y1="${(100 - r1 * Math.cos(a)).toFixed(1)}" x2="${(100 + r2 * Math.sin(a)).toFixed(1)}" y2="${(100 - r2 * Math.cos(a)).toFixed(1)}" class="${mj ? "tm5" : "tm1"}"/>`; }
       let n = ""; for (let i = 1; i <= 12; i++) { const a = (i * 30 * Math.PI) / 180; n += `<text x="${(100 + 68 * Math.sin(a)).toFixed(1)}" y="${(100 - 68 * Math.cos(a) + 6).toFixed(1)}" text-anchor="middle">${i}</text>`; }
@@ -1837,6 +2434,7 @@ class IntellectDashboard extends HTMLElement {
       const set = (c, deg) => { const g = el.querySelector("." + c); if (g) { const v = `rotate(${deg.toFixed(2)}deg)`; if (g.style.transform !== v) g.style.transform = v; } };
       set("ahh", hr * 30); set("amh", mi * 6); set("ash", sec * 6);
     });
+    this._fitPrev();
     const h = this._clockHtml(); R.querySelectorAll('[data-clk="d"]').forEach((el) => { if (el.innerHTML !== h) el.innerHTML = h; });
   }
   _clockHtml() {
@@ -2021,10 +2619,28 @@ class IntellectDashboard extends HTMLElement {
     if (a === "sspv") { setTimeout(() => this._ssShow(), 300); return; }
     const find = (key) => { const [k, id] = [key.slice(0, key.indexOf(":")), key.slice(key.indexOf(":") + 1)]; return this._myScenes().find((s) => s.sc === k && s.id === id); };
     if (a === "run") { const s = find(v); if (s) this._applyScene(s); return; }
+    if (a === "ntfd") {
+      try {
+        if (!v) localStorage.removeItem("intellect_ntf");
+        else {
+          const i = v.indexOf("|"), k = v.slice(0, i), x = v.slice(i + 1), o = this._ntfPers() || {};
+          if (k === "on") o.on = x === "1"; else if (k === "sound") { if (["phone", "beep", "off"].includes(x)) o.sound = x; delete o.snd; delete o.bro; if (x === "phone" && window.Notification && Notification.permission === "default") Notification.requestPermission().then(() => { this._last = null; this._draw(true); }); } else if (k === "mins") o.mins = +x; else if (k.startsWith("t:") && NT[k.slice(2)]) (o.types = o.types || {})[k.slice(2)] = x === "1";
+          localStorage.setItem("intellect_ntf", JSON.stringify(o));
+        }
+      } catch (e) {}
+      this._last = null; return this._draw(true);
+    }
+    if (a === "scrd") {
+      try { if (!v) localStorage.removeItem("intellect_scr"); else { const i = v.indexOf("|"), k = v.slice(0, i), x = v.slice(i + 1), o = this._scrPers() || {}; if (["awake", "night"].includes(k)) o[k] = x === "1"; else if (k === "idle") o.idle = x; else o[k] = +x; localStorage.setItem("intellect_scr", JSON.stringify(o)); } } catch (e) {}
+      this._wkT = 0; this._ambHide(); this._last = null; return this._draw(true);
+    }
+    if (a === "ntfperm") { if (window.Notification && Notification.permission === "default") Notification.requestPermission().then(() => { this._last = null; this._draw(true); }); return; }
+    if (a === "ntftest") { this._notify({ type: "test", title: "Test alert", msg: "This is how alerts sound on this device", force: true }); return; }
+    if (a === "ambprev") { if (["aurora", "night", "analog", "frame", "home"].includes(v)) { this._ambHide(); this._ambShow(v, true); } return; }
     if (a === "ckd") { try { if (v === "analog" || v === "digital") localStorage.setItem("intellect_ck", v); else localStorage.removeItem("intellect_ck"); } catch (e) {} this._last = null; return this._draw(true); }
     if (a === "ctd") { try { if (v === "1" || v === "0") localStorage.setItem("intellect_ct", v); else localStorage.removeItem("intellect_ct"); } catch (e) {} this._last = null; return this._draw(true); }
     if (a === "tsd") { try { if (TSIZES[v]) localStorage.setItem("intellect_ts", v); else localStorage.removeItem("intellect_ts"); } catch (e) {} this._applyTs(); return this._draw(true); }
-    if (a === "ordreset") { try { localStorage.removeItem("intellect_ord"); localStorage.removeItem("intellect_svo"); } catch (e) {} this._toast("Back to the shared order"); return this._draw(true); }
+    if (a === "ordreset") { try { localStorage.removeItem("intellect_ord"); localStorage.removeItem("intellect_svo"); localStorage.removeItem("intellect_hbo"); localStorage.removeItem("intellect_hlay"); localStorage.removeItem("intellect_hlist"); } catch (e) {} this._toast("Back to the shared order"); return this._draw(true); }
     if (a === "new") { this._sd = { name: "", scope: this._admin() ? "s" : "l", room: "", q: "", sel: new Set(Object.keys(this._h.states).filter((i) => ["lights", "shades", "climate"].includes(this._svcOf(i)) && !this._c.hide.includes(i))) }; return this._draw(true); }
     if (a === "re") { const s = find(v); if (!s) return; this._sd = { name: s.name, scope: s.sc, room: s.room || "", q: "", edit: v, sel: new Set((s.items || []).map((x) => x.e)) }; return this._draw(true); }
     if (a === "del") {
@@ -2097,8 +2713,10 @@ class IntellectDashboard extends HTMLElement {
       if (this._rsrv) delete this._rsrv[rid];
       const r = this._c.rooms.find((x) => x.id === rid); if (r) delete r.pic; this._save();
     }
-    const m = this._rimgs(); delete m[rid]; this._rimgSave(m); this._draw(true);
+    const m = this._rimgs(); delete m[rid]; this._rimgSave(m); this._applySv(); this._draw(true);
   }
+  _svImg() { return this._rimgs().__saver || (this._rsrv && this._rsrv.__saver) || ""; }
+  _applySv() { const v = this._svImg(), st = this.style; if (v) { const u = `url("${v}")`; if (st.getPropertyValue("--sv-img") !== u) st.setProperty("--sv-img", u); } else if (st.getPropertyValue("--sv-img")) st.removeProperty("--sv-img"); }
   async _pickRoomImg(file, rid) {
     try {
       const url = URL.createObjectURL(file), img = new Image();
@@ -2110,8 +2728,8 @@ class IntellectDashboard extends HTMLElement {
       if (this._admin()) {
         await this._h.callApi("POST", "intellect/roomimg", { id: rid, data });
         (this._rsrv = this._rsrv || {})[rid] = data; const r = this._c.rooms.find((x) => x.id === rid); if (r) r.pic = true; this._save();
-        this._toast("Room photo saved for everyone"); this._draw(true);
-      } else { const m = this._rimgs(); m[rid] = data; if (this._rimgSave(m)) { this._toast("Room photo saved on this device"); this._draw(true); } }
+        this._toast(rid === "__saver" ? "Screen saver photo saved for everyone" : "Room photo saved for everyone"); this._applySv(); this._draw(true);
+      } else { const m = this._rimgs(); m[rid] = data; if (this._rimgSave(m)) { this._toast(rid === "__saver" ? "Screen saver photo saved on this device" : "Room photo saved on this device"); this._applySv(); this._draw(true); } }
     } catch (e) { this._toast("Could not use that photo"); }
   }
   _pbControls(u, b) {
@@ -2128,7 +2746,7 @@ class IntellectDashboard extends HTMLElement {
       ${this._pbControls(u, b)}
       <div class="btns" style="margin-top:16px"><button class="pri" data-pers="close">Done</button></div></div></div>`;
   }
-  _bento(k) { const r = this._bentoOne(k); return (Array.isArray(r) ? r : [r]).map((p) => ({ ...p, h: p.h.replace(/^<div /, `<div data-sk="${this._esc(k)}" `) })); }
+  _bento(k) { const r = this._bentoOne(k); return (Array.isArray(r) ? r : [r]).map((p) => ({ ...p, h: p.h.replace(/^<div /, `<div data-sk="${this._esc(k)}" data-hi="s:${this._esc(k)}" `) })); }
   _bentoOne(k) {
     const c = this._c, H = this._h.states, st = (i) => H[i].state, S = SV[k], go = this._tileGo(k), E = (t) => this._esc(t), tiles = c.tiles || {};
     if (k === "camwall") return [];
@@ -2197,16 +2815,23 @@ class IntellectDashboard extends HTMLElement {
     const t = this._stats(k);
     return wrap("", `${hd("", S.i)}<div class="cnt">${t.big}</div><div class="cap2">${t.big ? t.lbl : "No cards yet · tap to open"}</div>`);
   }
-  _ts() { let u = ""; try { u = localStorage.getItem("intellect_ts") || ""; } catch (e) {} return TSIZES[u] ? u : TSIZES[this._c && this._c.tsz] ? this._c.tsz : "l"; }
+  _ts() { let u = ""; if (this._look()) try { u = localStorage.getItem("intellect_ts") || ""; } catch (e) {} return TSIZES[u] ? u : TSIZES[this._c && this._c.tsz] ? this._c.tsz : "l"; }
   _applyTs() {
-    const k = this._ts(), z = TSIZES[k].z, i = ["xl", "l", "s", "xs"].indexOf(k), phone = this.getAttribute("data-dev") === "phone", st = this.style;
+    const k = this._ts(), z = TSIZES[k].z, i = ["xl", "l", "m", "s", "xs"].indexOf(k), phone = this.getAttribute("data-dev") === "phone", st = this.style;
     this._z = z; this._m = TSIZES[k].m;
     const set = (n, v) => { if (st.getPropertyValue(n) !== String(v)) st.setProperty(n, String(v)); };
-    set("--z", z); set("--tm", TSIZES[k].m); set("--pc", [1, 2, 3, 4][i]); set("--pc2", [1, 1, 2, 2][i]); set("--abn", phone ? [1, 1, 2, 2][i] : [1, 2, 3, 4][i]);
+    set("--z", z); set("--tm", TSIZES[k].m); set("--pc", [1, 2, 2, 3, 4][i]); set("--pc2", [1, 1, 2, 2, 2][i]); set("--abn", phone ? [1, 1, 2, 2, 2][i] : [1, 2, 2, 3, 4][i]);
     if (this.getAttribute("data-ts") !== k) this.setAttribute("data-ts", k);
+    this._applyTa();
+  }
+  _ta() { const v = this._c && this._c.tileAlpha; return Number.isFinite(+v) && v !== null && v !== "" ? Math.max(0, Math.min(100, Math.round(+v))) : 60; }
+  _applyTa() {
+    const v = this._ta(), a = ((v / 100) * 0.92).toFixed(3), st = this.style;
+    if (st.getPropertyValue("--ta") !== a) st.setProperty("--ta", a);
+    const low = v < 35 ? "1" : "0"; if (this.getAttribute("data-tl") !== low) this.setAttribute("data-tl", low);
   }
   _cols() {
-    const w = this._w || 1024, wide = this.getAttribute("data-wide") === "1", area = wide ? w - Math.min(390, w * 0.3) - 40 - 88 : w - 56;
+    const w = this._w || 1024, wide = this.getAttribute("data-wide") === "1", area = wide ? w - 88 : w - 56;
     const m = this._m || 1;
     return Math.max(1, Math.min(m < 1 ? 4 : 3, Math.floor((area + 16) / (316 * m))));
   }
@@ -2219,16 +2844,119 @@ class IntellectDashboard extends HTMLElement {
       return `<div class="scw" data-id="sc:${E(s.key)}"><button class="scb ${s.on ? "on" : ""}" data-sc="run|${E(s.key)}"><i></i><span>${E(s.nm)}</span></button></div>`;
     };
     const scn = c.noScenes ? "" : `<div class="scn"><div class="cap"><span>Scenes</span></div>${sc.length ? `<div class="scg">${sc.map(scBtn).join("")}</div>` : `<div class="hintx">${this._admin() ? "Add scenes in Settings → Scenes." : "No scenes yet."}</div>`}</div>`;
-    const left = `<div class="hl">${this._brand()}${c.noClock ? "" : this._clockBlock("left")}<div class="dt">${E(date)}</div>${wx ? `<div class="wx">${wx.ic}<span>${wx.t}</span></div>` : ""}<div class="gr">${g}${who ? ", " + E(who) : ""}</div>${scn}</div>`;
-    const parts = L.flatMap((k) => this._bento(k)), n = this._cols(), cr = this._credit();
+    const tileB = {
+      clock: { h: `<div class="ckr">${c.noClock ? "" : this._clockBlock("tl")}<div class="ckd"><div class="dt">${E(date)}</div>${wx ? `<div class="wx">${wx.ic}<span>${wx.t}</span></div>` : ""}</div></div>`, w: 1.9 },
+      scenes: { h: scn, w: 1.6 + Math.ceil(sc.length / 2) * 0.9 },
+    };
+    const homeIdx = {}; (c.custom.home || []).forEach((it, i) => { homeIdx["c:" + (it.uid || "i" + i)] = { it, i }; });
+    const partsOf = (key) => {
+      const t = key.slice(2);
+      if (key[0] === "b") return [{ h: `<div class="bc hbt" data-hi="${key}" data-id="bt:${t}">${tileB[t].h}</div>`, w: tileB[t].w, wide: false }];
+      if (key[0] === "s") return this._bento(t);
+      const x = homeIdx[key]; return x ? [{ h: this._ccHtml("home", x.it, x.i, true), w: 2.6, wide: false }] : [];
+    };
+    const phone = this.getAttribute("data-dev") === "phone";
+    const parts = this._hlist().filter((k) => !phone || k[0] !== "b").flatMap(partsOf), n = this._cols(), cr = this._credit(), adm = this._admin();
     this._colsN = n;
-    const cols = Array.from({ length: n }, () => ({ h: "", w: 0 }));
-    parts.filter((p) => !p.wide).forEach((p) => { const m = cols.reduce((a, b) => (b.w < a.w ? b : a)); m.h += p.h; m.w += p.w; });
-    const wideH = parts.filter((p) => p.wide).map((p) => p.h).join("");
-    const bento = parts.length ? `<div class="bento" style="--cols:${n}">${cols.map((x, i) => `<div class="bcol" data-id="col:${i}">${x.h}</div>`).join("")}</div>${wideH ? `<div class="bwide">${wideH}</div>` : ""}` : '<div class="bc">No supported devices found.</div>';
-    return `<div class="home">${left}<div class="hr">${bento}${this._homeCards()}${cr ? `<div class="crm">${cr}</div>` : ""}</div></div>`;
+    let bento = "", grp = [], seg = 0;
+    const flush = () => {
+      if (!grp.length) return;
+      const cols = Array.from({ length: n }, () => ({ h: "", w: 0 }));
+      grp.forEach((p) => { const m = cols.reduce((a, b) => (b.w < a.w ? b : a)); m.h += p.h; m.w += p.w; });
+      bento += `<div class="bento" style="--cols:${n}">${cols.map((x, i) => `<div class="bcol" data-id="col:${seg}:${i}">${x.h}</div>`).join("")}</div>`; seg++; grp = [];
+    };
+    parts.forEach((p) => { if (p.wide) { flush(); bento += `<div class="bwide">${p.h}</div>`; } else grp.push(p); });
+    flush();
+    if (!parts.length) bento = phone ? "" : '<div class="bc">Nothing to show yet.</div>';
+    const add = adm ? `<div class="grid addg"><div class="tile add" data-cc="open:home"><div class="bdg" style="--c:#8d9ab8">＋</div><div class="nm">Add card</div></div></div>` : "";
+    if (phone) return this._homePhone({ g: g + (who ? ", " + E(who) : ""), date, sc, bento: bento + add, hasFav: parts.length > 0 || adm, cr });
+    return `<div class="home"><div class="hh">${this._brand()}</div><div class="hgr gr">${g}${who ? ", " + E(who) : ""}</div><div class="hall" data-hz="a">${bento}${add}</div>${cr ? `<div class="crm">${cr}</div>` : ""}</div>`;
+  }
+  _wxIcon(st) { return st === "sunny" ? SUN_I : st === "clear-night" ? MOON_I : st === "partlycloudy" ? PART_I : ["rainy", "pouring", "lightning-rainy", "snowy-rainy", "lightning", "hail"].includes(st) ? RAIN_I : CLOUD_I; }
+  _fcast(id) {
+    const f = this._fcx;
+    if (f && f.id === id && Date.now() - f.t < 1800e3) return f.list;
+    if (!f || f.id !== id || (!f.busy && Date.now() - f.t >= 1800e3)) {
+      this._fcx = { id, t: f ? f.t : 0, list: f && f.id === id ? f.list : [], busy: true };
+      try {
+        Promise.resolve(this._h.callWS({ type: "call_service", domain: "weather", service: "get_forecasts", service_data: { type: "daily" }, target: { entity_id: id }, return_response: true }))
+          .then((r) => { const l = r && r.response && r.response[id] && r.response[id].forecast; this._fcx = { id, t: Date.now(), list: Array.isArray(l) ? l.slice(0, 4) : [], busy: false }; if (this._fcx.list.length) { this._last = null; this._draw(true); } })
+          .catch(() => { this._fcx = { id, t: Date.now(), list: [], busy: false }; });
+      } catch (e) { this._fcx = { id, t: Date.now(), list: [], busy: false }; }
+    }
+    return this._fcx.list || [];
+  }
+  _homePhone(o) {
+    const c = this._c, E = (t) => this._esc(t), H = this._h.states, adm = this._admin();
+    const wid = c.noWeather ? "" : Object.keys(H).find((i) => i.startsWith("weather.")), w = wid && H[wid].attributes.temperature != null ? H[wid] : null;
+    let hero = "";
+    if (w) {
+      const a = w.attributes, cond = WX[w.state] || String(w.state).replace(/[-_]/g, " "), fc = a.forecast && a.forecast.length ? a.forecast.slice(0, 4) : this._fcast(wid);
+      const lang = (this._h.locale && this._h.locale.language) || undefined, now = new Date();
+      const fcH = fc.length ? `<div class="hfc">${fc.map((d, i) => { const dt = new Date(d.datetime), dd = Math.round((new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()) - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 864e5), nm = dd <= 0 ? "Today" : dd === 1 ? "Tomorrow" : dt.toLocaleDateString(lang, { weekday: "long" }); return `<div><i>${this._wxIcon(d.condition)}</i><span>${E(nm)}</span><b>${d.temperature != null ? Math.round(d.temperature) + "°" : ""}</b></div>`; }).join("")}</div>` : "";
+      hero += `<div class="hwx"><div class="hwi">${this._wxIcon(w.state)}</div><div class="hwt">${Math.round(a.temperature)}°</div><div class="hwc"><div>${E(cond)}</div></div><div class="hwh">${a.humidity != null ? DROP_I + " " + Math.round(a.humidity) + "%" : ""}</div></div>${fcH}`;
+    }
+    const clk = c.noClock ? "" : `<div class="hck">${this._clockBlock("tl")}<div class="dt">${E(o.date)}</div></div>`;
+    const stl = (s) => { const at = s.ha ? `data-act="scene.turn_on" data-e="${s.ha}"` : `data-sc="run|${E(s.key)}"`; return `<button class="ptl sct ${s.on ? "on" : ""}" data-id="sc:${E(s.key)}" ${at}><i>${GRID_I}</i><span>${E(s.nm)}</span></button>`; };
+    const scn = c.noScenes ? "" : `<div class="psec"><span>Scenes</span></div>${o.sc.length ? `<div class="ptg">${o.sc.map(stl).join("")}</div>` : `<div class="hintx">${adm ? "Add scenes in Settings → Scenes." : "No scenes yet."}</div>`}`;
+    const tl = (k, go, ico, nm, sub) => `<button class="ptl" data-id="pm:${E(k)}" ${go}><i>${ico}</i><span>${E(nm)}</span>${sub ? `<small>${E(sub)}</small>` : ""}</button>`;
+    const mt = [];
+    if (!(c.noRooms || !this._rooms().length)) mt.push(tl("room", `data-go='{"p":"room"}'`, ICONS.door, "Rooms", `${this._rooms().length} rooms`));
+    this._svcs().forEach((k) => { const n = k === "lights" ? this._ents("lights").filter((i) => H[i].state === "on").length : 0; mt.push(tl(k, this._tileGo(k), SV[k].i, SV[k].n, k === "lights" && n ? n + " on" : "")); });
+    const sys = [tl("settings", `data-go='{"p":"settings"}'`, GEAR_I, "Settings", ""), tl("bg", `data-pers="open"`, PALETTE_I, "Background", "")];
+    return `<div class="home phh"><div class="phero" data-id="ph:hero"><div class="hgr2">${o.g}</div>${hero}${clk}</div>${scn}<div class="psec"><span>Menu</span></div><div class="ptg">${mt.join("")}</div><div class="psep"></div><div class="ptg sys">${sys.join("")}</div>${o.hasFav ? `<div class="psec"><span>Favourites</span></div><div class="hall" data-hz="a">${o.bento}</div>` : ""}${o.cr ? `<div class="crm">${o.cr}</div>` : ""}</div>`;
+  }
+  _roomsGrid() {
+    const rs = this._rooms(), H = this._h.states, E = (t) => this._esc(t), L = this._svcs(), fl = this._c.floors || [];
+    this._roomBg = "";
+    if (!rs.length) return `<div class="area"><div class="bc">No rooms yet. Add rooms in Settings.</div></div>`;
+    const lt = (r) => (L.includes("lights") ? this._ents("lights", r.id) : []), on = (r) => lt(r).filter((i) => H[i].state === "on");
+    const fls = fl.filter((f) => rs.some((r) => r.floor === f.id)), loose = rs.filter((r) => !fls.some((f) => f.id === r.floor));
+    const hasAct = L.includes("lights") && rs.some((r) => on(r).length);
+    const f = (this._pick || {}).rf || "all", cur = f === "act" && !hasAct ? "all" : f;
+    const chips = [["all", "All"], ...(L.includes("lights") ? [["act", "Active"]] : []), ...(fls.length ? [...fls.map((x) => [x.id, x.name]), ...(loose.length ? [["_", "Other"]] : [])] : [])];
+    const card = (r) => {
+      const img = this._rimgOf(r), ls = lt(r), n = on(r).length, all = ls.join(",");
+      return `<div class="rcard ${img ? "" : "noimg"}" data-id="rc:${E(r.id)}" data-go='${JSON.stringify({ p: "room", room: r.id })}' ${img ? `style="background-image:url('${E(img)}')"` : ""}>${img ? "" : `<i class="rci">${ICONS.door}</i>`}${ls.length ? `<button class="rbd ${n ? "on" : ""}" data-act="${n ? "light.turn_off" : "light.turn_on"}" data-e="${all}" title="${n ? "Turn lights off" : "Turn lights on"}">${ICONS.bulb}</button>` : ""}<span>${E(r.name)}</span></div>`;
+    };
+    const sec = (t, list) => (list.length ? `<div class="psec" data-id="rs:${E(t)}"><span>${E(t)}</span></div><div class="rgrid">${list.map(card).join("")}</div>` : "");
+    let body = "";
+    if (cur === "act") body = sec("Active", rs.filter((r) => on(r).length));
+    else if (cur === "all" || !chips.some((c) => c[0] === cur)) body = fls.length ? fls.map((x) => sec(x.name, rs.filter((r) => r.floor === x.id))).join("") + sec("Other", loose) : sec("Rooms", rs);
+    else if (cur === "_") body = sec("Other", loose);
+    else body = sec((fls.find((x) => x.id === cur) || {}).name || "Rooms", rs.filter((r) => r.floor === cur));
+    return `<div class="area rooms"><div class="rchips">${chips.map(([k, n]) => `<button class="${k === cur ? "on" : ""}" data-pick="rf|${E(k)}">${E(n)}</button>`).join("")}</div>${body}</div>`;
+  }
+  _roomPhone(x) {
+    const { room, rid, sec, lights, cl, sh, avg, chips, adm, E, L, H, has } = x, svc = this._v.svc, st = (i) => H[i].state;
+    if (svc) {
+      const part = sec.filter((h) => h.includes(`data-sk="${E(svc)}"`));
+      return `<div class="area proom"><div class="rm2"><div class="abody">${part.join("") || `<div class="bc">Nothing here.</div>`}</div></div></div>`;
+    }
+    const tl = (k, go, ico, nm, sub, cls) => `<button class="ptl ${cls || ""}" data-id="rt:${E(k)}" ${go}><i>${ico}</i><span>${E(nm)}</span>${sub ? `<small>${E(sub)}</small>` : ""}</button>`;
+    const all = lights.join(","), n = lights.filter((i) => st(i) === "on").length;
+    const scs = [...(this._c.noScenes ? [] : this._myScenes().filter((y) => y.room === rid && this._sceneOk(y))).map((y) => `<button class="ptl sct ${this._sceneOn(y) ? "on" : ""}" data-id="sc:${y.sc}:${y.id}" data-sc="run|${y.sc}:${y.id}"><i>${GRID_I}</i><span>${E(y.name)}</span></button>`),
+      ...Object.keys(H).filter((i) => i.startsWith("scene.") && !this._c.hide.includes(i) && this._roomOf(i) === rid).map((i) => `<button class="ptl sct" data-id="sc:${i}" data-act="scene.turn_on" data-e="${i}"><i>${GRID_I}</i><span>${E(this._nm(i))}</span></button>`)];
+    const pw = lights.length ? [tl("allon", `data-act="light.turn_on" data-e="${all}"`, ICONS.power, "All on", n ? n + " on" : "", "pwr on"), tl("alloff", `data-act="light.turn_off" data-e="${all}"`, ICONS.power, "All off", "", "pwr")] : [];
+    const scn = pw.length || scs.length ? `<div class="psec"><span>Scenes</span></div><div class="ptg">${pw.join("")}${scs.join("")}</div>` : "";
+    const dial = (id) => {
+      const a = H[id].attributes, off = ["off", "unavailable", "unknown"].includes(st(id)), tg = a.temperature, cu = a.current_temperature, step = a.target_temp_step || 0.5, act = a.hvac_action;
+      const mn = a.min_temp != null ? +a.min_temp : 16, mx = a.max_temp != null ? +a.max_temp : 30, v = tg != null ? tg : cu, pr = v == null ? 0 : Math.max(0, Math.min(1, (v - mn) / (mx - mn)));
+      const C = 2 * Math.PI * 52, arc = C * 0.75, tint = off ? "off" : act === "heating" ? "hot" : act === "cooling" ? "cool" : "";
+      const t = (d) => `{"temperature":${Math.round((+tg + d) * 10) / 10}}`;
+      const info = [act && act !== "idle" ? act : off ? "off" : st(id), a.fan_mode ? "fan " + a.fan_mode : "", a.current_humidity != null ? a.current_humidity + "% humidity" : ""].filter(Boolean);
+      return `<div class="dial ${tint}" data-id="cl:${E(id)}" ${this._tileGo("climate")}><svg class="dr" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="d0" stroke-dasharray="${arc} ${C}" transform="rotate(135 60 60)"/><circle cx="60" cy="60" r="52" class="d1" stroke-dasharray="${(arc * pr).toFixed(1)} ${C}" transform="rotate(135 60 60)"/></svg><div class="dv"><b>${v != null ? this._fmt(v) + "°" : "–"}</b>${cu != null ? `<small>${this._fmt(cu)}°</small>` : ""}</div><div class="di">${info.map((y) => `<div>${E(y)}</div>`).join("")}${cl.length > 1 ? `<div class="dn">${E(this._nm(id))}</div>` : ""}</div>${tg != null && !off ? `<div class="dpm"><button data-act="climate.set_temperature" data-e="${id}" data-x='${t(-step)}'>−</button><button data-act="climate.set_temperature" data-e="${id}" data-x='${t(step)}'>+</button></div>` : ""}</div>`;
+    };
+    const comfort = cl.length ? `<div class="psec"><span>Comfort</span></div>${cl.map(dial).join("")}` : "";
+    const go = (s) => `data-go='${JSON.stringify({ p: "room", room: rid, svc: s })}'`;
+    const sub = { lights: lights.length ? `${n} of ${lights.length} on` : "", shades: avg != null ? avg + "% open" : "", media: (() => { const m = this._ents("media", rid).filter((i) => ["playing", "paused", "on"].includes(st(i))); return m.length ? "playing" : ""; })() };
+    const tiles = L.filter((s) => s !== "climate" && has(room, s) && !(isCs(s) && !this._csItems(rid, s).some((y) => !y.it.tile))).map((s) => tl(s, go(s), SV[s].i, SV[s].n, sub[s] || ""));
+    const pins = this._roomTiles(rid);
+    return `<div class="area proom"><div class="rm2">${scn}${comfort}${tiles.length ? `<div class="psec"><span>Control</span></div><div class="ptg">${tiles.join("")}</div>` : ""}${pins.length ? `<div class="psec"><span>Pinned</span></div><div class="abody">${pins.join("")}</div>` : ""}${!scn && !comfort && !tiles.length && !pins.length ? `<div class="bc">Nothing in this room yet.</div>` : ""}${adm ? `<div class="tile add" data-id="a:add" data-cc="open:${rid}"><div class="bdg" style="--c:#8d9ab8">＋</div><div class="nm">Add card</div></div>` : ""}</div></div>`;
   }
   _areaPage() {
+    const phone = this.getAttribute("data-dev") === "phone";
+    if (phone && !this._v.room) return this._roomsGrid();
     const rs = this._rooms(), L = this._svcs(), adm = this._admin(), H = this._h.states, st = (i) => H[i].state, E = (t) => this._esc(t);
     const has = (r, s) => (isCs(s) ? this._csItems(r.id, s).length : this._ents(s, r.id).length);
     const room = rs.find((r) => r.id === this._v.room) || rs.find((r) => L.some((s) => has(r, s))) || rs[0];
@@ -2278,6 +3006,7 @@ class IntellectDashboard extends HTMLElement {
     { const tl = this._roomTiles(rid), ci = sec.findIndex((h) => !/data-sk="(lights|shades|climate)"/.test(h)); sec.splice(ci < 0 ? sec.length : ci, 0, ...tl); }
     if (!sec.length) sec.push(`<div class="bc span2" data-id="a:none"><div class="lbl">Nothing in this room yet.</div></div>`);
     if (adm) sec.push(`<div class="tile add span2" data-id="a:add" data-cc="open:${rid}"><div class="bdg" style="--c:#8d9ab8">＋</div><div class="nm">Add card</div></div>`);
+    if (phone) return this._roomPhone({ room, rid, sec, lights, cl, sh, avg, chips, adm, E, L, H, has });
     return `<div class="area"><div class="rl">${this._brand()}<div class="cap rcap">Rooms</div>${floorBar}<div class="rlist">${list}</div><div class="ft"><span class="tm">@@T@@</span>${wx ? " · " + wx.s : ""}</div></div><div class="rm2"><div class="ah"><div><h1>${E(room.name)}</h1>${sub ? `<div class="sub">${E(sub)}</div>` : ""}</div>${lights.length ? `<div class="ahb"><button class="ob2" data-act="light.turn_off" data-e="${lights.join(",")}">All off</button></div>` : ""}</div>${chips}<div class="abody">${sec.join("")}</div></div></div>`;
   }
   /* ---------- camera wall: one screen with 1 to 32 cameras ---------- */
@@ -2353,28 +3082,62 @@ class IntellectDashboard extends HTMLElement {
   _list(s) {
     return `${this._top()}<h1>${SV[s].i} ${SV[s].n}</h1><div class="grid" data-grid="list:${s}" style="grid-template-columns:repeat(auto-fill,minmax(calc(${s === "cameras" ? 320 : 200}px * var(--tm,1)),1fr))">${this._cardsOf(this._ents(s), "list:" + s)}</div>`;
   }
+  _healthSub() { const h = this._health(); return h.off.length || h.bat.length ? [h.off.length ? h.off.length + " offline" : "", h.bat.length ? h.bat.length + " low battery" : ""].filter(Boolean).join(" · ") : "everything is fine"; }
+  _health() {
+    const S = this._h.states, c = this._c, off = [], bat = [], now = Date.now();
+    const ago = (iso) => { const t = Date.parse(iso); if (!isFinite(t)) return ""; const m = Math.max(0, Math.round((now - t) / 60000)); return m < 60 ? m + " min" : m < 2880 ? Math.round(m / 60) + " h" : Math.round(m / 1440) + " days"; };
+    const rm = (id) => { const r = this._rooms().find((x) => x.id === this._roomOf(id)); return r ? r.name : ""; };
+    Object.keys(S).forEach((id) => {
+      if (c.hide.includes(id)) return;
+      const st = S[id], a = st.attributes, dc = a.device_class, d = id.split(".")[0];
+      if (st.state === "unavailable" && this._svcOf(id)) off.push({ id, name: this._nm(id), room: rm(id), since: ago(st.last_changed) });
+      if (d === "sensor" && dc === "battery") { const v = parseFloat(st.state); if (isFinite(v) && v >= 0 && v < 20) bat.push({ id, name: this._nm(id), room: rm(id), v: Math.round(v) + "%" }); }
+      else if (d === "binary_sensor" && dc === "battery" && st.state === "on") bat.push({ id, name: this._nm(id), room: rm(id), v: "low" });
+    });
+    bat.sort((p, q) => parseFloat(p.v) - parseFloat(q.v));
+    return { off, bat };
+  }
   _settings() {
     const E = (t) => this._esc(t), c = this._c; let tab = this._v.tab || "general";
     const row = (l, sub, ctl) => `<div class="srow"><div class="sl"><div class="sn">${l}</div>${sub ? `<div class="ss">${sub}</div>` : ""}</div><div class="sc">${ctl}</div></div>`;
     const sec = (t, note, rows) => `<div class="ssec"><div class="shd"><span>${t}</span>${note ? `<small>${note}</small>` : ""}</div>${rows}</div>`;
     const tg = (on, a) => `<button class="sw ${on ? "on" : ""}" ${a}></button>`;
     const up = (a, v, off) => `<button class="ib2" data-s="${a}|${v}" ${off ? "disabled" : ""}>${a.endsWith("up") ? "▲" : "▼"}</button>`;
-    const tabs = !this._admin() ? [...(this._mgr() ? [["users", "Users", "add users, limit services and rooms"], ["updates", "Updates", "automatic updates and restart"]] : []), ["scenes", "Scenes", "add your own scenes"], ["rphoto", "Room photos", "pick a photo per room"], ["bg", "Background", "change it on this device"], ["ss", "Screensaver", "on or off on this device"]] : [["general", "General", "title, background, layout"], ["pages", "Pages", "services, order, titles"], ["rooms", "Rooms", "floors, order and names"], ["rphoto", "Room photos", "background of each room"], ["devices", "Devices", "room and visibility per device"], ["rdev", "Room devices", "hide or show devices room by room"], ["srooms", "Service rooms", "hide unused rooms in each service"], ["home", "Home page", "clock, weather, services"], ["ss", "Screensaver", "family photos or a clock when idle"], ["panels", "Wall panels", "keep screens on, health, alerts"], ["tiles", "Home tiles", "choose devices per tile"], ["wall", "Camera wall", "many cameras on one screen"], ["intercom", "Intercoms", "cameras, door, calls"], ["autos", "Automations", "choose what users can run"], ["users", "Users", "add users, limit services and rooms"], ["access", "Access", "default page and lock users"], ["updates", "Updates", "automatic updates and restart"], ["scenes", "Scenes", "add and edit scenes"], ["bg", "Background", "your own on this device"], ["cards", "Cards", "custom cards you added"]];
+    const tabs = !this._admin() ? [...(this._mgr() ? [["users", "Users", "add users, limit services and rooms"], ["updates", "Updates", "automatic updates and restart"]] : []), ["scenes", "Scenes", "add your own scenes"], ["ntf", "Notifications", "choose which alerts you see"], ["ss", "Screensaver", "on or off on this device"], ...(this._look() ? [["rphoto", "Room photos", "pick a photo per room"], ["bg", "Background", "change it on this device"]] : [])] : [["general", "General", "title, background, layout"], ["ntf", "Notifications", "alerts for everyone"], ["pages", "Pages", "services, order, titles"], ["rooms", "Rooms", "floors, order and names"], ["rphoto", "Room photos", "background of each room"], ["devices", "Devices", "room and visibility per device"], ["rdev", "Room devices", "hide or show devices room by room"], ["srooms", "Service rooms", "hide unused rooms in each service"], ["home", "Home page", "clock, weather, services"], ["ss", "Screensaver", "family photos or a clock when idle"], ["panels", "Wall panels", "keep screens on, health, alerts"], ["tiles", "Home tiles", "choose devices per tile"], ["wall", "Camera wall", "many cameras on one screen"], ["intercom", "Intercoms", "cameras, door, calls"], ["autos", "Automations", "choose what users can run"], ["users", "Users", "add users, limit services and rooms"], ["access", "Access", "default page and lock users"], ["adv", "Advanced", "auto-return, quiet hours, user limits"], ["health", "Health", this._healthSub()], ["updates", "Updates", "automatic updates and restart"], ["scenes", "Scenes", "add and edit scenes"], ["bg", "Background", "your own on this device"], ["cards", "Cards", "custom cards you added"]];
     const adm = this._admin();
-    const tsSeg = (cur, attr, none) => `<div class="seg sm" style="flex-wrap:wrap">${Object.entries(TSIZES).map(([k, t]) => `<button class="${cur === k ? "on" : ""}" ${attr}="${attr === "data-s" ? "tsz|" : "tsd|"}${k}">${t.n}</button>`).join("")}${none ? `<button ${attr}="tsd|">Same as shared</button>` : ""}</div>`;
+    const tsSeg = (cur, attr, none) => `<div class="seg sm tsz">${Object.entries(TSIZES).map(([k, t]) => `<button class="${cur === k ? "on" : ""}" ${attr}="${attr === "data-s" ? "tsz|" : "tsd|"}${k}">${t.n}</button>`).join("")}${none ? `<button ${attr}="tsd|">Same as shared</button>` : ""}</div>`;
+    const SCI = [["aurora", "Aurora", "Soft moving colours with a big clock. Shows home status and notifications"], ["night", "Starry night", "Dark sky with a moon and a dim clock. Easy on the eyes at night"], ["analog", "Classic analog", "A large analog clock with the date, home status and notifications"], ["frame", "Photo frame", "Your own saver photo slowly moving, with the time on top"], ["home", "Home overview", "The essentials at a glance: time, security, lights, temperature, music and notifications"]];
+    const scrRows = (cur, att) => {
+      const A = (k, v) => `${att}="${att === "data-s" ? "scr|" : "scrd|"}${k}|${v}"`, seg = (k, list, on) => `<div class="seg sm" style="flex-wrap:wrap">${list.map(([v, n]) => `<button class="${String(on) === String(v) ? "on" : ""}" ${A(k, v)}>${n}</button>`).join("")}</div>`;
+      return row("Keep the screen on", "the screen never goes off while this page is open", tg(cur.awake, A("awake", cur.awake ? "0" : "1"))) +
+        `<div class="ssub"><div class="sn">Screen saver</div><div class="ss">after a while with no touch, show one of these. Tap one to choose it, or see it full screen first. Tap anywhere to wake the screen</div></div><div class="svgrid"><div class="svc ${cur.idle === "off" ? "on" : ""}"><div class="svp off" ${A("idle", "off")}>Off</div><div class="svf"><b>Off</b><small>No screen saver</small></div></div>${SCI.map(([k, n, d]) => `<div class="svc ${cur.idle === k ? "on" : ""}"><div class="svp" ${A("idle", k)}>${this._ambPrev(k)}</div><div class="svf"><b>${n}${cur.idle === k ? " ✓" : ""}</b><small>${d}</small><button class="sbtn" data-sc="ambprev|${k}">See full screen</button></div></div>`).join("")}</div>` +
+        row("Saver photo", this._svImg() ? (this._rimgs().__saver ? "your own photo on this device" : "the shared photo") + ", used by Photo frame and Home overview" : "a picture behind Photo frame and Home overview. Without one they use the dashboard background", `<input type="file" accept="image/*" data-svfile="1" style="max-width:200px;color:var(--mu);font-size:12px">${this._svImg() ? '<img class="rpv" src="' + this._svImg() + '"><button class="sbtn" data-rimgb="__saver">Remove</button>' : ""}`) +
+        (cur.idle === "off" ? "" : row("Start after", "minutes without a touch", seg("mins", [1, 2, 5, 10, 30].map((m) => [m, m + " min"]), cur.mins)) +
+          (cur.idle === "night" ? "" : row("Starry night at night", "switch to the dark Starry night screen between these hours", tg(cur.night, A("night", cur.night ? "0" : "1")))) +
+          (cur.idle === "night" || !cur.night ? "" : row("Night starts", "", seg("n1", [20, 21, 22, 23].map((h) => [h, h + ":00"]), cur.n1)) + row("Night ends", "", seg("n2", [5, 6, 7, 8].map((h) => [h, "0" + h + ":00"]), cur.n2))));
+    };
+    const ntfRows = (cur, att, pers) => {
+      const A = (k, v) => `${att}="${att === "data-s" ? "ntf|" : "ntfd|"}${k}|${v}"`;
+      return row("Notifications", "switch all alerts on or off", tg(cur.on, A("on", cur.on ? "0" : "1"))) +
+        Object.keys(NT).map((k) => row(NT[k].n, NT[k].d, tg(cur.types[k], A("t:" + k, cur.types[k] ? "0" : "1")))).join("") +
+        row("Left open after", "how long before an open door or gate sends an alert", `<div class="seg sm">${[3, 5, 10, 30].map((m) => `<button class="${cur.mins === m ? "on" : ""}" ${A("mins", m)}>${m} min</button>`).join("")}</div>`) +
+        (pers ? row("Sound", "how alerts sound on this device", `<div class="seg sm">${[["phone", "Follow my phone"], ["beep", "Beep in the app"], ["off", "Silent"]].map(([v, n]) => `<button class="${cur.sound === v ? "on" : ""}" ${A("sound", v)}>${n}</button>`).join("")}</div>`) +
+          (cur.sound === "phone" ? row("Phone sound", (() => { const st = this._sysState(); return st === "granted" ? "On. A silent phone, Do Not Disturb or low volume makes the alert silent too" : st === "default" ? "Allow system notifications so your phone can play the alert sound" : st === "denied" ? "Blocked. Allow notifications for this site in the browser settings, then come back" : st === "insecure" ? "System notifications need a secure (https) address for Home Assistant" : "This browser cannot show system notifications"; })(), (this._sysState() === "default" ? '<button class="sbtn pri2" data-sc="ntfperm|">Allow</button>' : "") + (this._sysState() === "granted" ? '<button class="sbtn" data-sc="ntftest|">Send a test alert</button>' : "")) : cur.sound === "beep" ? row("Test", "the beep plays even when the phone is on silent", '<button class="sbtn" data-sc="ntftest|">Send a test alert</button>') : "") : "");
+    };
     let tab2 = tab;
-    if (!adm) tab2 = tab === "bg" || tab === "ss" || tab === "rphoto" || ((tab === "users" || tab === "updates") && this._mgr()) ? tab : "scenes";
+    if (!adm) tab2 = ((tab === "bg" || tab === "rphoto") && this._look()) || tab === "ntf" || tab === "ss" || ((tab === "users" || tab === "updates") && this._mgr()) ? tab : "scenes";
     tab = tab2;
     let body = "";
     if (tab === "bg") {
       const u = this._bgu(), b = { preset: "midnight", mode: "preset", dim: 0, blur: 0, ...(u || c.bg || {}) };
       let mine = ""; try { mine = localStorage.getItem("intellect_ts") || ""; } catch (e) {}
-      let mk = "", mt = ""; try { mk = localStorage.getItem("intellect_ck") || ""; mt = localStorage.getItem("intellect_ct") || ""; } catch (e) {}
+      let mk = ""; try { mk = localStorage.getItem("intellect_ck") || ""; localStorage.removeItem("intellect_ct"); } catch (e) {}
       const ckSeg = `<div class="seg sm" style="flex-wrap:wrap">${[["digital", "Digital"], ["analog", "Analog"]].map(([k, n]) => `<button class="${this._clockStyle() === k ? "on" : ""}" data-sc="ckd|${k}">${n}</button>`).join("")}${mk ? '<button data-sc="ckd|">Same as shared</button>' : ""}</div>`;
-      const ctSeg = `<div class="seg sm" style="flex-wrap:wrap">${[["1", "Show"], ["0", "Hide"]].map(([k, n]) => `<button class="${this._clockTile() === (k === "1") ? "on" : ""}" data-sc="ctd|${k}">${n}</button>`).join("")}${mt ? '<button data-sc="ctd|">Same as shared</button>' : ""}</div>`;
-      body = sec("Clock", mk || mt ? "this device only" : "using the shared clock", row("Clock style", "digital numbers or an analog face", ckSeg) + row("Clock tile", "show the clock as a tile among the home tiles", ctSeg)) + sec("Tile size", mine && TSIZES[mine] ? "this device only" : "using the shared size", row("Size on this device", "extra large, large, small or very small tiles and cards", tsSeg(this._ts(), "data-sc", !!(mine && TSIZES[mine])))) +
-        (adm ? "" : sec("Arrangement", "hold a tile or card for 2 seconds, then drag it onto the card whose place you want",
-        row("Your own order", "tiles and cards are arranged on this device only", '<button class="sbtn" data-sc="ordreset|">Back to the shared order</button>'))) +
+      const pers = this._scrPers();
+      body = sec("Screen", pers ? "this device only" : "using the shared setting", scrRows(this._scr(), "data-sc") + (pers ? row("Shared setting", "forget the choices on this device", '<button class="sbtn" data-sc="scrd|">Same as shared</button>') : "")) +
+        sec("Clock", mk ? "this device only" : "using the shared clock", row("Clock style", "digital numbers or an analog face", ckSeg)) + sec("Tile size", mine && TSIZES[mine] ? "this device only" : "using the shared size", row("Size on this device", "extra large, large, medium, small or extra small tiles and cards", tsSeg(this._ts(), "data-sc", !!(mine && TSIZES[mine])))) +
+        (adm ? "" : sec("Arrangement", "hold any item on the home page for 2 seconds, then drag it anywhere. On a phone: hold, then tap where it should go",
+        row("Your own layout", "the home page is arranged on this device only", '<button class="sbtn" data-sc="ordreset|">Back to the shared order</button>'))) +
         sec("Background", u ? "this device only" : "using the shared look", `<div style="padding:4px 4px 12px">${this._pbControls(u, b)}</div>`);
     } else if (tab === "panels") {
       if ((!this._pl || Date.now() - (this._plAt || 0) > 30e3) && !this._plBusy) { this._plBusy = true; this._plAt = Date.now(); this._plLoad().then(() => { this._plBusy = false; }); }
@@ -2436,16 +3199,21 @@ class IntellectDashboard extends HTMLElement {
         row("Preview", "show it now; tap the screen to close", '<button class="sbtn" data-sc="sspv|">Show now</button>')) +
       sec("Wall panel", !this._pname() ? "not a wall panel" : !this._hbRes ? "reporting…" : this._hbRes.ok ? `reported to Home Assistant at ${new Date(this._hbRes.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : `report failed: ${E(String(this._hbRes.msg))}`,
         row("Wall panel name", "give a wall tablet a name (e.g. Kitchen) so it reports to Home Assistant and Quinteca is told if it goes offline. Leave empty on phones", `<input type="text" data-pname value="${E(this._pname())}" placeholder="Kitchen">`));
+    } else if (tab === "ntf") {
+      const pers = this._ntfPers();
+      body = sec("Your notifications", pers ? "this device only" : "using the shared setting", ntfRows(this._ntf(), "data-sc", true) + (pers ? row("Shared setting", "forget the choices on this device", '<button class="sbtn" data-sc="ntfd|">Same as shared</button>') : "")) +
+        sec("Try it", "see how an alert looks on this screen", row("Send a test notification", "", '<button class="sbtn" data-ntf="test">Send test</button>')) +
+        (adm ? sec("Shared setting for everyone", "what everybody gets unless they choose their own", ntfRows(this._ntf0(), "data-s", false)) : "");
     } else if (tab === "general") {
       const bg = { preset: "midnight", mode: "preset", dim: 0, blur: 0, ...(c.bg || {}) }, dv = localStorage.getItem("intellect_dev") || "auto";
       body = sec("Settings file", "settings are stored on the server and shared by every user; a file makes them portable",
         row("Export", "download all settings as JSON", `<button class="sbtn" data-s="export|">Download</button>`) +
         row("Import", "an export; merged with what is already there", `<input type="file" accept=".json,application/json" data-import="1">`)) +
       sec("Tile size", "the size of every tile and card for all users; a person can pick another size on their own device",
-        row("Size for everyone", "extra large, large, small or very small", tsSeg(TSIZES[c.tsz] ? c.tsz : "l", "data-s"))) +
+        row("Size for everyone", "extra large, large, medium, small or extra small", tsSeg(TSIZES[c.tsz] ? c.tsz : "l", "data-s")) + row("Tile background", `how much you see of the tile behind its text: from invisible to solid. Now <b>${this._ta()}%</b>`, `<input type="range" min="0" max="100" step="5" value="${this._ta()}" data-ta="1"><span class="lbl" style="min-width:70px">Invisible → Solid</span>`)) +
       sec("Appearance", "",
         row("Client name", "written top left on every page", `<input type="text" data-ttl value="${E(c.title || "")}" placeholder="${E(this._title || "Intellect")}">`) +
-        row("Bottom text", "written next to the settings button, bottom right (empty = hide)", `<input type="text" data-cred value="${E(c.credit === undefined ? "By Quinteca" : c.credit)}" placeholder="By Quinteca">`) +
+        row("Bottom text", "written next to the settings button, bottom right (empty = hide)", `<input type="text" data-cred value="${E(c.credit === undefined ? "Intellect by Quinteca" : c.credit)}" placeholder="Intellect by Quinteca">`) +
         row("Greeting name", "shown on the home page", `<input type="text" data-uname value="${E(c.name || "")}" placeholder="${E((this._h.user && this._h.user.name) || "")}">`)) +
       sec("Background", "everything sits on top of this",
         row("Theme", "colour themes", Object.keys(BG).map((k) => `<button class="swt ${bg.mode !== "image" && bg.preset === k ? "sel" : ""}" style="background:${SWATCH[k]}" title="${k}" data-s="bgp|${k}"></button>`).join("")) +
@@ -2455,6 +3223,21 @@ class IntellectDashboard extends HTMLElement {
       sec("This device", "saved on this device only",
         row("Screen layout", `Detected: ${this._auto || "–"} · ${this._w || 0}px wide`, `<select data-devsel="1">${[["auto", "Auto"], ["phone", "Phone"], ["tablet", "Tablet"], ["desktop", "Desktop / wall panel"]].map(([v, l]) => `<option value="${v}" ${dv === v ? "selected" : ""}>${l}</option>`).join("")}</select>`) +
         row("Fullscreen", "hide the Home Assistant sidebar", tg(localStorage.getItem("intellect_full") === "1", 'data-tog="full:0"')));
+    } else if (tab === "adv") {
+      const q = c.quiet || {}, ha = +(c.homeAfter || 0), seg = (list, on, att) => `<div class="seg sm" style="flex-wrap:wrap">${list.map(([v, n]) => `<button class="${String(on) === String(v) ? "on" : ""}" data-s="adv|${att}|${v}">${n}</button>`).join("")}</div>`;
+      body = sec("Screen behaviour", "for every user and device", row("Go back to Home", "when nobody touches the screen for a while, return to the Home page. Handy for wall panels and shared phones", seg([[0, "Never"], [1, "1 min"], [2, "2 min"], [5, "5 min"], [10, "10 min"], [30, "30 min"]], ha, "home"))) +
+        sec("Quiet hours", "alerts still appear in the bell, but make no sound and show no pop-up",
+          row("Quiet hours", "switch on to silence alerts at night", tg(!!q.on, `data-s="adv|qon|${q.on ? 0 : 1}"`)) +
+          (q.on ? row("Starts at", "", seg([20, 21, 22, 23, 0].map((h) => [h, h + ":00"]), q.from == null ? 22 : q.from, "qfrom")) + row("Ends at", "", seg([5, 6, 7, 8, 9].map((h) => [h, "0" + h + ":00"]), q.to == null ? 7 : q.to, "qto")) +
+            row("Critical alerts", "alarm, smoke, gas and leak alerts still sound during quiet hours", tg(q.crit !== false, `data-s="adv|qcrit|${q.crit !== false ? 0 : 1}"`)) : "")) +
+        sec("What normal users can do", "admins are never limited",
+          row("Rearrange the home page", "hold a tile for 2 seconds and drag it", tg(!c.noArrange, 'data-s="flag|noArrange"')) +
+          row("Change their own look", "background, room photos and tile size on their own device", tg(!c.noLook, 'data-s="flag|noLook"')) +
+          row("Hide offline devices", "a device that stops answering disappears from their pages instead of showing as unavailable", tg(!!c.hideUnavail, 'data-s="flag|hideUnavail"')));
+    } else if (tab === "health") {
+      const h = this._health();
+      body = sec("Offline devices", h.off.length ? h.off.length + " not answering" : "all answering", (h.off.map((x) => row(E(x.name), `${x.room ? E(x.room) + " · " : ""}${x.since ? "offline for " + x.since + " · " : ""}${E(x.id)}`, `<button class="sbtn" data-s="hhide|${E(x.id)}">Hide</button>`)).join("") || '<div class="lbl" style="padding:6px 4px 12px">Everything is answering.</div>') + '<div class="lbl" style="padding:8px 4px 4px">Hide removes a device from every page. Save to keep it.</div>') +
+        sec("Low batteries", h.bat.length ? h.bat.length + " below 20%" : "all fine", h.bat.map((x) => row(E(x.name), `${x.room ? E(x.room) + " · " : ""}${E(x.id)}`, `<b>${E(x.v)}</b>`)).join("") || '<div class="lbl" style="padding:6px 4px 12px">No battery is low.</div>');
     } else if (tab === "pages") {
       const all = this._svcsList(), H = c.svcHide || [], T = c.svcTitle || {};
       body = sec("Pages", "name, show and order the services on the home screen and bottom bar", all.map((k, i) => {
@@ -2509,12 +3292,13 @@ class IntellectDashboard extends HTMLElement {
     } else if (tab === "home") {
       const all = this._svcsList(), H = c.svcHide || [];
       body = sec("Home screen", "what the home page shows",
-        row("Clock", "the big clock on the left", tg(!c.noClock, 'data-s="flag|noClock"')) +
-        row("Clock style", "digital numbers or an analog face, for the clock on the left and the clock tile", `<div class="seg sm">${[["digital", "Digital"], ["analog", "Analog"]].map(([k, n]) => `<button class="${(c.cks === "analog" ? "analog" : "digital") === k ? "on" : ""}" data-s="cks|${k}">${n}</button>`).join("")}</div>`) +
-        row("Clock tile", "a clock as its own tile among the home tiles. Drag it like any other tile", tg(!!c.clockTile, 'data-s="ctile|"')) +
+        row("Clock", "the clock tile on the home page", tg(!c.noClock, 'data-s="flag|noClock"')) +
+        row("Clock style", "digital numbers or an analog face, for the home clock and the clock saver", `<div class="seg sm">${[["digital", "Digital"], ["analog", "Analog"]].map(([k, n]) => `<button class="${(c.cks === "analog" ? "analog" : "digital") === k ? "on" : ""}" data-s="cks|${k}">${n}</button>`).join("")}</div>`) +
+        row("Home page layout", "everyone can drag every item (clock, weather, greeting, scenes, tiles, cards) to any place: hold for 2 seconds. What you arrange here is the layout everyone starts with", '<button class="sbtn" data-s="hbreset|">Reset the shared layout</button>') +
         row("Weather line", "temperature, condition and sunset", tg(!c.noWeather, 'data-s="flag|noWeather"')) +
-        row("Scenes", "the scene buttons under the greeting", tg(!c.noScenes, 'data-s="flag|noScenes"')) +
+        row("Scenes", "the scene buttons", tg(!c.noScenes, 'data-s="flag|noScenes"')) +
         row("Rooms tab", "the page with the list of rooms", tg(!c.noRooms, 'data-s="flag|noRooms"'))) +
+      sec("Screen for everyone", "the shared setting. Each person can still choose their own in Background", scrRows({ ...this._scr0() }, "data-s")) +
       sec("Services", "show or hide a tile on the home page and its tab in the bottom bar",
         all.map((k) => row(`${SV[k].i} ${E(SV[k].n)}`, H.includes(k) ? "hidden" : "shown", tg(!H.includes(k), `data-s="svcvis|${E(k)}"`))).join(""));
     } else if (tab === "tiles") {
@@ -2668,13 +3452,27 @@ class IntellectDashboard extends HTMLElement {
       this._applyBg();
     }
     const tab = (cls, go, ico, t, col) => `<button class="t ${cls}" data-c="${col}" style="--c:${col}" ${go}>${ico}<span>${t}</span></button>`;
-    const tabs = `<span class="tind" data-id="tind" data-ks="1"></span>` + tab(p === "home" ? "act" : "", `data-go='{"p":"home"}'`, HOME_I, "Home", "#e8c98f") +
-      (c.noRooms || !this._rooms().length ? "" : tab(p === "room" ? "act" : "", `data-go='{"p":"room"}'`, ICONS.door, "Rooms", "#7dd3fc")) +
-      this._svcs().map((s) => tab((p === "rooms" && V.svc === s) || p === s ? "act" : "", this._tileGo(s), SV[s].i, SV[s].n, SV[s].c)).join("");
+    const pages = [["home", p === "home", `data-go='{"p":"home"}'`, HOME_I, "Home", "#e8c98f"]];
+    if (!(c.noRooms || !this._rooms().length)) pages.push(["room", p === "room", `data-go='{"p":"room"}'`, ICONS.door, "Rooms", "#7dd3fc"]);
+    this._svcs().forEach((s) => pages.push([s, (p === "rooms" && V.svc === s) || p === s, this._tileGo(s), SV[s].i, SV[s].n, SV[s].c]));
+    const phone = this.getAttribute("data-dev") === "phone";
+    let tabs = "", more = "", pbar = "";
+    if (phone) {
+      const it = (cls, go, ico, t, col) => `<button class="mi ${cls}" style="--c:${col}" ${go}><i>${ico}</i><span>${t}</span></button>`;
+      if (this._more) more = `<div class="ov mo" data-more="bg"><div class="dlg"><div class="mgrab"></div><div class="mgr">${pages.map((x) => it(x[1] ? "act" : "", x[2], x[3], x[4], x[5])).join("")}${it(p === "settings" ? "act" : "", `data-go='{"p":"settings"}'`, GEAR_I, "Settings", "#cbd5e1")}${it("", `data-pers="open"`, PALETTE_I, "Background", "#f9a8d4")}</div><div class="btns" style="margin-top:14px"><button data-more="close">Close</button></div></div></div>`;
+      const room = p === "room" && V.room ? this._rooms().find((r) => r.id === V.room) : null;
+      const pt = p === "home" ? "" : p === "room" ? (room ? room.name : "Rooms") : p === "rooms" ? (isCs(V.svc) ? (V.svc === "more" ? "More" : V.svc.slice(3)) : (SV[V.svc] || {}).n || "") : p === "settings" ? "Settings" : (SV[p] || {}).n || "";
+      const back = p === "home" ? "" : p === "room" && V.room && V.svc ? { p: "room", room: V.room } : p === "room" && V.room ? { p: "room" } : { p: "home" };
+      const hamb = !this._locked() && (this._narrow || localStorage.getItem("intellect_full") === "1");
+      const nU = this._nList().filter((x) => !x.read).length;
+      pbar = `<header class="pbar">${back ? `<button class="pb" data-hb="1" data-go='${JSON.stringify(back)}' title="Back">${CHEV_I}</button>` : hamb ? `<button class="pb" data-tog="menu:0" title="Menu">☰</button>` : ""}<div class="pt">${p === "home" ? `<b>${this._esc(this._c.title || this._title || "Intellect")}</b><i></i><span>home</span>` : `<span class="pn">${this._esc(pt)}</span>`}</div><div class="pr">${p !== "home" ? `<button class="pb" data-go='{"p":"home"}' title="Home">${HOME_I}</button>` : ""}<button class="pb nbell" data-ntf="open" title="Notifications">${BELL_I}${nU ? `<span class="nbd">${nU > 9 ? "9+" : nU}</span>` : ""}</button><button class="pb" data-more="open" title="Menu">${MORE_I}</button></div></header>`;
+    } else {
+      tabs = `<span class="tind" data-id="tind" data-ks="1"></span>` + pages.map((x) => tab(x[1] ? "act" : "", x[2], x[3], x[4], x[5])).join("");
+    }
     const cr = this._credit(), adm = this._admin();
     const sy = this.scrollTop;
     const vk = JSON.stringify(V), changed = this._vk !== vk;
-    const html = `<div class="bgl"><i></i></div><div class="app"><main class="${changed ? "anim" : ""}">${body}</main><nav><div class="tabs2">${tabs}</div><div class="nr">${cr ? `<span class="cr">${cr}</span>` : ""}<button class="gb" data-pers="open" title="Background">${PALETTE_I}</button><button class="gb" data-go='{"p":"settings"}' title="Settings">${GEAR_I}</button></div></nav></div>${this._dialog()}${this._scDialog()}${this._persDialog()}${this._camView()}`;
+    const html = `<div class="bgl"><i></i></div><div class="app">${phone ? pbar : `<button class="gb nbell tbell" data-ntf="open" title="Notifications">${BELL_I}${this._nList().some((x) => !x.read) ? `<span class="nbd">${this._nList().filter((x) => !x.read).length > 9 ? "9+" : this._nList().filter((x) => !x.read).length}</span>` : ""}</button>`}<main class="${changed ? "anim" : ""}">${body}</main>${phone ? "" : `<nav><div class="tabs2">${tabs}</div><div class="nr">${cr ? `<span class="cr">${cr}</span>` : ""}<button class="gb" data-pers="open" title="Background">${PALETTE_I}</button><button class="gb" data-go='{"p":"settings"}' title="Settings">${GEAR_I}</button></div></nav>`}</div>${more}${this._dialog()}${this._scDialog()}${this._persDialog()}${this._ntfPanel()}${this._camView()}`;
     if (html === this._last) { Object.values(this._lvc || {}).forEach((e) => (e.hass = this._h)); return; }
     this._last = html; this._vk = vk;
     const tpl = document.createElement("template");
@@ -2682,7 +3480,7 @@ class IntellectDashboard extends HTMLElement {
     this._morph(this._root, tpl.content);
     this._rn = (this._rn || 0) + 1;
     this.scrollTop = changed ? 0 : sy;
-    this._slide(); if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => this._slide());
+    this._slide(); this._fitPrev(); if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => { this._slide(); this._fitPrev(); });
     this._mountLv(); this._mountHa(); this._tickClock();
   }
 }
