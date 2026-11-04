@@ -70,7 +70,7 @@ const SHADE_DC = ["shutter", "blind", "curtain", "shade", "awning", "window"];
 const SEC_BS = ["door", "window", "opening", "garage_door", "lock", "occupancy", "motion", "tamper"];
 const OFF = ["off", "unavailable", "unknown", "standby", "closed", "locked", "idle"];
 const KEY = "intellect_cfg";
-const VER = "1.32.2";
+const VER = "1.32.3";
 const GATE_OPEN_MS = 60000; // how long a gate shows "Open" after it is opened from the panel
 const HOLD_MS = 2000;
 // z = how much a tile and its contents are scaled, m = how wide its column is (small sizes keep a little more room so the text still fits)
@@ -2656,7 +2656,12 @@ class IntellectDashboard extends HTMLElement {
     this._seen = {}; this._track.forEach((i) => (this._seen[i] = this._h.states[i]));
     this._n = Object.keys(this._h.states).length;
     const ringer = this._icList().find((x) => this._ringing(x)), ring = !!ringer;
-    if (ringer && (!this._ringPrev || this._ringPrev !== ringer.id) && ringer.auto && ringer.camera && !this._cam && this._h.states[ringer.camera]) this._cam = ringer.camera;
+    // A new ring with "Open video on ring" on: wake the screensaver first, then open the big camera with Speak and Open door.
+    if (ringer && (!this._ringPrev || this._ringPrev !== ringer.id) && ringer.auto && ringer.camera && this._h.states[ringer.camera]) {
+      if (this._ssShown) this._ssHide();
+      this._ssLast = Date.now();
+      if (!this._cam) this._cam = ringer.camera;
+    }
     this._ringPrev = ringer ? ringer.id : null;
     const p = this._v.p, V = this._v;
     if (this._cam && !(this._h.states[this._cam] && this._h.states[this._cam].attributes.entity_picture)) this._cam = null;
